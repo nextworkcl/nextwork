@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar perfiles · Nextwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream2);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.logo-word span{color:var(--accent2)}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-links a.active{color:var(--accent2);font-weight:500}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 60%,var(--accent3) 100%);padding:3.5rem 2.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8f0d8' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero h1{font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--glow);margin-bottom:.6rem;position:relative}
+.hero p{font-size:15px;color:rgba(200,240,216,.7);max-width:500px;margin:0 auto 2rem;position:relative}
+
+/* SEARCH BAR */
+.search-wrap{max-width:620px;margin:0 auto;position:relative;z-index:1}
+.search-bar{display:flex;align-items:center;background:var(--surface);border-radius:50px;padding:6px 6px 6px 20px;box-shadow:0 4px 24px rgba(0,0,0,.15);gap:8px}
+.search-bar input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:transparent}
+.search-bar input::placeholder{color:var(--ink3)}
+.search-btn{background:var(--accent);color:var(--glow);border:none;border-radius:40px;padding:10px 22px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .2s}
+.search-btn:hover{background:var(--accent2)}
+
+/* LAYOUT */
+.page-body{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 5rem;display:grid;grid-template-columns:240px 1fr;gap:1.5rem}
+@media(max-width:900px){.page-body{grid-template-columns:1fr}.sidebar{display:none}}
+
+/* SIDEBAR FILTERS */
+.sidebar{position:sticky;top:80px;align-self:start}
+.filter-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.2rem;margin-bottom:1rem}
+.filter-card h4{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);margin-bottom:.9rem}
+.filter-option{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;cursor:pointer;font-size:13.5px;color:var(--ink2);transition:color .15s;border-radius:6px}
+.filter-option:hover{color:var(--accent2)}
+.filter-option input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0}
+.filter-option.active-filter{color:var(--accent2);font-weight:500}
+.filter-divider{height:1px;background:var(--cream3);margin:.6rem 0}
+.active-count{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--glow);border-radius:10px;font-size:10.5px;font-weight:600;padding:1px 7px;margin-left:auto}
+.clear-filters{font-size:12px;color:var(--accent3);cursor:pointer;margin-top:.3rem;display:block;text-align:right}
+.clear-filters:hover{text-decoration:underline}
+
+/* MAIN AREA */
+.main-area{min-width:0}
+
+/* STATS BAR */
+.stats-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem}
+.result-count{font-size:14px;color:var(--ink3)}
+.result-count strong{color:var(--ink);font-weight:600}
+.sort-wrap{display:flex;align-items:center;gap:.5rem;font-size:13px;color:var(--ink3)}
+.sort-wrap select{border:1.5px solid var(--cream3);border-radius:8px;padding:5px 10px;font-size:13px;color:var(--ink2);background:var(--surface);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
+
+/* FILTER CHIPS (mobile) */
+.chip-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.chip{padding:5px 14px;border-radius:20px;border:1.5px solid var(--cream3);background:var(--surface);font-size:12.5px;color:var(--ink2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:var(--accent3);color:var(--accent2)}
+.chip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+/* PROFILE GRID */
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+
+/* PROFILE CARD */
+.profile-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);overflow:hidden;transition:box-shadow .2s,transform .2s;cursor:pointer}
+.profile-card:hover{box-shadow:0 6px 28px rgba(0,0,0,.09);transform:translateY(-3px)}
+.card-banner{height:64px;position:relative}
+.card-avatar-wrap{position:absolute;bottom:-22px;left:1rem}
+.card-avatar{width:48px;height:48px;border-radius:50%;border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#fff;overflow:hidden}
+.card-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.card-body{padding:1.5rem 1rem 1rem}
+.card-name{font-weight:600;font-size:15px;margin-bottom:2px;display:flex;align-items:center;gap:.4rem}
+.card-role{font-size:12.5px;color:var(--ink3);margin-bottom:.5rem}
+.card-loc{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:.3rem;margin-bottom:.7rem}
+.card-bio{font-size:12.5px;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.8rem}
+.card-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem}
+.ctag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.ctag-skill{background:var(--glow2);color:var(--accent2)}
+.ctag-status{background:var(--cream2);color:var(--ink2)}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:.7rem;border-top:1px solid var(--cream3)}
+.match-pct-pill{display:flex;align-items:center;gap:.3rem;font-size:11.5px;font-weight:600;color:var(--accent2)}
+.match-pct-pill span{font-size:14px}
+.connect-btn{padding:5px 14px;border-radius:18px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.connect-btn:hover,.connect-btn.sent{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.verified-ico{width:15px;height:15px;background:var(--accent2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.verified-ico svg{width:8px;height:8px;stroke:#fff;fill:none;stroke-width:3}
+
+/* FEATURED BADGE */
+.featured-badge{position:absolute;top:8px;right:8px;background:rgba(200,240,216,.85);color:var(--accent);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;backdrop-filter:blur(4px);letter-spacing:.5px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.empty-state .ico{font-size:3rem;margin-bottom:1rem}
+.empty-state h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ink);margin-bottom:.5rem}
+.empty-state p{font-size:14px;max-width:340px;margin:0 auto 1.5rem}
+.empty-cta{display:inline-block;background:var(--accent);color:var(--glow);padding:10px 24px;border-radius:24px;font-size:14px;font-weight:500;transition:all .2s}
+.empty-cta:hover{background:var(--accent2)}
+
+/* LOAD MORE */
+.load-more-wrap{text-align:center;margin-top:2rem}
+.load-more-btn{background:var(--surface);border:1.5px solid var(--cream3);color:var(--ink2);padding:10px 28px;border-radius:24px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.load-more-btn:hover{border-color:var(--accent3);color:var(--accent2)}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:24px;font-size:13.5px;opacity:0;transition:all .3s;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FOOTER */
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr}}
+.footer-brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:rgba(255,255,255,.85);margin-bottom:.7rem}
+.footer-brand-mark{width:26px;height:26px;background:var(--accent2);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.footer-brand-mark svg{width:13px;height:13px;fill:var(--glow)}
+.footer-tagline{font-size:12px;color:rgba(255,255,255,.35);line-height:1.5;max-width:160px}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2.5rem;flex-wrap:wrap;gap:.5rem}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.4);font-size:12px;transition:color .2s}
+.footer-links a:hover{color:rgba(255,255,255,.7)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 20 20"><path d="M10 2L18 7V13L10 18L2 13V7L10 2Z"/><circle cx="10" cy="10" r="3" fill="#1a3a2a" opacity=".8"/></svg>
+    </div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="oportunidades.html">Oportunidades</a>
+    <a href="buscar.html" class="active">Perfiles</a>
+    <a href="publicaciones.html">Publicaciones</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Encuentra tu próxima<br><em style="font-style:italic;color:rgba(200,240,216,.8)">conexión</em></h1>
+  <p>Busca fundadores, diseñadores, devs, marketers y más. Filtra por habilidades, ciudad o lo que buscan.</p>
+  <div class="search-wrap">
+    <div class="search-bar">
+      <svg style="width:17px;height:17px;stroke:var(--ink3);fill:none;stroke-width:2;flex-shrink:0" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Busca por nombre, habilidad, ciudad, empresa..." autocomplete="off">
+      <button class="search-btn" onclick="doSearch()">Buscar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="filter-card">
+      <h4>Rol / Área</h4>
+      <label class="filter-option"><input type="checkbox" value="Fundador" onchange="applyFilters()"> Fundador/a</label>
+      <label class="filter-option"><input type="checkbox" value="Desarrollador" onchange="applyFilters()"> Desarrollador/a</label>
+      <label class="filter-option"><input type="checkbox" value="Diseñador" onchange="applyFilters()"> Diseñador/a</label>
+      <label class="filter-option"><input type="checkbox" value="Marketing" onchange="applyFilters()"> Marketing</label>
+      <label class="filter-option"><input type="checkbox" value="Producto" onchange="applyFilters()"> Producto</label>
+      <label class="filter-option"><input type="checkbox" value="Finanzas" onchange="applyFilters()"> Finanzas</label>
+      <label class="filter-option"><input type="checkbox" value="Estudiante" onchange="applyFilters()"> Estudiante</label>
+      <label class="filter-option"><input type="checkbox" value="Inversionista" onchange="applyFilters()"> Inversionista</label>
+    </div>
+
+    <div class="filter-card">
+      <h4>Ciudad</h4>
+      <label class="filter-option"><input type="checkbox" value="Santiago" onchange="applyFilters()"> Santiago</label>
+      <label class="filter-option"><input type="checkbox" value="Valparaíso" onchange="applyFilters()"> Valparaíso</label>
+      <label class="filter-option"><input type="checkbox" value="Concepción" onchange="applyFilters()"> Concepción</label>
+      <label class="filter-option"><input type="checkbox" value="Remoto" onchange="applyFilters()"> Remoto</label>
+      <label class="filter-option"><input type="checkbox" value="Buenos Aires" onchange="applyFilters()"> Buenos Aires</label>
+      <label class="filter-option"><input type="checkbox" value="Bogotá" onchange="applyFilters()"> Bogotá</label>
+      <label class="filter-option"><input type="checkbox" value="Ciudad de México" onchange="applyFilters()"> Ciudad de México</label>
+    </div>
+
+    <div class="filter-card">
+      <h4>Busca colaborar en</h4>
+      <label class="filter-option"><input type="checkbox" value="startup" onchange="applyFilters()"> Startup</label>
+      <label class="filter-option"><input type="checkbox" value="freelance" onchange="applyFilters()"> Freelance</label>
+      <label class="filter-option"><input type="checkbox" value="cofounder" onchange="applyFilters()"> Cofundador/a</label>
+      <label class="filter-option"><input type="checkbox" value="empleo" onchange="applyFilters()"> Empleo</label>
+      <label class="filter-option"><input type="checkbox" value="mentor" onchange="applyFilters()"> Mentoría</label>
+      <label class="filter-option"><input type="checkbox" value="proyecto" onchange="applyFilters()"> Proyecto puntual</label>
+    </div>
+
+    <span class="clear-filters" onclick="clearAllFilters()">Limpiar filtros</span>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+
+    <!-- CHIP FILTERS (visible en mobile) -->
+    <div class="chip-row" id="chip-row">
+      <div class="chip active" onclick="setChip(this,'')">Todos</div>
+      <div class="chip" onclick="setChip(this,'Fundador')">Fundadores</div>
+      <div class="chip" onclick="setChip(this,'Desarrollador')">Devs</div>
+      <div class="chip" onclick="setChip(this,'Diseñador')">Diseño</div>
+      <div class="chip" onclick="setChip(this,'Marketing')">Marketing</div>
+      <div class="chip" onclick="setChip(this,'Producto')">Producto</div>
+      <div class="chip" onclick="setChip(this,'Inversionista')">Inversores</div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="result-count"><strong id="count-num">24</strong> perfiles encontrados</div>
+      <div class="sort-wrap">
+        Ordenar por
+        <select id="sort-select" onchange="applyFilters()">
+          <option value="match">Mayor match</option>
+          <option value="recent">Más recientes</option>
+          <option value="name">Nombre A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PROFILES GRID -->
+    <div class="profiles-grid" id="profiles-grid"></div>
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="empty-state" style="display:none">
+      <div class="ico">🔍</div>
+      <h3>Sin resultados</h3>
+      <p>Intenta con otros filtros o una búsqueda diferente.</p>
+      <a href="#" class="empty-cta" onclick="clearAllFilters();return false">Ver todos los perfiles</a>
+    </div>
+
+    <!-- LOAD MORE -->
+    <div class="load-more-wrap" id="load-more-wrap">
+      <button class="load-more-btn" onclick="loadMore()">Ver más perfiles</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a href="index.html" class="footer-brand">
+        <div class="footer-brand-mark">
+          <svg viewBox="0 0 20 20"><path d="M10 2L18 7V13L10 18L2 13V7L10 2Z"/><circle cx="10" cy="10" r="3" fill="#1a3a2a" opacity=".8"/></svg>
+        </div>
+        next<span style="color:var(--accent3)">work</span>
+      </a>
+      <p class="footer-tagline">La red de colaboración para el talento latinoamericano.</p>
+    </div>
+    <div class="footer-col"><h4>General</h4><ul>
+      <li><a href="crear-perfil.html">Registrarse</a></li>
+      <li><a href="dashboard.html">Iniciar sesión</a></li>
+      <li><a href="#">Centro de ayuda</a></li>
+      <li><a href="index.html#how">Acerca de</a></li>
+      <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="desarrolladores.html">Desarrolladores</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Navegar por Nextwork</h4><ul>
+      <li><a href="index.html#how">Cómo funciona</a></li>
+      <li><a href="index.html#match">Matching IA</a></li>
+      <li><a href="oportunidades.html">Oportunidades</a></li>
+      <li><a href="buscar.html">Buscar perfiles</a></li>
+      <li><a href="dashboard.html">Mi Dashboard</a></li>
+      <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Descubrir</h4><ul>
+      <li><a href="top-startups.html">Top Startups</a></li>
+      <li><a href="top-universidades.html">Top Universidades</a></li>
+      <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="#">Términos y condiciones</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script>
+/* ─── DATA: 24 mock profiles ─── */
+const PROFILES=[
+  {id:1,name:'Valentina Riquelme',role:'Fundadora & CEO',location:'Santiago',bio:'Construyendo Brotanda, marketplace de productos artesanales. Ex-Cornershop. Busco CTO técnico con experiencia en marketplaces.',skills:['Product','Startups','Growth'],collab:['startup','cofounder'],match:97,color:'#7c4dff',verified:true,featured:true,joined:'2026-01-15'},
+  {id:2,name:'Matías Herrera',role:'Full Stack Developer',location:'Santiago',bio:'5 años en React, Node.js y AWS. Actualmente freelance, open a co-fundador técnico en proyectos de impacto social.',skills:['React','Node.js','AWS'],collab:['cofounder','freelance'],match:94,color:'#1a3a2a',verified:true,featured:true,joined:'2026-01-20'},
+  {id:3,name:'Camila Torres',role:'UX/UI Designer',location:'Valparaíso',bio:'Diseñadora de producto con foco en UX research. He trabajado con startups en etapas tempranas y me apasiona la educación.',skills:['Figma','UX Research','Design Systems'],collab:['startup','proyecto'],match:91,color:'#e91e63',verified:true,joined:'2026-02-01'},
+  {id:4,name:'Ignacio Fuentes',role:'Growth Marketer',location:'Santiago',bio:'CMO en NotColab. Antes en Fintual. Experto en growth hacking, SEO y campañas de performance.',skills:['Growth','SEO','Performance'],collab:['empleo','startup'],match:88,color:'#ff6d00',verified:false,joined:'2026-02-10'},
+  {id:5,name:'Sofía Mendoza',role:'Estudiante de Ingeniería',location:'Santiago',bio:'Estudiante de Ingeniería Civil en Informática en la USACH. Busco mi primer proyecto real para aplicar lo que aprendí.',skills:['Python','Machine Learning','SQL'],collab:['proyecto','startup'],match:85,color:'#00897b',verified:false,joined:'2026-02-15'},
+  {id:6,name:'Rodrigo Castillo',role:'Inversionista Ángel',location:'Santiago',bio:'Invertí en más de 15 startups chilenas y latinoamericanas. Tickets seed entre USD 50K–200K. Busco fundadores con tracción.',skills:['Inversión','Fintech','EdTech'],collab:['startup','mentor'],match:83,color:'#455a64',verified:true,featured:true,joined:'2026-01-05'},
+  {id:7,name:'Francisca Alvarado',role:'Product Manager',location:'Remoto',bio:'PM con experiencia en banca digital y fintech. He liderado equipos de hasta 12 personas en lanzamientos de productos.',skills:['Product','Agile','Fintech'],collab:['empleo','startup'],match:81,color:'#6a1b9a',verified:true,joined:'2026-02-20'},
+  {id:8,name:'Diego Morales',role:'Fundador & CTO',location:'Concepción',bio:'Fundé dos startups en el sur de Chile. La segunda levantó USD 500K pre-seed. Ahora mentor y busco nuevos proyectos.',skills:['Backend','AWS','Startups'],collab:['mentor','cofounder'],match:79,color:'#2e7d32',verified:true,joined:'2026-01-25'},
+  {id:9,name:'Javiera Pérez',role:'Diseñadora de Marca',location:'Santiago',bio:'Especialista en branding para startups. He trabajado con más de 30 marcas. Portfolio en behance.net/javiera.',skills:['Branding','Illustrator','Naming'],collab:['freelance','proyecto'],match:77,color:'#c62828',verified:false,joined:'2026-03-01'},
+  {id:10,name:'Nicolás Soto',role:'Data Scientist',location:'Santiago',bio:'Ing. comercial + máster en data science. Actualmente en equipo de IA de Buk. Busco proyectos de impacto.',skills:['Python','ML','SQL'],collab:['startup','proyecto'],match:76,color:'#0277bd',verified:true,joined:'2026-03-05'},
+  {id:11,name:'Isidora Vega',role:'Marketing Manager',location:'Buenos Aires',bio:'10 años en marketing digital. Lideré campañas que generaron más de $2M USD en pipeline. Ex-Mercado Libre.',skills:['Marketing','Paid Media','CRM'],collab:['empleo','freelance'],match:74,color:'#558b2f',verified:true,joined:'2026-03-10'},
+  {id:12,name:'Felipe Rojas',role:'Desarrollador iOS',location:'Santiago',bio:'Desarrollador Swift senior con 6 años de experiencia. Apasionado por la IA aplicada a mobile.',skills:['Swift','iOS','CoreML'],collab:['empleo','startup'],match:72,color:'#4527a0',verified:false,joined:'2026-03-15'},
+  {id:13,name:'Paula Ibáñez',role:'Community Builder',location:'Bogotá',bio:'Construí comunidades de más de 50K miembros en LatAm. Me mueve conectar personas con propósito.',skills:['Community','Events','Content'],collab:['startup','proyecto'],match:70,color:'#d81b60',verified:true,joined:'2026-03-18'},
+  {id:14,name:'Tomás Navarro',role:'Estudiante de MBA',location:'Santiago',bio:'MBA en UAI. Ex-consultor en BCG. Busco proyecto emprendedor donde aplicar estrategia y operaciones.',skills:['Estrategia','Finanzas','Operaciones'],collab:['cofounder','startup'],match:69,color:'#37474f',verified:false,joined:'2026-03-20'},
+  {id:15,name:'Catalina Muñoz',role:'Desarrolladora Front-end',location:'Valparaíso',bio:'Especialista en Vue.js y animaciones CSS. Busco equipo en donde el diseño y código trabajen juntos.',skills:['Vue.js','CSS','Animación'],collab:['empleo','startup'],match:68,color:'#00838f',verified:false,joined:'2026-03-22'},
+  {id:16,name:'Andrés Lagos',role:'Fundador & CMO',location:'Santiago',bio:'Fundé Ruvid, plataforma de turismo rural. Ex-profesor universitario. Busco dev y diseñador para escalar.',skills:['Marketing','Turismo','Comunidades'],collab:['cofounder','startup'],match:66,color:'#bf360c',verified:true,joined:'2026-03-25'},
+  {id:17,name:'Renata Flores',role:'Diseñadora de Producto',location:'Ciudad de México',bio:'Lead designer en startup de healthtech. Me interesa trabajar en proyectos de impacto en LatAm.',skills:['Product Design','Figma','HealthTech'],collab:['empleo','startup'],match:65,color:'#ad1457',verified:true,joined:'2026-03-28'},
+  {id:18,name:'Bastián Contreras',role:'DevOps Engineer',location:'Remoto',bio:'Infraestructura cloud para startups en etapa temprana. Kubernetes, Terraform, CI/CD. Rates competitivos.',skills:['DevOps','Kubernetes','AWS'],collab:['freelance','startup'],match:63,color:'#1565c0',verified:false,joined:'2026-04-01'},
+  {id:19,name:'Marcela Espinoza',role:'Inversionista',location:'Santiago',bio:'Partner en fondo seed enfocado en Latam. Portafolio de 28 startups. Verticales: fintech, agritech, edtech.',skills:['VC','Startups','Impacto'],collab:['mentor','startup'],match:62,color:'#2e7d32',verified:true,featured:true,joined:'2026-01-10'},
+  {id:20,name:'Hernán Araya',role:'Desarrollador Backend',location:'Concepción',bio:'Go y Rust para sistemas de alta performance. Open a trabajo remoto y proyectos freelance interesantes.',skills:['Go','Rust','Microservicios'],collab:['empleo','freelance'],match:60,color:'#3e2723',verified:false,joined:'2026-04-05'},
+  {id:21,name:'Antonia Vera',role:'Content Strategist',location:'Santiago',bio:'Estrategia de contenido para startups B2B SaaS. He ayudado a reducir CAC hasta un 40% con contenido orgánico.',skills:['Content','SEO','SaaS'],collab:['freelance','empleo'],match:58,color:'#880e4f',verified:false,joined:'2026-04-08'},
+  {id:22,name:'Joaquín Silva',role:'Estudiante de Diseño',location:'Santiago',bio:'Estudiante en DUOC UC, último año. Busco práctica o proyecto real para completar mi portafolio.',skills:['Figma','Adobe XD','Ilustración'],collab:['proyecto','startup'],match:57,color:'#4e342e',verified:false,joined:'2026-04-10'},
+  {id:23,name:'Lorena Bravo',role:'Operations Manager',location:'Santiago',bio:'Escalo operaciones en startups. Llevé equipo de 3 a 40 personas en 18 meses. Ex-Buk.',skills:['Operaciones','RRHH','Procesos'],collab:['empleo','startup'],match:55,color:'#1a3a2a',verified:true,joined:'2026-04-12'},
+  {id:24,name:'Pablo Cárdenas',role:'Fundador Stealth',location:'Remoto',bio:'Construyendo algo en el espacio de legaltech. Ex-abogado. Busco dev full-stack y diseñador UX.',skills:['LegalTech','Startups','B2B'],collab:['cofounder','startup'],match:53,color:'#33691e',verified:false,joined:'2026-04-15'}
+];
+
+/* ─── STATE ─── */
+let query='';
+let activeChipRole='';
+let visibleCount=12;
+const PAGE_SIZE=6;
+
+/* ─── RENDER ─── */
+function renderCards(list){
+  const grid=document.getElementById('profiles-grid');
+  const empty=document.getElementById('empty-state');
+  const loadWrap=document.getElementById('load-more-wrap');
+  document.getElementById('count-num').textContent=list.length;
+
+  if(!list.length){
+    grid.innerHTML='';
+    empty.style.display='block';
+    loadWrap.style.display='none';
+    return;
+  }
+  empty.style.display='none';
+  const visible=list.slice(0,visibleCount);
+  loadWrap.style.display=visibleCount>=list.length?'none':'block';
+
+  grid.innerHTML=visible.map(p=>`
+    <div class="profile-card" onclick="goProfile('${p.name}')">
+      <div class="card-banner" style="background:linear-gradient(135deg,${p.color}cc,${p.color}88)">
+        ${p.featured?'<span class="featured-badge">⭐ Destacado</span>':''}
+        <div class="card-avatar-wrap">
+          <div class="card-avatar" style="background:${p.color}">
+            ${p.color?p.name.split(' ').map(n=>n[0]).slice(0,2).join(''):''}
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">
+          ${p.name}
+          ${p.verified?`<span class="verified-ico" title="Verificado"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>`:''}
+        </div>
+        <div class="card-role">${p.role} · ${p.location}</div>
+        <div class="card-bio">${p.bio}</div>
+        <div class="card-tags">
+          ${p.skills.map(s=>`<span class="ctag ctag-skill">${s}</span>`).join('')}
+        </div>
+        <div class="card-footer">
+          <div class="match-pct-pill"><span>🤝</span> ${p.match}% match</div>
+          <button class="connect-btn" onclick="event.stopPropagation();connectUser(this,'${p.name}')">Conectar</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── FILTER & SORT ─── */
+function getFiltered(){
+  const sortVal=document.getElementById('sort-select').value;
+  // checkboxes
+  const checkedRoles=[...document.querySelectorAll('.filter-card:nth-child(1) input:checked')].map(c=>c.value);
+  const checkedCities=[...document.querySelectorAll('.filter-card:nth-child(2) input:checked')].map(c=>c.value);
+  const checkedCollab=[...document.querySelectorAll('.filter-card:nth-child(3) input:checked')].map(c=>c.value);
+
+  let list=PROFILES.filter(p=>{
+    const q=query.toLowerCase();
+    const matchQ=!q||(
+      p.name.toLowerCase().includes(q)||
+      p.role.toLowerCase().includes(q)||
+      p.bio.toLowerCase().includes(q)||
+      p.location.toLowerCase().includes(q)||
+      p.skills.some(s=>s.toLowerCase().includes(q))
+    );
+    const matchRole=!activeChipRole&&!checkedRoles.length||
+      (activeChipRole&&p.role.includes(activeChipRole))||
+      checkedRoles.some(r=>p.role.includes(r));
+    const matchCity=!checkedCities.length||checkedCities.some(c=>p.location.includes(c));
+    const matchCollab=!checkedCollab.length||checkedCollab.some(c=>p.collab.includes(c));
+    return matchQ&&matchRole&&matchCity&&matchCollab;
+  });
+
+  if(sortVal==='match') list.sort((a,b)=>b.match-a.match);
+  else if(sortVal==='recent') list.sort((a,b)=>new Date(b.joined)-new Date(a.joined));
+  else if(sortVal==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  return list;
+}
+
+function applyFilters(){
+  visibleCount=PAGE_SIZE*2;
+  renderCards(getFiltered());
+}
+
+/* ─── SEARCH ─── */
+document.getElementById('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+function doSearch(){
+  query=document.getElementById('search-input').value.trim();
+  applyFilters();
+}
+
+/* ─── CHIP ─── */
+function setChip(el,role){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeChipRole=role;
+  applyFilters();
+}
+
+/* ─── CLEAR FILTERS ─── */
+function clearAllFilters(){
+  document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
+  document.getElementById('search-input').value='';
+  query='';
+  activeChipRole='';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.chip').classList.add('active');
+  applyFilters();
+}
+
+/* ─── LOAD MORE ─── */
+function loadMore(){
+  visibleCount+=PAGE_SIZE;
+  renderCards(getFiltered());
+}
+
+/* ─── CONNECT ─── */
+function connectUser(btn,name){
+  btn.classList.toggle('sent');
+  btn.textContent=btn.classList.contains('sent')?'Conectado ✓':'Conectar';
+  if(btn.classList.contains('sent')) showToast(`Solicitud enviada a ${name.split(' ')[0]}`);
+}
+
+/* ─── GO PROFILE ─── */
+function goProfile(name){
+  // In the future would go to that user's profile — for now open own profile as demo
+  window.location.href='perfil-publico.html';
+}
+
+/* ─── TOAST ─── */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ─── INIT ─── */
+renderCards(getFiltered());
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');const {data:{session}}=await sb.auth.getSession();const el=document.getElementById('nav-auth');if(!el||!session)return;const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();if(!p)return;const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;})();</script>
+</body>
+</html>

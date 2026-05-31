@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Dashboard · Nextwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream2);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.2rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;cursor:pointer;border:2px solid var(--accent3)}
+.nav-name{font-size:13.5px;font-weight:500;color:var(--ink)}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+
+/* NO PROFILE GATE */
+.gate{max-width:500px;margin:6rem auto;text-align:center;padding:2rem}
+.gate h2{font-family:'DM Serif Display',serif;font-size:2rem;margin-bottom:.8rem}
+.gate p{color:var(--ink2);margin-bottom:2rem}
+.gate-btn{display:inline-block;background:var(--accent);color:var(--glow);padding:12px 28px;border-radius:28px;font-size:15px;font-weight:500;transition:all .2s}
+.gate-btn:hover{background:var(--accent2);transform:translateY(-2px)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:280px 1fr 260px;gap:1.5rem;max-width:1200px;margin:0 auto;padding:2rem 1.5rem 5rem}
+
+/* SIDEBAR LEFT */
+.profile-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);overflow:hidden;margin-bottom:1rem}
+.profile-banner{height:70px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);position:relative}
+.profile-avatar-wrap{position:absolute;bottom:-24px;left:1.2rem}
+.profile-avatar{width:52px;height:52px;border-radius:50%;border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff}
+.profile-info{padding:2rem 1.2rem 1.2rem}
+.profile-name{font-weight:600;font-size:15.5px;margin-bottom:2px}
+.profile-role{font-size:13px;color:var(--ink3);margin-bottom:.8rem}
+.profile-loc{font-size:12.5px;color:var(--ink3);display:flex;align-items:center;gap:.3rem;margin-bottom:1rem}
+.profile-edit{display:block;text-align:center;padding:7px;border-radius:22px;border:1.5px solid var(--accent);color:var(--accent);font-size:13px;font-weight:500;transition:all .2s}
+.profile-edit:hover{background:var(--accent);color:var(--glow)}
+
+/* COMPLETION */
+.completion-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.2rem;margin-bottom:1rem}
+.completion-card h4{font-size:13px;font-weight:600;margin-bottom:.8rem;color:var(--ink)}
+.progress-bar{height:7px;background:var(--cream3);border-radius:4px;overflow:hidden;margin-bottom:.5rem}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent3));border-radius:4px;transition:width .6s ease}
+.completion-pct{font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:.8rem}
+.completion-items{display:flex;flex-direction:column;gap:.4rem}
+.comp-item{display:flex;align-items:center;gap:.5rem;font-size:12.5px;color:var(--ink3)}
+.comp-item.done{color:var(--accent2)}
+.comp-dot{width:6px;height:6px;border-radius:50%;background:var(--cream3);flex-shrink:0}
+.comp-item.done .comp-dot{background:var(--accent3)}
+
+/* STATS */
+.stats-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.2rem;margin-bottom:1rem}
+.stats-card h4{font-size:13px;font-weight:600;margin-bottom:.9rem}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--cream3);font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-val{font-weight:600;color:var(--accent2)}
+
+/* QUICK LINKS */
+.quick-links{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1rem}
+.quick-link{display:flex;align-items:center;gap:.7rem;padding:.5rem .6rem;border-radius:8px;font-size:13.5px;color:var(--ink2);transition:background .2s;cursor:pointer}
+.quick-link:hover{background:var(--cream2);color:var(--accent2)}
+.quick-link span{font-size:16px}
+
+/* MAIN CONTENT */
+.welcome-banner{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 60%,var(--accent3) 100%);border-radius:var(--r);padding:1.8rem 2rem;color:var(--glow2);margin-bottom:1.2rem;position:relative;overflow:hidden}
+.welcome-banner::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;background:rgba(200,240,216,.08);border-radius:50%}
+.welcome-banner h2{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--glow);margin-bottom:.3rem}
+.welcome-banner p{font-size:14px;color:rgba(232,247,239,.7)}
+.banner-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(200,240,216,.15);border:1px solid rgba(200,240,216,.25);padding:4px 10px;border-radius:14px;font-size:12px;color:var(--glow);margin-bottom:.6rem}
+
+/* SECTION */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-head h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.see-all{font-size:13px;color:var(--accent2);font-weight:500}
+.see-all:hover{text-decoration:underline}
+
+/* MATCH CARDS */
+.matches-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
+.match-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem;transition:box-shadow .2s,transform .2s;cursor:pointer}
+.match-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
+.match-header{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.7rem}
+.match-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.match-name{font-weight:600;font-size:14px;line-height:1.3}
+.match-role{font-size:12px;color:var(--ink3)}
+.match-pct{display:inline-flex;align-items:center;gap:.3rem;background:var(--glow2);color:var(--accent2);padding:3px 8px;border-radius:10px;font-size:11.5px;font-weight:600;margin-bottom:.6rem}
+.match-skills{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.8rem}
+.skill-tag{padding:2px 8px;background:var(--cream2);color:var(--ink2);border-radius:10px;font-size:11px}
+.match-btn{width:100%;padding:6px;border-radius:20px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.match-btn:hover,.match-btn.connected{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+/* OPP CARDS */
+.opp-list{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem}
+.opp-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem 1.3rem;display:flex;gap:1rem;align-items:flex-start;transition:box-shadow .2s}
+.opp-card:hover{box-shadow:0 3px 16px rgba(0,0,0,.06)}
+.opp-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.opp-info{flex:1;min-width:0}
+.opp-title{font-weight:600;font-size:14px;margin-bottom:2px}
+.opp-company{font-size:12.5px;color:var(--ink3);margin-bottom:.5rem}
+.opp-tags{display:flex;gap:.4rem;flex-wrap:wrap}
+.otag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.otag-s{background:var(--glow2);color:var(--accent2)}
+.otag-c{background:var(--cream2);color:var(--ink2)}
+.opp-action{flex-shrink:0}
+.btn-apply{padding:6px 14px;border-radius:18px;background:var(--accent);color:var(--glow);font-size:12.5px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .2s}
+.btn-apply:hover{background:var(--accent2)}
+
+/* RECENT POSTS */
+.mini-post{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem 1.3rem;margin-bottom:.8rem;transition:box-shadow .2s}
+.mini-post:hover{box-shadow:0 2px 14px rgba(0,0,0,.05)}
+.mini-post-header{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.mini-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.mini-name{font-weight:500;font-size:13.5px}
+.mini-role{font-size:12px;color:var(--ink3)}
+.mini-body{font-size:13px;color:var(--ink2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.6rem}
+.mini-engagement{display:flex;gap:1rem;font-size:12px;color:var(--ink3)}
+
+/* RIGHT SIDEBAR */
+.right-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.2rem;margin-bottom:1rem}
+.right-card h4{font-size:13.5px;font-weight:600;margin-bottom:.9rem}
+.activity-item{display:flex;align-items:flex-start;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--cream3);font-size:12.5px}
+.activity-item:last-child{border-bottom:none}
+.act-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.act-text{color:var(--ink2);line-height:1.4}
+.act-time{color:var(--ink3);font-size:11.5px;margin-top:1px}
+.tip-box{background:var(--glow2);border:1px solid rgba(77,158,114,.2);border-radius:var(--r);padding:1.1rem;margin-bottom:1rem}
+.tip-box h4{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:.6rem}
+.tip-box p{font-size:13px;color:var(--accent2);line-height:1.5}
+.tip-link{display:block;margin-top:.6rem;font-size:12.5px;color:var(--accent2);font-weight:500}
+.tip-link:hover{text-decoration:underline}
+.event-item{display:flex;gap:.8rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid var(--cream3);cursor:pointer}
+.event-item:last-child{border-bottom:none}
+.event-date{background:var(--accent);color:var(--glow);border-radius:8px;padding:.3rem .5rem;text-align:center;min-width:40px;flex-shrink:0}
+.event-day{font-weight:700;font-size:15px;line-height:1}
+.event-mon{font-size:10px;line-height:1.6;opacity:.8}
+.event-info .event-name{font-size:13px;font-weight:500;color:var(--ink)}
+.event-info .event-loc{font-size:12px;color:var(--ink3)}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--glow);padding:.7rem 1.4rem;border-radius:22px;font-size:13.5px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* FOOTER */
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand .logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+footer strong{color:rgba(255,255,255,.75)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+
+@media(max-width:1100px){.layout{grid-template-columns:250px 1fr}.right-sidebar{display:none}}
+@media(max-width:720px){.layout{grid-template-columns:1fr;padding:1.2rem 1rem 4rem}.matches-grid{grid-template-columns:1fr}.left-sidebar{order:-1}}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+    <span class="logo-word">Next<span>work</span></span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="oportunidades.html">Oportunidades</a>
+      <a href="publicaciones.html">Publicaciones</a>
+      <a href="top-startups.html">Top Startups</a>
+    </div>
+    <div id="nav-user" style="display:flex;align-items:center;gap:.6rem"></div>
+  </div>
+</nav>
+
+<div id="gate" style="display:none">
+  <div class="gate">
+    <div style="font-size:3rem;margin-bottom:1rem">🚀</div>
+    <h2>Tu dashboard te espera</h2>
+    <p>Crea tu perfil para ver tus matches, publicaciones y oportunidades recomendadas.</p>
+    <a href="crear-perfil.html" class="gate-btn">Crear mi perfil gratis →</a>
+  </div>
+</div>
+
+<div id="dashboard" style="display:none">
+  <div class="layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="left-sidebar">
+      <div class="profile-card">
+        <div class="profile-banner" id="banner-bg"></div>
+        <div style="position:relative;height:32px">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="dash-avatar"></div>
+          </div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="dash-name"></div>
+          <div class="profile-role" id="dash-role"></div>
+          <div class="profile-loc" id="dash-loc"></div>
+          <a href="crear-perfil.html" class="profile-edit">Editar perfil</a>
+        </div>
+      </div>
+
+      <div class="completion-card">
+        <h4>Completitud del perfil</h4>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+        <div class="completion-pct" id="prog-pct"></div>
+        <div class="completion-items" id="comp-items"></div>
+      </div>
+
+      <div class="stats-card">
+        <h4>Tu actividad</h4>
+        <div class="stat-row"><span>Visitas al perfil</span><span class="stat-val" id="stat-views">—</span></div>
+        <div class="stat-row"><span>Matches generados</span><span class="stat-val" id="stat-matches">—</span></div>
+        <div class="stat-row"><span>Oportunidades vistas</span><span class="stat-val" id="stat-opps">—</span></div>
+        <div class="stat-row"><span>Miembro desde</span><span class="stat-val" id="stat-since">—</span></div>
+      </div>
+
+      <div class="quick-links">
+        <a href="perfil-publico.html" class="quick-link" style="background:var(--glow2);color:var(--accent2);font-weight:500;margin-bottom:.3rem"><span>👤</span> Ver mi perfil público</a>
+        <a href="buscar.html" class="quick-link"><span>🔍</span> Buscar perfiles</a>
+        <a href="oportunidades.html" class="quick-link"><span>💼</span> Oportunidades</a>
+        <a href="publicaciones.html" class="quick-link"><span>💬</span> Publicaciones</a>
+        <a href="top-startups.html" class="quick-link"><span>🚀</span> Top Startups</a>
+        <a href="top-universidades.html" class="quick-link"><span>🎓</span> Top Universidades</a>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+      <div class="welcome-banner">
+        <div class="banner-tag">✨ Tu espacio en Nextwork</div>
+        <h2 id="welcome-msg">¡Bienvenido de vuelta!</h2>
+        <p>Tienes nuevos matches y oportunidades recomendadas basadas en tu perfil.</p>
+      </div>
+
+      <!-- MATCHES -->
+      <div class="section-head">
+        <h3>Tus matches de hoy</h3>
+        <a href="index.html#match" class="see-all">Ver todos →</a>
+      </div>
+      <div class="matches-grid" id="matches-grid"></div>
+
+      <!-- OPORTUNIDADES -->
+      <div class="section-head">
+        <h3>Oportunidades recomendadas</h3>
+        <a href="oportunidades.html" class="see-all">Ver todas →</a>
+      </div>
+      <div class="opp-list" id="opp-list"></div>
+
+      <!-- PUBLICACIONES -->
+      <div class="section-head">
+        <h3>De la comunidad</h3>
+        <a href="publicaciones.html" class="see-all">Ver más →</a>
+      </div>
+      <div id="posts-list"></div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="right-sidebar">
+
+      <div class="tip-box">
+        <h4>💡 Tip del día</h4>
+        <p id="tip-text"></p>
+        <a href="crear-perfil.html" class="tip-link">Completar perfil →</a>
+      </div>
+
+      <div class="right-card">
+        <h4>Actividad reciente</h4>
+        <div id="activity-list"></div>
+      </div>
+
+      <div class="right-card">
+        <h4>📅 Próximos eventos</h4>
+        <div class="event-item">
+          <div class="event-date"><div class="event-day">15</div><div class="event-mon">MAY</div></div>
+          <div class="event-info"><div class="event-name">Demo Day Platanus</div><div class="event-loc">Santiago · Presencial</div></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="event-day">22</div><div class="event-mon">MAY</div></div>
+          <div class="event-info"><div class="event-name">Hackathon IA Latam</div><div class="event-loc">Remoto</div></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="event-day">3</div><div class="event-mon">JUN</div></div>
+          <div class="event-info"><div class="event-name">Nextwork Meetup Santiago</div><div class="event-loc">Santiago · Presencial</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col"><h4>General</h4><ul>
+      <li><a href="crear-perfil.html">Registrarse</a></li>
+      <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+      <li><a href="index.html#faq">Centro de ayuda</a></li>
+      <li><a href="index.html#how">Acerca de</a></li>
+      <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="desarrolladores.html">Desarrolladores</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Navegar por Nextwork</h4><ul>
+      <li><a href="index.html#how">Cómo funciona</a></li>
+      <li><a href="index.html#match">Matching IA</a></li>
+      <li><a href="oportunidades.html">Oportunidades</a></li>
+      <li><a href="buscar.html">Buscar perfiles</a></li>
+      <li><a href="dashboard.html">Mi Dashboard</a></li>
+      <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Descubrir</h4><ul>
+      <li><a href="top-startups.html">Top Startups</a></li>
+      <li><a href="top-universidades.html">Top Universidades</a></li>
+      <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script>
+/* ── SUPABASE ── */
+const _sb=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+async function logout(){
+  await _sb.auth.signOut();
+  localStorage.removeItem('nw_profile');
+  window.location.href='index.html';
+}
+
+const TIPS = [
+  'Añade al menos 5 habilidades para aparecer en más búsquedas de matching.',
+  'Los perfiles con foto reciben 3x más conexiones. ¡Sube la tuya!',
+  'Comparte una publicación esta semana para aumentar tu visibilidad.',
+  'Postula a una oportunidad hoy — los mejores equipos se forman rápido.',
+  'Conecta tu LinkedIn para que otros puedan conocer tu trayectoria completa.',
+];
+
+const MATCHES = [
+  {av:'SC',c:'#1a3a2a',name:'Sofía Contreras',role:'Founder · MindPath',pct:94,skills:['Salud mental','Product','Growth']},
+  {av:'MR',c:'#1e4a8a',name:'Matías Rojas',role:'CTO · Rocketbot',pct:89,skills:['React','Node.js','IA']},
+  {av:'AL',c:'#4a1a5a',name:'Alejandra Luna',role:'UX Designer · Freelance',pct:85,skills:['Figma','UX','Branding']},
+  {av:'FN',c:'#6b3a1a',name:'Felipe Navarro',role:'Investor · Platanus',pct:82,skills:['Fundraising','Startups','VC']},
+];
+
+const OPPS = [
+  {icon:'🚀',bg:'#e8f7ef',title:'Co-fundador técnico para EdTech',company:'EduPath · Idea stage',tags:['Equity 15%','Remote','Urgente']},
+  {icon:'⚡',bg:'#fff3e0',title:'Diseñador UX para rediseño de marca',company:'Kredz · Fintech B2B',tags:['$900 USD','6 semanas','Figma']},
+  {icon:'🤝',bg:'#f0f4ff',title:'Productor de contenido · Podcast',company:'Latam Builders · Revenue share',tags:['Colaboración','Remoto','Audio']},
+];
+
+const POSTS = [
+  {av:'VR',c:'#1a4a3a',name:'Valentina Ríos',role:'Founder · GreenRoute',time:'hace 2h',body:'¡Llegamos a 1.000 usuarios activos esta semana! 🌱 Cuando lanzamos hace 4 meses no teníamos ni dominio. Hoy tenemos usuarios en 3 ciudades.',likes:567,comments:104},
+  {av:'JV',c:'#1a2a5a',name:'Jorge Valdés',role:'PM · Buk',time:'hace 5h',body:'5 cosas que aprendí en mi primer año como PM en una startup: 1. El roadmap es mentira hasta que está en producción...',likes:312,comments:68},
+];
+
+const ACTIVITY = [
+  {icon:'👁️',text:'3 personas vieron tu perfil',time:'hoy'},
+  {icon:'🤝',text:'Nuevo match: Matías Rojas',time:'hace 2h'},
+  {icon:'💼',text:'Oportunidad nueva: EdTech Co-founder',time:'hace 4h'},
+  {icon:'🌟',text:'Tu perfil está al 75%',time:'ayer'},
+];
+
+function getInitials(name){
+  if(!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function getColor(name){
+  const colors=['#1a3a2a','#1e4a8a','#4a1a5a','#6b3a1a','#1a4a4a','#2d6b4a','#3a2a1a'];
+  let h=0; for(let c of (name||'')) h=(h*31+c.charCodeAt(0))%colors.length;
+  return colors[h];
+}
+
+function calcCompletion(p){
+  const checks=[
+    {label:'Nombre y rol',done:!!(p.name&&p.role)},
+    {label:'Foto de perfil',done:!!p.photo},
+    {label:'Ubicación',done:!!p.location},
+    {label:'Habilidades',done:!!(p.skills&&p.skills.length>0)},
+    {label:'Bio / descripción',done:!!p.bio},
+    {label:'Email de contacto',done:!!p.email},
+    {label:'Tipo de colaboración',done:!!(p.collabTypes&&p.collabTypes.length>0)},
+  ];
+  const done=checks.filter(c=>c.done).length;
+  return {pct:Math.round((done/checks.length)*100),checks};
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function renderDashboard(p){
+  document.getElementById('dashboard').style.display='block';
+
+  /* NAV */
+  const initials=getInitials(p.name);
+  const color=getColor(p.name);
+  document.getElementById('nav-user').innerHTML=`
+    <span class="nav-name">${p.name||'Mi perfil'}</span>
+    <div class="nav-avatar" style="background:${color}" title="Mi perfil">${initials}</div>
+    <button onclick="logout()" style="background:none;border:1px solid var(--cream3);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--cream3)';this.style.color='var(--ink3)'">Salir</button>`;
+
+  /* PAGE TITLE */
+  document.title = `Dashboard · ${p.name||'Nextwork'}`;
+
+  /* BANNER */
+  const banner=document.getElementById('banner-bg');
+  if(p.banner) banner.style.backgroundImage=`url(${p.banner})`, banner.style.backgroundSize='cover';
+
+  /* AVATAR */
+  const av=document.getElementById('dash-avatar');
+  av.style.background=color;
+  if(p.photo){av.style.backgroundImage=`url(${p.photo})`;av.style.backgroundSize='cover';av.textContent='';}
+  else av.textContent=initials;
+
+  /* INFO */
+  document.getElementById('dash-name').textContent=p.name||'—';
+  document.getElementById('dash-role').textContent=p.role||'—';
+  document.getElementById('dash-loc').innerHTML=p.location?`📍 ${p.location}`:'';
+
+  /* WELCOME */
+  const hour=new Date().getHours();
+  const greeting=hour<12?'¡Buenos días':hour<18?'¡Buenas tardes':'¡Buenas noches';
+  document.getElementById('welcome-msg').textContent=`${greeting}, ${(p.name||'').split(' ')[0]}!`;
+
+  /* COMPLETION */
+  const {pct,checks}=calcCompletion(p);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'% completado';
+  document.getElementById('comp-items').innerHTML=checks.map(c=>`
+    <div class="comp-item${c.done?' done':''}">
+      <div class="comp-dot"></div>${c.label}${c.done?' ✓':''}
+    </div>`).join('');
+
+  /* STATS */
+  document.getElementById('stat-views').textContent=Math.floor(Math.random()*40+10);
+  document.getElementById('stat-matches').textContent=Math.floor(Math.random()*15+4);
+  document.getElementById('stat-opps').textContent=Math.floor(Math.random()*8+2);
+  document.getElementById('stat-since').textContent='Mayo 2026';
+
+  /* TIP */
+  document.getElementById('tip-text').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
+
+  /* MATCHES */
+  document.getElementById('matches-grid').innerHTML=MATCHES.map((m,i)=>`
+    <div class="match-card">
+      <div class="match-header">
+        <div class="match-av" style="background:${m.c}">${m.av}</div>
+        <div><div class="match-name">${m.name}</div><div class="match-role">${m.role}</div></div>
+      </div>
+      <div class="match-pct">⚡ ${m.pct}% match</div>
+      <div class="match-skills">${m.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+      <button class="match-btn" id="mbtn-${i}" onclick="connectMatch(${i},'${m.name}')">Conectar</button>
+    </div>`).join('');
+
+  /* OPPS */
+  document.getElementById('opp-list').innerHTML=OPPS.map(o=>`
+    <div class="opp-card">
+      <div class="opp-icon" style="background:${o.bg}">${o.icon}</div>
+      <div class="opp-info">
+        <div class="opp-title">${o.title}</div>
+        <div class="opp-company">${o.company}</div>
+        <div class="opp-tags">${o.tags.map(t=>`<span class="otag otag-s">${t}</span>`).join('')}</div>
+      </div>
+      <div class="opp-action"><button class="btn-apply" onclick="showToast('🔒 Disponible en la beta — ¡ya casi!')">Postular</button></div>
+    </div>`).join('');
+
+  /* POSTS */
+  document.getElementById('posts-list').innerHTML=POSTS.map(p=>`
+    <div class="mini-post">
+      <div class="mini-post-header">
+        <div class="mini-av" style="background:${p.c}">${p.av}</div>
+        <div><div class="mini-name">${p.name}</div><div class="mini-role">${p.role} · ${p.time}</div></div>
+      </div>
+      <div class="mini-body">${p.body}</div>
+      <div class="mini-engagement"><span>👍 ${p.likes}</span><span>💬 ${p.comments}</span></div>
+    </div>`).join('');
+
+  /* ACTIVITY */
+  document.getElementById('activity-list').innerHTML=ACTIVITY.map(a=>`
+    <div class="activity-item">
+      <div class="act-icon">${a.icon}</div>
+      <div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>
+    </div>`).join('');
+}
+
+/* ── INIT ── */
+(async()=>{
+  const {data:{session}}=await _sb.auth.getSession();
+  if(session){
+    const {data:p}=await _sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(p){
+      localStorage.setItem('nw_profile',JSON.stringify(p));
+      renderDashboard(p);
+      return;
+    }
+  }
+  /* fallback localStorage */
+  const local=JSON.parse(localStorage.getItem('nw_profile')||'null');
+  if(local&&local.name){
+    renderDashboard(local);
+  } else {
+    document.getElementById('gate').style.display='block';
+    document.getElementById('nav-user').innerHTML=`<a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>`;
+  }
+})();
+
+function connectMatch(i, name){
+  const btn=document.getElementById('mbtn-'+i);
+  if(btn.classList.contains('connected')){
+    showToast('Ya estás conectado con '+name);
+    return;
+  }
+  btn.classList.add('connected');
+  btn.textContent='✓ Conectado';
+  showToast('🤝 ¡Conectaste con '+name+'!');
+}
+</script>
+</body>
+</html>

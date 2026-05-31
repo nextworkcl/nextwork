@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Startups · Nextwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif}
+.nav-cta:hover{background:var(--accent2)}
+
+.page-hero{background:var(--accent);color:var(--glow2);padding:3.5rem 2.5rem 3rem;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:340px;height:340px;background:rgba(200,240,216,.05);border-radius:50%}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(200,240,216,.12);color:var(--glow);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:1.2rem;border:1px solid rgba(200,240,216,.2)}
+.page-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3rem);color:var(--glow);line-height:1.15;margin-bottom:.8rem}
+.page-hero p{color:rgba(232,247,239,.7);max-width:560px;font-size:15px;margin-bottom:1.5rem}
+.hero-meta{display:flex;gap:2.5rem;flex-wrap:wrap}
+.hero-meta div strong{color:var(--glow);font-size:16px;display:block;font-weight:600}
+.hero-meta div span{font-size:12px;color:rgba(232,247,239,.5)}
+
+.top-bar{background:var(--surface);border-bottom:1px solid var(--cream3);padding:.8rem 2.5rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;position:sticky;top:62px;z-index:90}
+.filter-label{font-size:12.5px;color:var(--ink3);font-weight:500;margin-right:.3rem}
+.fchip{padding:5px 14px;border-radius:20px;font-size:13px;border:1px solid var(--cream3);background:var(--cream2);color:var(--ink2);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.fchip.active,.fchip:hover{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+.main{max-width:800px;margin:0 auto;padding:2.5rem 2rem 5rem}
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.list-header h2{font-family:'DM Serif Display',serif;font-size:1.5rem}
+.list-header span{font-size:13px;color:var(--ink3)}
+
+.info-box{background:var(--glow2);border:1px solid rgba(77,158,114,.2);border-radius:var(--r);padding:1rem 1.4rem;margin-bottom:2rem;font-size:13.5px;color:var(--accent2);display:flex;gap:.8rem;align-items:flex-start;line-height:1.5}
+
+.startup-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.4rem 1.6rem;display:flex;gap:1.2rem;margin-bottom:.9rem;transition:box-shadow .2s,transform .2s;cursor:default}
+.startup-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.07);transform:translateY(-2px)}
+.rank-num{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--cream3);min-width:34px;text-align:center;padding-top:2px;line-height:1;user-select:none}
+.startup-logo{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;letter-spacing:-.3px}
+.startup-info{flex:1;min-width:0}
+.startup-name{font-weight:600;font-size:15.5px;margin-bottom:2px}
+.startup-tagline{font-size:13px;color:var(--ink3);margin-bottom:.6rem}
+.tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
+.tag{padding:3px 10px;border-radius:12px;font-size:11.5px;font-weight:500}
+.tag-s{background:var(--glow2);color:var(--accent2)}
+.tag-l{background:var(--cream2);color:var(--ink2)}
+.tag-r{background:#eef2ff;color:#3b5bdb}
+.startup-desc{font-size:13px;color:var(--ink2);line-height:1.55}
+.startup-side{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;flex-shrink:0;padding-top:4px}
+.btn-follow{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.btn-follow:hover,.btn-follow.on{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.team-pill{font-size:11.5px;color:var(--ink3)}
+
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand .logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+footer strong{color:rgba(255,255,255,.75)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:640px){.startup-card{flex-wrap:wrap}.startup-side{flex-direction:row;align-items:center}.top-bar,.main,.page-hero{padding-left:1.2rem;padding-right:1.2rem}.nav-links{display:none}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+    <span class="logo-word">Next<span>work</span></span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="oportunidades.html">Oportunidades</a>
+      <a href="publicaciones.html">Publicaciones</a>
+      <a href="top-universidades.html">Universidades</a>
+    </div>
+    <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-tag">🚀 Nextwork · 2026</div>
+  <h1>Top Startups<br>Chile &amp; Latam</h1>
+  <p>Las 10 startups emergentes más destacadas del ecosistema latinoamericano. Rankeadas por tracción, impacto y oportunidades de colaboración.</p>
+  <div class="hero-meta">
+    <div><strong>10</strong><span>Startups seleccionadas</span></div>
+    <div><strong>6</strong><span>Sectores representados</span></div>
+    <div><strong>Mayo 2026</strong><span>Última actualización</span></div>
+  </div>
+</div>
+
+<div class="top-bar">
+  <span class="filter-label">Filtrar:</span>
+  <button class="fchip active" onclick="setFilter('todos',this)">Todos</button>
+  <button class="fchip" onclick="setFilter('Fintech',this)">Fintech</button>
+  <button class="fchip" onclick="setFilter('FoodTech',this)">FoodTech</button>
+  <button class="fchip" onclick="setFilter('HR Tech',this)">HR Tech</button>
+  <button class="fchip" onclick="setFilter('PropTech',this)">PropTech</button>
+  <button class="fchip" onclick="setFilter('IA',this)">IA &amp; Automatización</button>
+  <button class="fchip" onclick="setFilter('AgriTech',this)">AgriTech</button>
+</div>
+
+<main class="main">
+  <div class="info-box">
+    ℹ️ &nbsp;El ranking se basa en crecimiento de equipo, tracción de usuarios, rondas de inversión recientes y presencia activa en el ecosistema Nextwork. Se actualiza trimestralmente.
+  </div>
+  <div class="list-header">
+    <h2>Ranking 2026</h2>
+    <span id="count-lbl">10 startups</span>
+  </div>
+  <div id="list"></div>
+</main>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col"><h4>General</h4><ul>
+      <li><a href="crear-perfil.html">Registrarse</a></li>
+      <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+      <li><a href="index.html#faq">Centro de ayuda</a></li>
+      <li><a href="index.html#how">Acerca de</a></li>
+      <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="desarrolladores.html">Desarrolladores</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Navegar por Nextwork</h4><ul>
+      <li><a href="index.html#how">Cómo funciona</a></li>
+      <li><a href="index.html#match">Matching IA</a></li>
+      <li><a href="oportunidades.html">Oportunidades</a></li>
+      <li><a href="buscar.html">Buscar perfiles</a></li>
+      <li><a href="dashboard.html">Mi Dashboard</a></li>
+      <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Descubrir</h4><ul>
+      <li><a href="top-startups.html">Top Startups</a></li>
+      <li><a href="top-universidades.html">Top Universidades</a></li>
+      <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script>
+const DATA = [
+  {rank:1,i:'FT',c:'#1a3a2a',name:'Fintual',tag:'Inversiones simples para personas reales',sector:'Fintech',loc:'Santiago · Miami',stage:'Series B',team:'50–100 personas',desc:'La plataforma de inversión más accesible de Chile y México. Más de 200.000 usuarios invierten en fondos mutuos gestionados por IA desde $1.',on:false},
+  {rank:2,i:'NC',c:'#2d5f2a',name:'NotCo',tag:'Alimentos del futuro con inteligencia artificial',sector:'FoodTech',loc:'Santiago · Nueva York',stage:'Series D',team:'500+ personas',desc:'Usa IA generativa para crear alimentos de origen vegetal que replican el sabor, textura y olor de productos animales. Presente en 10 países.',on:false},
+  {rank:3,i:'BF',c:'#1e4a8a',name:'Betterfly',tag:'Bienestar corporativo que impacta al mundo',sector:'HR Tech',loc:'Santiago · Bogotá',stage:'Series C',team:'200–500 personas',desc:'Plataforma de beneficios para empleados que conecta salud, bienestar y propósito social. Por cada meta cumplida, se dona a una causa.',on:false},
+  {rank:4,i:'XP',c:'#6b3a1a',name:'Xepelin',tag:'Capital de trabajo para pymes en 24 horas',sector:'Fintech',loc:'Santiago · CDMX',stage:'Series B',team:'100–200 personas',desc:'Financiamiento ágil para pequeñas empresas mediante anticipos de facturas y crédito inmediato. Ha desembolsado más de $500M USD en la región.',on:false},
+  {rank:5,i:'BK',c:'#1a3a5a',name:'Buk',tag:'El software de RRHH que aman los equipos',sector:'HR Tech',loc:'Santiago · Lima · Bogotá',stage:'Series B',team:'200–500 personas',desc:'Suite completa de gestión de personas: remuneraciones, asistencia, desempeño y cultura. Más de 1.500 empresas en 5 países latinoamericanos.',on:false},
+  {rank:6,i:'CP',c:'#4a1a6b',name:'Cumplo',tag:'Financiamiento colectivo para empresas',sector:'Fintech',loc:'Santiago · CDMX',stage:'Series A',team:'50–100 personas',desc:'Plataforma P2P que conecta empresas que necesitan capital con inversionistas que buscan rendimientos superiores al mercado tradicional.',on:false},
+  {rank:7,i:'HM',c:'#1a4a4a',name:'Houm',tag:'Arrienda y compra propiedades sin estrés',sector:'PropTech',loc:'Santiago · Bogotá · CDMX',stage:'Series A',team:'100–200 personas',desc:'Digitaliza el proceso de arriendo y compraventa de propiedades con garantía de pago, gestión 100% online y contratos inteligentes.',on:false},
+  {rank:8,i:'PV',c:'#3a2a1a',name:'Platanus Ventures',tag:'El mejor lugar para comenzar tu startup',sector:'VC',loc:'Santiago',stage:'Fondo activo',team:'20–50 personas',desc:'Aceleradora y fondo de inversión enfocado en startups tecnológicas latinoamericanas en etapa temprana. Más de 60 startups en portafolio.',on:false},
+  {rank:9,i:'RB',c:'#1a2a4a',name:'Rocketbot',tag:'Automatización inteligente para empresas',sector:'IA',loc:'Santiago · Lima',stage:'Seed',team:'20–50 personas',desc:'Plataforma RPA con IA que automatiza procesos repetitivos. Sus bots trabajan 24/7 en más de 300 empresas de la región.',on:false},
+  {rank:10,i:'IC',c:'#2a4a1a',name:'Instacrops',tag:'Agricultura de precisión con IoT y datos',sector:'AgriTech',loc:'Talca · Santiago',stage:'Seed',team:'10–20 personas',desc:'Sensores y plataforma de datos que ayudan a agricultores a optimizar el riego y predecir enfermedades de cultivos con modelos de IA.',on:false},
+];
+
+let filter='todos';
+
+function setFilter(f,el){
+  filter=f;
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function toggle(rank){
+  DATA.find(x=>x.rank===rank).on^=1;
+  render();
+}
+
+function render(){
+  const list=filter==='todos'?DATA:DATA.filter(s=>s.sector===filter);
+  document.getElementById('count-lbl').textContent=list.length+' startup'+(list.length!==1?'s':'');
+  document.getElementById('list').innerHTML=list.map(s=>`
+    <div class="startup-card">
+      <div class="rank-num">${s.rank}</div>
+      <div class="startup-logo" style="background:${s.c}">${s.i}</div>
+      <div class="startup-info">
+        <div class="startup-name">${s.name}</div>
+        <div class="startup-tagline">${s.tag}</div>
+        <div class="tags">
+          <span class="tag tag-s">${s.sector}</span>
+          <span class="tag tag-l">📍 ${s.loc}</span>
+          <span class="tag tag-r">${s.stage}</span>
+        </div>
+        <div class="startup-desc">${s.desc}</div>
+      </div>
+      <div class="startup-side">
+        <button class="btn-follow${s.on?' on':''}" onclick="toggle(${s.rank})">${s.on?'✓ Siguiendo':'+ Seguir'}</button>
+        <div class="team-pill">👥 ${s.team}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+render();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');const {data:{session}}=await sb.auth.getSession();const el=document.getElementById('nav-auth');if(!el||!session)return;const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();if(!p)return;const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;})();</script>
+</body>
+</html>

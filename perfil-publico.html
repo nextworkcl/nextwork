@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil · Nextwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream2);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s}
+.nav-cta:hover{background:var(--accent2)}
+
+/* GATE */
+.gate{max-width:480px;margin:6rem auto;text-align:center;padding:2rem}
+.gate h2{font-family:'DM Serif Display',serif;font-size:2rem;margin-bottom:.8rem}
+.gate p{color:var(--ink2);margin-bottom:2rem;font-size:15px}
+.gate-btn{display:inline-block;background:var(--accent);color:var(--glow);padding:12px 28px;border-radius:28px;font-size:15px;font-weight:500;transition:all .2s}
+.gate-btn:hover{background:var(--accent2);transform:translateY(-2px)}
+
+/* LAYOUT */
+.page-wrap{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.profile-grid{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start}
+
+/* MAIN COLUMN */
+/* HERO CARD */
+.hero-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);overflow:hidden;margin-bottom:1.2rem}
+.hero-banner{height:160px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 60%,var(--accent3) 100%);position:relative;overflow:hidden}
+.hero-banner::after{content:'';position:absolute;right:-40px;bottom:-40px;width:200px;height:200px;background:rgba(200,240,216,.08);border-radius:50%}
+.hero-banner-img{width:100%;height:100%;object-fit:cover}
+.hero-body{padding:0 2rem 1.8rem;position:relative}
+.avatar-wrap{position:absolute;top:-52px;left:2rem}
+.avatar-circle{width:104px;height:104px;border-radius:50%;border:4px solid var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:32px;color:#fff;background:var(--accent);overflow:hidden;flex-shrink:0}
+.avatar-circle img{width:100%;height:100%;object-fit:cover}
+.hero-actions{display:flex;justify-content:flex-end;gap:.8rem;padding-top:1rem;margin-bottom:3.5rem}
+.btn-share{display:flex;align-items:center;gap:.5rem;padding:8px 18px;border-radius:22px;border:1.5px solid var(--cream3);background:var(--surface);color:var(--ink2);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-share:hover{border-color:var(--accent3);color:var(--accent2)}
+.btn-edit{display:flex;align-items:center;gap:.5rem;padding:8px 18px;border-radius:22px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-edit:hover{background:var(--accent);color:var(--glow)}
+.hero-name{font-family:'DM Serif Display',serif;font-size:1.8rem;line-height:1.2;margin-bottom:.3rem}
+.hero-role{font-size:15px;color:var(--ink2);margin-bottom:.5rem}
+.hero-loc{font-size:13.5px;color:var(--ink3);display:flex;align-items:center;gap:.3rem;margin-bottom:1rem}
+.status-badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.status-badge{padding:5px 12px;border-radius:20px;font-size:12.5px;font-weight:500;border:1px solid}
+.badge-trabajo{background:#fff3e0;color:#b45309;border-color:#fed7aa}
+.badge-cofundador{background:var(--glow2);color:var(--accent2);border-color:rgba(77,158,114,.3)}
+.badge-proyecto{background:#f0f4ff;color:#3b5bdb;border-color:#c7d2fe}
+.badge-networking{background:#fdf4ff;color:#7c3aed;border-color:#e9d5ff}
+.badge-mentoria{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+.hero-links{display:flex;gap:1rem;flex-wrap:wrap}
+.hero-link{display:flex;align-items:center;gap:.4rem;font-size:13px;color:var(--accent2);font-weight:500;transition:opacity .2s}
+.hero-link:hover{opacity:.7}
+.hero-link svg{width:15px;height:15px;fill:currentColor}
+
+/* SECTIONS */
+.profile-section{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.5rem 1.8rem;margin-bottom:1rem}
+.section-title{font-weight:600;font-size:16px;margin-bottom:1rem;color:var(--ink);display:flex;align-items:center;gap:.5rem}
+.section-title span{font-size:18px}
+.bio-text{font-size:14.5px;color:var(--ink2);line-height:1.7;white-space:pre-line}
+.skills-wrap{display:flex;flex-wrap:wrap;gap:.5rem}
+.skill{padding:6px 14px;background:var(--glow2);color:var(--accent2);border-radius:20px;font-size:13px;font-weight:500;border:1px solid rgba(77,158,114,.2);transition:all .2s}
+.skill:hover{background:var(--accent);color:var(--glow)}
+.offer-text{font-size:14px;color:var(--ink2);line-height:1.65;background:var(--cream2);padding:1rem 1.2rem;border-radius:10px;border-left:3px solid var(--accent3)}
+.collab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
+.collab-chip{padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;border:1.5px solid var(--cream3);color:var(--ink2);background:var(--cream2);text-align:center}
+.collab-chip.active{background:var(--glow2);color:var(--accent2);border-color:rgba(77,158,114,.3)}
+.avail-wrap{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.avail-chip{padding:4px 12px;border-radius:14px;font-size:12.5px;border:1px solid var(--cream3);color:var(--ink3);background:var(--cream2)}
+.avail-chip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.vision-text{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ink);line-height:1.6;font-style:italic}
+.hobbies-wrap{display:flex;flex-wrap:wrap;gap:.5rem}
+.hobby{padding:5px 12px;background:var(--cream2);color:var(--ink2);border-radius:14px;font-size:13px;border:1px solid var(--cream3)}
+
+/* SIDEBAR */
+.contact-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.5rem;margin-bottom:1rem;text-align:center}
+.contact-card h3{font-weight:600;font-size:15px;margin-bottom:.4rem}
+.contact-card p{font-size:13px;color:var(--ink3);margin-bottom:1.2rem}
+.btn-contact{display:block;width:100%;padding:11px;border-radius:24px;background:var(--accent);color:var(--glow);font-size:14px;font-weight:500;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-bottom:.7rem}
+.btn-contact:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-contact-outline{display:block;width:100%;padding:10px;border-radius:24px;background:transparent;color:var(--accent);font-size:14px;font-weight:500;border:1.5px solid var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-contact-outline:hover{background:var(--glow2)}
+
+.match-card{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);border-radius:var(--r);padding:1.5rem;margin-bottom:1rem;color:var(--glow2);text-align:center}
+.match-card h4{font-size:13px;opacity:.7;margin-bottom:.5rem;font-weight:400}
+.match-pct{font-family:'DM Serif Display',serif;font-size:3rem;color:var(--glow);line-height:1;margin-bottom:.3rem}
+.match-label{font-size:13px;opacity:.75;margin-bottom:1.2rem}
+.match-bar{height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin-bottom:.5rem}
+.match-bar-fill{height:100%;background:var(--glow);border-radius:4px;transition:width 1s ease}
+.match-attrs{display:flex;flex-direction:column;gap:.4rem;margin-top:.8rem;text-align:left}
+.match-attr{display:flex;align-items:center;gap:.5rem;font-size:12.5px;opacity:.8}
+.match-attr-dot{width:6px;height:6px;border-radius:50%;background:var(--glow);flex-shrink:0}
+
+.sidebar-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.3rem;margin-bottom:1rem}
+.sidebar-card h4{font-size:13.5px;font-weight:600;margin-bottom:.9rem}
+.suggested-user{display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--cream3);cursor:pointer}
+.suggested-user:last-child{border-bottom:none}
+.sug-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.sug-name{font-size:13px;font-weight:500}
+.sug-role{font-size:11.5px;color:var(--ink3)}
+.sug-follow{margin-left:auto;font-size:12px;color:var(--accent2);font-weight:500;white-space:nowrap}
+.sug-follow:hover{text-decoration:underline}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:var(--glow);padding:.7rem 1.4rem;border-radius:22px;font-size:13.5px;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FOOTER */
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand .logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+footer strong{color:rgba(255,255,255,.75)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:720px){.profile-grid{grid-template-columns:1fr}.nav-links{display:none}.hero-banner{height:110px}.page-wrap{padding:1.2rem 1rem 4rem}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}.hero-actions{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+    <span class="logo-word">Next<span>work</span></span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="oportunidades.html">Oportunidades</a>
+      <a href="publicaciones.html">Publicaciones</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <div id="nav-user"></div>
+  </div>
+</nav>
+
+<!-- GATE: no profile -->
+<div id="gate" style="display:none">
+  <div class="gate">
+    <div style="font-size:3rem;margin-bottom:1rem">👤</div>
+    <h2>Crea tu perfil público</h2>
+    <p>Tu perfil es tu carta de presentación en Nextwork. Aparece en búsquedas, matches y resultados de la comunidad.</p>
+    <a href="crear-perfil.html" class="gate-btn">Crear mi perfil gratis →</a>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile-page" style="display:none">
+  <div class="page-wrap">
+    <div class="profile-grid">
+
+      <!-- LEFT: MAIN CONTENT -->
+      <div>
+        <!-- HERO -->
+        <div class="hero-card">
+          <div class="hero-banner" id="hero-banner"></div>
+          <div class="hero-body">
+            <div class="avatar-wrap">
+              <div class="avatar-circle" id="hero-avatar"></div>
+            </div>
+            <div class="hero-actions">
+              <button class="btn-share" onclick="shareProfile()">
+                <svg viewBox="0 0 20 20" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Compartir
+              </button>
+              <a href="crear-perfil.html"><button class="btn-edit">✏️ Editar perfil</button></a>
+            </div>
+            <div class="hero-name" id="hero-name"></div>
+            <div class="hero-role" id="hero-role"></div>
+            <div class="hero-loc" id="hero-loc"></div>
+            <div class="status-badges" id="status-badges"></div>
+            <div class="hero-links" id="hero-links"></div>
+          </div>
+        </div>
+
+        <!-- ABOUT -->
+        <div class="profile-section" id="section-bio" style="display:none">
+          <div class="section-title"><span>👤</span> Acerca de</div>
+          <div class="bio-text" id="bio-text"></div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="profile-section" id="section-skills" style="display:none">
+          <div class="section-title"><span>⚡</span> Habilidades</div>
+          <div class="skills-wrap" id="skills-wrap"></div>
+        </div>
+
+        <!-- OFFER -->
+        <div class="profile-section" id="section-offer" style="display:none">
+          <div class="section-title"><span>🎯</span> Lo que ofrezco</div>
+          <div class="offer-text" id="offer-text"></div>
+        </div>
+
+        <!-- COLLAB -->
+        <div class="profile-section" id="section-collab" style="display:none">
+          <div class="section-title"><span>🤝</span> Busco colaborar en</div>
+          <div class="collab-grid" id="collab-grid"></div>
+          <div class="avail-wrap" id="avail-wrap"></div>
+        </div>
+
+        <!-- VISION -->
+        <div class="profile-section" id="section-vision" style="display:none">
+          <div class="section-title"><span>🌎</span> Mi visión</div>
+          <div class="vision-text" id="vision-text"></div>
+        </div>
+
+        <!-- HOBBIES -->
+        <div class="profile-section" id="section-hobbies" style="display:none">
+          <div class="section-title"><span>🎨</span> Intereses y hobbies</div>
+          <div class="hobbies-wrap" id="hobbies-wrap"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: SIDEBAR -->
+      <div>
+        <!-- CONTACT -->
+        <div class="contact-card">
+          <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
+          <h3>¿Quieres conectar?</h3>
+          <p>Envía un mensaje directo o postula a colaborar juntos</p>
+          <button class="btn-contact" onclick="contactar()">Enviar mensaje</button>
+          <button class="btn-contact-outline" onclick="showToast('🔒 Disponible en la beta — ¡ya casi!')">Proponer colaboración</button>
+        </div>
+
+        <!-- MATCH -->
+        <div class="match-card" id="match-card">
+          <h4>Compatibilidad contigo</h4>
+          <div class="match-pct" id="match-pct">—</div>
+          <div class="match-label">de afinidad</div>
+          <div class="match-bar"><div class="match-bar-fill" id="match-bar-fill" style="width:0%"></div></div>
+          <div class="match-attrs" id="match-attrs"></div>
+        </div>
+
+        <!-- SUGGESTED -->
+        <div class="sidebar-card">
+          <h4>Perfiles similares</h4>
+          <div id="suggested-list"></div>
+        </div>
+
+        <!-- NEXTWORK CTA -->
+        <div style="background:var(--glow2);border:1px solid rgba(77,158,114,.2);border-radius:var(--r);padding:1.3rem;text-align:center">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">🚀</div>
+          <div style="font-weight:600;font-size:14px;color:var(--accent);margin-bottom:.4rem">¿Eres de Nextwork?</div>
+          <div style="font-size:13px;color:var(--accent2);margin-bottom:1rem">Crea tu perfil y aparece en los matches de la comunidad</div>
+          <a href="crear-perfil.html" style="display:block;background:var(--accent);color:var(--glow);padding:9px;border-radius:20px;font-size:13px;font-weight:500;transition:all .2s">Unirme gratis →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col"><h4>General</h4><ul>
+      <li><a href="crear-perfil.html">Registrarse</a></li>
+      <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+      <li><a href="index.html#faq">Centro de ayuda</a></li>
+      <li><a href="index.html#how">Acerca de</a></li>
+      <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="desarrolladores.html">Desarrolladores</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Navegar por Nextwork</h4><ul>
+      <li><a href="index.html#how">Cómo funciona</a></li>
+      <li><a href="index.html#match">Matching IA</a></li>
+      <li><a href="oportunidades.html">Oportunidades</a></li>
+      <li><a href="buscar.html">Buscar perfiles</a></li>
+      <li><a href="dashboard.html">Mi Dashboard</a></li>
+      <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+    </ul></div>
+    <div class="footer-col"><h4>Descubrir</h4><ul>
+      <li><a href="top-startups.html">Top Startups</a></li>
+      <li><a href="top-universidades.html">Top Universidades</a></li>
+      <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script>
+const profile = JSON.parse(localStorage.getItem('nw_profile') || 'null');
+
+const COLLAB_LABELS = {
+  cofundador:'🚀 Co-fundador', proyecto:'💡 Proyecto puntual',
+  freelance:'⚡ Freelance', mentoria:'🧠 Mentoría',
+  inversor:'💰 Inversor / Advisor', comunidad:'🤝 Comunidad'
+};
+
+const AVAIL_LABELS = {
+  'tiempo-completo':'Tiempo completo','medio-tiempo':'Medio tiempo',
+  'fines-semana':'Fines de semana','remoto':'Remoto','presencial':'Presencial'
+};
+
+const STATUS_MAP = {
+  'busco-trabajo':{label:'🟢 Buscando trabajo',cls:'badge-trabajo'},
+  'ofrezco-servicios':{label:'⚡ Ofrezco servicios',cls:'badge-proyecto'},
+  'busco-cofundador':{label:'🚀 Busco co-fundador',cls:'badge-cofundador'},
+  'busco-proyecto':{label:'💡 Busco proyecto',cls:'badge-proyecto'},
+  'networking':{label:'🤝 Networking',cls:'badge-networking'},
+  'mentoria':{label:'🧠 Mentoría',cls:'badge-mentoria'},
+  'solo-aprendiendo':{label:'📚 Aprendiendo',cls:'badge-networking'},
+  'no-disponible':{label:'🔴 No disponible',cls:'badge-mentoria'},
+};
+
+const SUGGESTED = [
+  {av:'SC',c:'#1a3a2a',name:'Sofía Contreras',role:'Founder · MindPath',pct:94},
+  {av:'MR',c:'#1e4a8a',name:'Matías Rojas',role:'CTO · Rocketbot',pct:89},
+  {av:'AL',c:'#4a1a5a',name:'Alejandra Luna',role:'UX Designer',pct:85},
+];
+
+function getInitials(name){
+  if(!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+function getColor(name){
+  const colors=['#1a3a2a','#1e4a8a','#4a1a5a','#6b3a1a','#1a4a4a','#2d6b4a','#3a2a1a'];
+  let h=0; for(let c of (name||'')) h=(h*31+c.charCodeAt(0))%colors.length;
+  return colors[h];
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function shareProfile(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    showToast('🔗 Link copiado al portapapeles');
+  }).catch(()=>showToast('🔗 '+window.location.href));
+}
+
+function contactar(){
+  const p=profile;
+  if(p&&p.email){
+    window.location.href='mailto:'+p.email+'?subject=Conexión desde Nextwork&body=Hola '+p.name.split(' ')[0]+', vi tu perfil en Nextwork y me gustaría conectar.';
+  } else {
+    showToast('📧 Agrega tu email en el perfil para recibir mensajes');
+  }
+}
+
+function renderProfile(p){
+  document.getElementById('profile-page').style.display='block';
+  document.title = (p.name||'Perfil')+' · Nextwork';
+
+  /* NAV */
+  const color=getColor(p.name);
+  const initials=getInitials(p.name);
+  document.getElementById('nav-user').innerHTML=`
+    <a href="dashboard.html" style="display:flex;align-items:center;gap:.6rem;font-size:13.5px;font-weight:500;color:var(--ink)">
+      <div style="width:34px;height:34px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid var(--accent3)">${initials}</div>
+      ${p.name.split(' ')[0]}
+    </a>`;
+
+  /* BANNER */
+  const banner=document.getElementById('hero-banner');
+  if(p.banner){
+    banner.innerHTML=`<img class="hero-banner-img" src="${p.banner}" alt="banner">`;
+  }
+
+  /* AVATAR */
+  const av=document.getElementById('hero-avatar');
+  av.style.background=color;
+  if(p.photo){
+    av.innerHTML=`<img src="${p.photo}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  } else {
+    av.textContent=initials;
+  }
+
+  /* NAME / ROLE / LOC */
+  document.getElementById('hero-name').textContent=p.name||'';
+  document.getElementById('hero-role').textContent=p.role||'';
+  const loc=document.getElementById('hero-loc');
+  if(p.location) loc.innerHTML=`📍 ${p.location}`;
+
+  /* STATUS BADGES */
+  const badges=document.getElementById('status-badges');
+  if(p.status&&p.status.length){
+    badges.innerHTML=p.status.map(s=>{
+      const m=STATUS_MAP[s]||{label:s,cls:'badge-proyecto'};
+      return `<span class="status-badge ${m.cls}">${m.label}</span>`;
+    }).join('');
+  }
+
+  /* LINKS */
+  const links=document.getElementById('hero-links');
+  let linksHTML='';
+  if(p.linkedin) linksHTML+=`<a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>`;
+  if(p.strava) linksHTML+=`<a href="${p.strava.startsWith('http')?p.strava:'https://'+p.strava}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>Strava</a>`;
+  if(p.email) linksHTML+=`<a href="mailto:${p.email}" class="hero-link"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${p.email}</a>`;
+  links.innerHTML=linksHTML;
+
+  /* BIO */
+  if(p.bio){
+    document.getElementById('section-bio').style.display='block';
+    document.getElementById('bio-text').textContent=p.bio;
+  }
+
+  /* SKILLS */
+  if(p.skills&&p.skills.length){
+    document.getElementById('section-skills').style.display='block';
+    document.getElementById('skills-wrap').innerHTML=p.skills.map(s=>`<span class="skill">${s}</span>`).join('');
+  }
+
+  /* OFFER */
+  if(p.offer){
+    document.getElementById('section-offer').style.display='block';
+    document.getElementById('offer-text').textContent=p.offer;
+  }
+
+  /* COLLAB */
+  const collabLabels=Object.keys(COLLAB_LABELS);
+  const hasCollab=p.collabTypes&&p.collabTypes.length;
+  const hasAvail=p.availability&&p.availability.length;
+  if(hasCollab||hasAvail){
+    document.getElementById('section-collab').style.display='block';
+    if(hasCollab){
+      document.getElementById('collab-grid').innerHTML=collabLabels.map(k=>`
+        <div class="collab-chip${p.collabTypes.includes(k)?' active':''}">${COLLAB_LABELS[k]}</div>`).join('');
+    }
+    if(hasAvail){
+      document.getElementById('avail-wrap').innerHTML=p.availability.map(a=>`
+        <span class="avail-chip${p.availability.includes(a)?' active':''}">${AVAIL_LABELS[a]||a}</span>`).join('');
+    }
+  }
+
+  /* VISION */
+  if(p.vision){
+    document.getElementById('section-vision').style.display='block';
+    document.getElementById('vision-text').textContent='"'+p.vision+'"';
+  }
+
+  /* HOBBIES */
+  if(p.hobbies){
+    const hobbiesArr=p.hobbies.split(',').map(h=>h.trim()).filter(Boolean);
+    if(hobbiesArr.length){
+      document.getElementById('section-hobbies').style.display='block';
+      document.getElementById('hobbies-wrap').innerHTML=hobbiesArr.map(h=>`<span class="hobby">${h}</span>`).join('');
+    }
+  }
+
+  /* MATCH */
+  const pct=Math.floor(Math.random()*20+75);
+  document.getElementById('match-pct').textContent=pct+'%';
+  setTimeout(()=>document.getElementById('match-bar-fill').style.width=pct+'%',300);
+  const attrs=[];
+  if(p.skills&&p.skills.length) attrs.push('Habilidades complementarias');
+  if(p.collabTypes&&p.collabTypes.length) attrs.push('Tipo de colaboración compatible');
+  if(p.location) attrs.push('Misma zona geográfica');
+  attrs.push('Visión y valores alineados');
+  document.getElementById('match-attrs').innerHTML=attrs.slice(0,3).map(a=>`
+    <div class="match-attr"><div class="match-attr-dot"></div>${a}</div>`).join('');
+
+  /* SUGGESTED */
+  document.getElementById('suggested-list').innerHTML=SUGGESTED.map(s=>`
+    <div class="suggested-user" onclick="showToast('🔒 Disponible en la beta')">
+      <div class="sug-av" style="background:${s.c}">${s.av}</div>
+      <div><div class="sug-name">${s.name}</div><div class="sug-role">${s.role}</div></div>
+      <div class="sug-follow">+ Seguir</div>
+    </div>`).join('');
+}
+
+/* INIT */
+const _sb=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+(async()=>{
+  const {data:{session}}=await _sb.auth.getSession();
+  if(session){
+    const {data:p}=await _sb.from('profiles').select('*').eq('id',session.user.id).single();
+    if(p){localStorage.setItem('nw_profile',JSON.stringify(p));renderProfile(p);return;}
+  }
+  const local=JSON.parse(localStorage.getItem('nw_profile')||'null');
+  if(local&&local.name){renderProfile(local);}
+  else{
+    document.getElementById('gate').style.display='block';
+    document.getElementById('nav-user').innerHTML=`<a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>`;
+  }
+})();
+</script>
+</body>
+</html>

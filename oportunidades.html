@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oportunidades · Nextwork</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;
+  --cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;
+  --accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;
+  --glow:#c8f0d8;--glow2:#e8f7ef;
+  --surface:#ffffff;--r:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-back{font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:6px;transition:color .2s}
+.nav-back:hover{color:var(--accent2)}
+.nav-back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.nav-cta:hover{background:var(--accent2)}
+
+/* HERO STRIP */
+.page-hero{background:var(--accent);padding:3.5rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 65% 40%,rgba(77,158,114,.18) 0%,transparent 60%);pointer-events:none}
+.page-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3rem);color:var(--glow);line-height:1.12;letter-spacing:-.8px;margin-bottom:.7rem}
+.page-hero p{color:rgba(200,240,216,.7);font-size:15px;max-width:440px;margin:0 auto 1.8rem;font-weight:300;line-height:1.7}
+.hero-stats{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap}
+.hstat{text-align:center;color:var(--glow)}
+.hstat-n{font-family:'DM Serif Display',serif;font-size:1.6rem;display:block;line-height:1.2}
+.hstat-l{font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.8px}
+
+/* TOOLBAR */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--cream3);padding:.9rem 2rem;position:sticky;top:62px;z-index:90}
+.toolbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:200px;max-width:340px}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2;pointer-events:none}
+.search-wrap input{width:100%;padding:9px 12px 9px 36px;border-radius:22px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--accent3)}
+.filter-chips{display:flex;gap:7px;flex-wrap:wrap}
+.fchip{padding:6px 14px;border-radius:22px;border:1.5px solid var(--cream3);font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--ink2);transition:all .2s;user-select:none;white-space:nowrap}
+.fchip:hover{border-color:var(--accent3);color:var(--accent2)}
+.fchip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.results-count{font-size:12px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+.sort-select{padding:7px 12px;border-radius:10px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink2);outline:none;cursor:pointer}
+
+/* MAIN LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:2rem 2rem 5rem;display:grid;grid-template-columns:220px 1fr;gap:2rem;align-items:start}
+@media(max-width:860px){.main{grid-template-columns:1fr}.sidebar{display:none}}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.4rem}
+.sb-title{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);font-weight:500;margin-bottom:.9rem}
+.sb-group{margin-bottom:1.4rem}
+.sb-option{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink2);padding:5px 0;cursor:pointer;transition:color .15s}
+.sb-option:hover{color:var(--accent2)}
+.sb-option input[type=checkbox]{accent-color:var(--accent2);width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.sb-option label{cursor:pointer;flex:1}
+.sb-option .count{font-size:11px;color:var(--ink3);margin-left:auto}
+.sb-divider{border:none;border-top:1px solid var(--cream3);margin:.6rem 0 1rem}
+.clear-filters{width:100%;padding:8px;background:transparent;color:var(--ink3);border:1px solid var(--cream3);border-radius:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:.3rem}
+.clear-filters:hover{border-color:var(--accent3);color:var(--accent2)}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.3rem}
+.opp-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.6rem;transition:transform .25s,box-shadow .25s;cursor:default;display:flex;flex-direction:column}
+.opp-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(26,58,42,.08);border-color:var(--accent3)}
+.opp-card.featured{background:var(--accent);border-color:transparent}
+.opp-card.featured:hover{box-shadow:0 10px 28px rgba(26,58,42,.3)}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:1rem}
+.type-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.8px;padding:3px 10px;border-radius:6px}
+.type-startup{background:var(--glow2);color:var(--accent);border:1px solid rgba(45,107,74,.18)}
+.type-freelance{background:#fef9e7;color:#7d6608;border:1px solid #f9e79f}
+.type-idea{background:#fdf2f8;color:#76448a;border:1px solid #d7bde2}
+.type-collab{background:#e8f4fd;color:#1a5276;border:1px solid #aed6f1}
+.type-equity{background:#fef5e7;color:#784212;border:1px solid #fad7a0}
+.type-featured{background:rgba(200,240,216,.2);color:var(--glow);border:1px solid rgba(200,240,216,.25)}
+.card-location{font-size:11px;color:var(--ink3);margin-left:auto;display:flex;align-items:center;gap:3px}
+.featured .card-location{color:rgba(200,240,216,.6)}
+.card-title{font-family:'DM Serif Display',serif;font-size:1rem;letter-spacing:-.2px;margin-bottom:.4rem;line-height:1.3}
+.featured .card-title{color:var(--glow)}
+.card-desc{font-size:12px;color:var(--ink2);line-height:1.65;margin-bottom:1rem;flex:1}
+.featured .card-desc{color:rgba(200,240,216,.72)}
+.card-skills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+.skill-pill{font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)}
+.featured .skill-pill{background:rgba(200,240,216,.12);color:var(--glow);border-color:rgba(200,240,216,.2)}
+.card-progress{margin-bottom:.9rem}
+.progress-header{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:4px}
+.featured .progress-header{color:rgba(200,240,216,.6)}
+.progress-pct{color:var(--accent2);font-weight:500}
+.featured .progress-pct{color:var(--glow)}
+.progress-bar{background:var(--cream3);border-radius:4px;height:5px}
+.featured .progress-bar{background:rgba(200,240,216,.15)}
+.progress-fill{height:100%;border-radius:4px}
+.card-meta{display:flex;gap:1rem;font-size:11px;color:var(--ink3);margin-bottom:1rem;flex-wrap:wrap}
+.featured .card-meta{color:rgba(200,240,216,.6)}
+.card-btn{width:100%;padding:10px;background:var(--accent);color:var(--glow);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:auto}
+.card-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.featured .card-btn{background:var(--glow);color:var(--accent)}
+.featured .card-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* EMPTY STATE */
+.empty-state{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.empty-state h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ink2);margin-bottom:.5rem}
+
+/* LOAD MORE */
+.load-more-wrap{grid-column:1/-1;text-align:center;margin-top:1rem}
+.load-more{background:transparent;color:var(--accent2);border:1.5px solid var(--accent3);padding:11px 32px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.load-more:hover{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+/* PUBLISH CTA */
+.publish-bar{background:var(--accent2);padding:2.5rem 2rem;text-align:center}
+.publish-bar h2{font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--glow);margin-bottom:.5rem}
+.publish-bar p{color:rgba(200,240,216,.72);font-size:14px;margin-bottom:1.5rem}
+.publish-bar a button{background:var(--glow);color:var(--accent);padding:13px 32px;border-radius:22px;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s}
+.publish-bar a button:hover{opacity:.9}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:12px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--accent2)}
+
+@media(max-width:640px){
+  nav{padding:0 1.2rem}
+  .toolbar{padding:.8rem 1rem}
+  .main{padding:1.5rem 1rem 4rem}
+  .page-hero{padding:2.5rem 1rem 2rem}
+}
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand .logo-mark svg{width:15px;height:15px;fill:var(--glow)}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+footer strong{color:rgba(255,255,255,.75)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M8 2L14 6V10L8 14L2 10V6L8 2Z"/><circle cx="8" cy="8" r="2.5" fill="rgba(26,58,42,0.8)"/></svg>
+    </div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <div class="nav-right">
+    <a href="index.html" class="nav-back">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      Volver al inicio
+    </a>
+    <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <h1>Oportunidades<br><em style="font-style:italic;color:rgba(200,240,216,.7)">que te esperan</em></h1>
+  <p>Proyectos reales buscando talento, cofundadores y colaboradores. Encuentra el tuyo.</p>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="stat-active">48</span><span class="hstat-l">Proyectos activos</span></div>
+    <div class="hstat"><span class="hstat-n">12</span><span class="hstat-l">Nuevos esta semana</span></div>
+    <div class="hstat"><span class="hstat-n">6</span><span class="hstat-l">Países representados</span></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Buscar por proyecto, habilidad…" oninput="filterCards()">
+    </div>
+    <div class="filter-chips" id="filter-chips">
+      <span class="fchip active" data-filter="todos" onclick="setFilter(this)">Todos</span>
+      <span class="fchip" data-filter="startup" onclick="setFilter(this)">🚀 Startup</span>
+      <span class="fchip" data-filter="freelance" onclick="setFilter(this)">⚡ Freelance</span>
+      <span class="fchip" data-filter="idea" onclick="setFilter(this)">💡 Idea</span>
+      <span class="fchip" data-filter="collab" onclick="setFilter(this)">🤝 Colaboración</span>
+      <span class="fchip" data-filter="equity" onclick="setFilter(this)">📈 Equity</span>
+    </div>
+    <span class="results-count" id="results-count">48 proyectos</span>
+    <select class="sort-select" onchange="sortCards(this.value)">
+      <option value="recent">Más recientes</option>
+      <option value="progress">Más avanzados</option>
+      <option value="budget">Mayor presupuesto</option>
+    </select>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-group">
+      <p class="sb-title">Industria</p>
+      <div class="sb-option"><input type="checkbox" id="f-tech" onchange="filterCards()"><label for="f-tech">Tecnología</label><span class="count">18</span></div>
+      <div class="sb-option"><input type="checkbox" id="f-salud" onchange="filterCards()"><label for="f-salud">Salud</label><span class="count">7</span></div>
+      <div class="sb-option"><input type="checkbox" id="f-edu" onchange="filterCards()"><label for="f-edu">Educación</label><span class="count">9</span></div>
+      <div class="sb-option"><input type="checkbox" id="f-fin" onchange="filterCards()"><label for="f-fin">Fintech</label><span class="count">6</span></div>
+      <div class="sb-option"><input type="checkbox" id="f-imp" onchange="filterCards()"><label for="f-imp">Impacto Social</label><span class="count">8</span></div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-group">
+      <p class="sb-title">Habilidades</p>
+      <div class="sb-option"><input type="checkbox" id="sk-dev" onchange="filterCards()"><label for="sk-dev">Desarrollo</label><span class="count">22</span></div>
+      <div class="sb-option"><input type="checkbox" id="sk-dis" onchange="filterCards()"><label for="sk-dis">Diseño</label><span class="count">14</span></div>
+      <div class="sb-option"><input type="checkbox" id="sk-mkt" onchange="filterCards()"><label for="sk-mkt">Marketing</label><span class="count">11</span></div>
+      <div class="sb-option"><input type="checkbox" id="sk-data" onchange="filterCards()"><label for="sk-data">Data / IA</label><span class="count">9</span></div>
+      <div class="sb-option"><input type="checkbox" id="sk-neg" onchange="filterCards()"><label for="sk-neg">Negocio</label><span class="count">16</span></div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-group">
+      <p class="sb-title">Modalidad</p>
+      <div class="sb-option"><input type="checkbox" id="m-rem" onchange="filterCards()"><label for="m-rem">Remoto</label><span class="count">31</span></div>
+      <div class="sb-option"><input type="checkbox" id="m-chi" onchange="filterCards()"><label for="m-chi">Chile</label><span class="count">24</span></div>
+      <div class="sb-option"><input type="checkbox" id="m-lat" onchange="filterCards()"><label for="m-lat">Latam</label><span class="count">12</span></div>
+    </div>
+    <button class="clear-filters" onclick="clearFilters()">Limpiar filtros</button>
+  </aside>
+
+  <!-- CARDS -->
+  <div class="cards-grid" id="cards-grid">
+    <!-- cards rendered by JS -->
+  </div>
+
+</div>
+
+<!-- PUBLISH CTA -->
+<div class="publish-bar">
+  <h2>¿Tienes un proyecto?</h2>
+  <p>Publica tu oportunidad y encuentra el equipo ideal en menos de 48 horas</p>
+  <a href="crear-perfil.html"><button>Publicar mi proyecto →</button></a>
+</div>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col">
+      <h4>General</h4>
+      <ul>
+        <li><a href="crear-perfil.html">Registrarse</a></li>
+        <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+        <li><a href="index.html#faq">Centro de ayuda</a></li>
+        <li><a href="index.html#how">Acerca de</a></li>
+        <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="desarrolladores.html">Desarrolladores</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar por Nextwork</h4>
+      <ul>
+        <li><a href="index.html#how">Cómo funciona</a></li>
+        <li><a href="index.html#match">Matching IA</a></li>
+        <li><a href="oportunidades.html">Oportunidades</a></li>
+        <li><a href="buscar.html">Buscar perfiles</a></li>
+        <li><a href="dashboard.html">Mi Dashboard</a></li>
+        <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Descubrir</h4>
+      <ul>
+        <li><a href="top-startups.html">Top Startups</a></li>
+        <li><a href="top-universidades.html">Top Universidades</a></li>
+        <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script>
+const CARDS=[
+  {id:1,type:'startup',typeLabel:'🚀 Startup',typeClass:'type-startup',title:'Plataforma de salud mental para universitarios',company:'MindPath',desc:'Buscamos CTO co-fundador para construir el MVP. Tenemos validación, primeros usuarios y tracción en redes sociales.',skills:['React Native','Node.js','Product','UX'],location:'Santiago, Chile',progress:60,progressLabel:'Equipo completado',compensation:'💰 Equity 5–10%',timeline:'⏱ 3 meses',spots:'👥 2 posiciones',featured:false,date:1},
+  {id:2,type:'freelance',typeLabel:'⚡ Freelance',typeClass:'type-freelance',title:'Rediseño de marca y landing para fintech B2B',company:'Kredz',desc:'Startup fintech necesita diseñador UX/UI para rediseñar su identidad visual y crear landing de alta conversión.',skills:['Figma','Branding','UX Research','Webflow'],location:'Remoto',progress:60,progressLabel:'Propuestas recibidas',compensation:'💵 $800–1.200 USD',timeline:'⏱ 6 semanas',spots:'',featured:false,date:2},
+  {id:3,type:'idea',typeLabel:'💡 Idea',typeClass:'type-idea',title:'App de carpooling para trabajadores de zonas industriales',company:'RutaShared',desc:'Idea validada con 3 empresas ancla. Busco dev y co-founder para construir el MVP juntos desde cero.',skills:['Flutter','Backend','Mapas','Logística'],location:'Concepción, Chile',progress:20,progressLabel:'Equipo completado',compensation:'💰 Equity 15–20%',timeline:'⏱ 6 meses',spots:'👥 1 posición',featured:true,date:3},
+  {id:4,type:'collab',typeLabel:'🤝 Colaboración',typeClass:'type-collab',title:'Podcast sobre emprendimiento latinoamericano',company:'Latam Builders',desc:'Buscamos productor de contenido y editor de audio para co-producir temporada 2. 8K oyentes mensuales.',skills:['Edición Audio','Contenido','Redes','SEO'],location:'Remoto',progress:50,progressLabel:'Roles cubiertos',compensation:'💵 Revenue share',timeline:'⏱ Largo plazo',spots:'👥 2 posiciones',featured:false,date:4},
+  {id:5,type:'startup',typeLabel:'🚀 Startup',typeClass:'type-startup',title:'SaaS de gestión de turnos para clínicas veterinarias',company:'VetFlow',desc:'Producto con 12 clínicas pagando. Buscamos dev fullstack para escalar de 12 a 100 clientes en 6 meses.',skills:['Vue.js','Python','AWS','PostgreSQL'],location:'Santiago, Chile',progress:80,progressLabel:'Hitos completados',compensation:'💵 $1.500 USD/mes + equity',timeline:'⏱ Permanente',spots:'👥 1 posición',featured:false,date:5},
+  {id:6,type:'equity',typeLabel:'📈 Equity',typeClass:'type-equity',title:'Marketplace de artesanía chilena para exportación',company:'Hecho en Chile',desc:'Proyecto con soporte CORFO, buscamos CMO con experiencia en e-commerce internacional y mercados gringos.',skills:['E-commerce','Marketing Internacional','Growth','Amazon'],location:'Santiago, Chile',progress:45,progressLabel:'Equipo completado',compensation:'💰 Equity 8%',timeline:'⏱ 12 meses',spots:'👥 1 posición',featured:false,date:6},
+  {id:7,type:'freelance',typeLabel:'⚡ Freelance',typeClass:'type-freelance',title:'Desarrollo de chatbot con IA para atención al cliente',company:'BotAtende',desc:'Empresa retail necesita integrar IA conversacional en su e-commerce. Presupuesto definido y specs claras.',skills:['Python','LangChain','OpenAI','API REST'],location:'Remoto',progress:10,progressLabel:'Propuestas recibidas',compensation:'💵 $2.000–3.000 USD',timeline:'⏱ 4 semanas',spots:'',featured:false,date:7},
+  {id:8,type:'startup',typeLabel:'🚀 Startup',typeClass:'type-startup',title:'Plataforma de microinversiones para jóvenes chilenos',company:'CentavosApp',desc:'Fintech regulada buscando diseñador de producto senior. App con 4K usuarios beta y primera ronda cerrada.',skills:['Figma','Design System','Mobile','UX Strategy'],location:'Santiago, Chile',progress:70,progressLabel:'Equipo completado',compensation:'💵 $1.200 USD/mes + equity',timeline:'⏱ Permanente',spots:'👥 1 posición',featured:false,date:8},
+  {id:9,type:'idea',typeLabel:'💡 Idea',typeClass:'type-idea',title:'Red social para fotógrafos emergentes de Latinoamérica',company:'Encuadre',desc:'Concepto validado con 200 encuestas. Busco diseñador UX y dev backend para construir MVP en 3 meses.',skills:['UX Design','Node.js','MongoDB','Mobile'],location:'Remoto',progress:10,progressLabel:'Equipo completado',compensation:'💰 Equity 10–15%',timeline:'⏱ 3 meses',spots:'👥 2 posiciones',featured:false,date:9},
+  {id:10,type:'collab',typeLabel:'🤝 Colaboración',typeClass:'type-collab',title:'Newsletter semanal sobre startups chilenas',company:'StartupRadar',desc:'Newsletter con 6.000 suscriptores busca analista de mercado y redactor especializado en tecnología.',skills:['Redacción','Research','Análisis','Datos'],location:'Remoto',progress:50,progressLabel:'Roles cubiertos',compensation:'💵 $300 USD/mes',timeline:'⏱ Part-time',spots:'👥 1 posición',featured:false,date:10},
+  {id:11,type:'equity',typeLabel:'📈 Equity',typeClass:'type-equity',title:'EdTech para formación técnica en zonas rurales',company:'TerrenoDigital',desc:'Proyecto con apoyo del MINEDUC, busca CTO y líder pedagógico. Impacto directo en 5.000 estudiantes.',skills:['EdTech','React','Gestión Proyectos','Impacto Social'],location:'Chile',progress:35,progressLabel:'Equipo completado',compensation:'💰 Equity 12% + sueldo',timeline:'⏱ 18 meses',spots:'👥 2 posiciones',featured:false,date:11},
+  {id:12,type:'freelance',typeLabel:'⚡ Freelance',typeClass:'type-freelance',title:'Dashboard de analytics para agencia de marketing',company:'AgenciaNorte',desc:'Agencia necesita dev para construir dashboard interno con integración a Google Ads, Meta y HubSpot.',skills:['React','APIs','Data Viz','TypeScript'],location:'Remoto',progress:0,progressLabel:'Propuestas recibidas',compensation:'💵 $1.500 USD',timeline:'⏱ 3 semanas',spots:'',featured:false,date:12},
+];
+
+let activeFilter='todos';
+let searchQuery='';
+let currentSort='recent';
+
+function typeColor(type){
+  const map={startup:'#2d6b4a',freelance:'#b7950b',idea:'#76448a',collab:'#1a5276',equity:'#784212'};
+  return map[type]||'#555';
+}
+
+function renderCards(list){
+  const grid=document.getElementById('cards-grid');
+  if(list.length===0){
+    grid.innerHTML=`<div class="empty-state"><h3>Sin resultados</h3><p>Prueba cambiando los filtros o la búsqueda</p></div>`;
+    document.getElementById('results-count').textContent='0 proyectos';
+    return;
+  }
+  document.getElementById('results-count').textContent=`${list.length} proyecto${list.length!==1?'s':''}`;
+  grid.innerHTML=list.map(c=>`
+    <div class="opp-card${c.featured?' featured':''}" data-type="${c.type}" data-title="${c.title.toLowerCase()}" data-skills="${c.skills.join(' ').toLowerCase()}">
+      <div class="card-top">
+        <span class="type-badge ${c.featured?'type-featured':c.typeClass}">${c.typeLabel}</span>
+        <span class="card-location">📍 ${c.location}</span>
+      </div>
+      <p class="card-title">${c.title}</p>
+      <p class="card-desc">${c.desc}</p>
+      <div class="card-skills">${c.skills.map(s=>`<span class="skill-pill">${s}</span>`).join('')}</div>
+      <div class="card-progress">
+        <div class="progress-header"><span>${c.progressLabel}</span><span class="progress-pct">${c.progress}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${c.progress}%;background:${c.featured?'var(--glow)':'linear-gradient(90deg,var(--accent3),var(--glow))'}"></div></div>
+      </div>
+      <div class="card-meta">
+        <span>${c.compensation}</span>${c.timeline?`<span>${c.timeline}</span>`:''}${c.spots?`<span>${c.spots}</span>`:''}
+      </div>
+      <button class="card-btn" onclick="openProject(${c.id})">Ver proyecto →</button>
+    </div>`).join('');
+}
+
+function getFiltered(){
+  return CARDS.filter(c=>{
+    const matchType=activeFilter==='todos'||c.type===activeFilter;
+    const q=searchQuery.toLowerCase();
+    const matchSearch=!q||c.title.toLowerCase().includes(q)||c.skills.join(' ').toLowerCase().includes(q)||c.desc.toLowerCase().includes(q);
+    return matchType&&matchSearch;
+  });
+}
+
+function getSorted(list){
+  const sorted=[...list];
+  if(currentSort==='progress')sorted.sort((a,b)=>b.progress-a.progress);
+  else if(currentSort==='budget')sorted.sort((a,b)=>b.id-a.id);
+  else sorted.sort((a,b)=>b.date-a.date);
+  return sorted;
+}
+
+function setFilter(el){
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter=el.dataset.filter;
+  filterCards();
+}
+
+function filterCards(){
+  searchQuery=document.getElementById('search-input').value;
+  renderCards(getSorted(getFiltered()));
+}
+
+function sortCards(val){currentSort=val;filterCards();}
+
+function clearFilters(){
+  document.querySelectorAll('.sidebar input[type=checkbox]').forEach(c=>c.checked=false);
+  document.getElementById('search-input').value='';
+  searchQuery='';
+  activeFilter='todos';
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.fchip[data-filter="todos"]').classList.add('active');
+  filterCards();
+}
+
+function openProject(id){
+  const t=document.getElementById('toast');
+  t.textContent='🔒 Acceso completo disponible en la beta — ¡crea tu perfil para postular!';
+  t.className='toast show success';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+renderCards(getSorted(CARDS));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');const {data:{session}}=await sb.auth.getSession();const el=document.getElementById('nav-auth');if(!el||!session)return;const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();if(!p)return;const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;})();</script>
+</body>
+</html>
