@@ -1,321 +1,35 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nextwork · Tu próximo equipo te está buscando</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231a3a2a'/><path d='M16 4L28 11V21L16 28L4 21V11L16 4Z' fill='%23c8f0d8'/><circle cx='16' cy='16' r='5' fill='%230f0e0c' opacity='.7'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
---ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;
---cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;
---accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;
---glow:#c8f0d8;--glow2:#e8f7ef;
---surface:#ffffff;--r:14px;
-}
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;font-size:15px;line-height:1.6}
-a{text-decoration:none;color:inherit}
-
-/* SCROLL PROGRESS */
-#scroll-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent3),var(--glow));z-index:200;transition:width .1s linear;width:0%}
-
-/* NAV */
-nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px}
-.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;transition:transform .3s}
-.logo-mark:hover{transform:rotate(15deg)}
-.logo-mark svg{width:15px;height:15px;fill:var(--glow)}
-.logo-word{color:var(--ink)}
-.logo-word span{color:var(--accent2)}
-.nav-links{display:flex;align-items:center;gap:2rem;font-size:13px;color:var(--ink2)}
-.nav-links a{transition:color .2s;position:relative;padding-bottom:2px}
-.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--accent3);transition:width .25s}
-.nav-links a:hover,.nav-links a.active{color:var(--accent2)}
-.nav-links a:hover::after,.nav-links a.active::after{width:100%}
-.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif}
-.nav-cta:hover{background:var(--accent2);transform:translateY(-1px)}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none}
-.hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:all .3s}
-.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-.hamburger.open span:nth-child(2){opacity:0}
-.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.mobile-menu{display:none;position:fixed;top:62px;left:0;right:0;background:rgba(245,242,235,0.98);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:1.5rem 2rem;flex-direction:column;gap:1.2rem;z-index:99;transform:translateY(-10px);opacity:0;transition:all .25s}
-.mobile-menu.open{display:flex;transform:translateY(0);opacity:1}
-.mobile-menu a{font-size:15px;color:var(--ink2);padding:.5rem 0;border-bottom:1px solid var(--cream3)}
-.mobile-menu .nav-cta{width:100%;text-align:center;margin-top:.5rem}
-
-/* HERO */
-.hero{min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 2rem 4rem;text-align:center;position:relative;overflow:hidden}
-.hero-orb{position:absolute;top:-10%;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(77,158,114,0.12) 0%,transparent 65%);pointer-events:none;border-radius:50%;animation:orbFloat 8s ease-in-out infinite}
-@keyframes orbFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-30px)}}
-.badge{display:inline-flex;align-items:center;gap:7px;background:var(--glow2);color:var(--accent);font-size:12px;font-weight:500;padding:6px 14px;border-radius:22px;margin-bottom:2rem;border:1px solid rgba(45,107,74,0.18);opacity:0;animation:fadeUp .6s .1s forwards}
-.badge-dot{width:7px;height:7px;background:var(--accent3);border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.75)}}
-h1{font-family:'DM Serif Display',serif;font-size:clamp(2.8rem,5.5vw,4.6rem);line-height:1.08;letter-spacing:-1.5px;max-width:780px;color:var(--ink);opacity:0;animation:fadeUp .7s .2s forwards}
-h1 em{font-style:italic;color:var(--accent2)}
-.hero-sub{font-size:17px;color:var(--ink2);max-width:500px;margin:1.6rem auto 2.8rem;font-weight:300;line-height:1.75;opacity:0;animation:fadeUp .7s .35s forwards}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .7s .5s forwards}
-.btn-primary{background:var(--accent);color:var(--glow);padding:14px 30px;border-radius:26px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif}
-.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,58,42,.2)}
-.btn-secondary{background:transparent;color:var(--ink);padding:14px 30px;border-radius:26px;font-size:14px;font-weight:500;cursor:pointer;border:1.5px solid var(--cream3);transition:all .2s;font-family:'DM Sans',sans-serif}
-.btn-secondary:hover{border-color:var(--accent3);color:var(--accent2);transform:translateY(-2px)}
-.proof{margin-top:4rem;display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .65s forwards}
-.avs{display:flex}.av{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--cream);margin-left:-10px;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;color:white;transition:transform .2s;cursor:default}.av:first-child{margin-left:0}
-.av:hover{transform:scale(1.2) translateY(-3px);z-index:1}
-.proof-txt{font-size:13px;color:var(--ink3)}.proof-txt strong{color:var(--ink)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
-/* STATS */
-.stats{background:var(--accent);padding:1.4rem 2rem;display:flex;justify-content:center;gap:3.5rem;flex-wrap:wrap}
-.stat{text-align:center;color:var(--glow)}
-.stat-n{font-family:'DM Serif Display',serif;font-size:1.9rem;display:block;line-height:1.2}
-.stat-l{font-size:11px;opacity:0.65;text-transform:uppercase;letter-spacing:1px;margin-top:2px;display:block}
-
-/* FADE-IN OBSERVER */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .55s ease,transform .55s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
-.reveal-left{opacity:0;transform:translateX(-28px);transition:opacity .55s ease,transform .55s ease}
-.reveal-left.visible{opacity:1;transform:translateX(0)}
-.reveal-right{opacity:0;transform:translateX(28px);transition:opacity .55s ease,transform .55s ease}
-.reveal-right.visible{opacity:1;transform:translateX(0)}
-.stagger>*{opacity:0;transform:translateY(22px);transition:opacity .45s ease,transform .45s ease}
-.stagger.visible>*:nth-child(1){opacity:1;transform:none;transition-delay:.05s}
-.stagger.visible>*:nth-child(2){opacity:1;transform:none;transition-delay:.12s}
-.stagger.visible>*:nth-child(3){opacity:1;transform:none;transition-delay:.19s}
-.stagger.visible>*:nth-child(4){opacity:1;transform:none;transition-delay:.26s}
-.stagger.visible>*:nth-child(5){opacity:1;transform:none;transition-delay:.33s}
-.stagger.visible>*:nth-child(6){opacity:1;transform:none;transition-delay:.40s}
-
-/* SECTIONS */
-section{padding:5.5rem 2rem}
-.inner{max-width:1100px;margin:0 auto}
-.stag{font-size:11px;text-transform:uppercase;letter-spacing:1.8px;color:var(--accent3);font-weight:500;margin-bottom:.9rem}
-.stitle{font-family:'DM Serif Display',serif;font-size:clamp(1.9rem,3.2vw,2.7rem);line-height:1.18;letter-spacing:-.6px;margin-bottom:.9rem}
-.ssub{color:var(--ink2);font-size:16px;max-width:460px;font-weight:300;line-height:1.75}
-
-/* HOW */
-.how{background:var(--surface)}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.5rem;margin-top:3rem}
-.step{padding:1.8rem;border-radius:var(--r);border:1px solid var(--cream3);background:var(--cream);position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s,border-color .25s;cursor:default}
-.step:hover{transform:translateY(-5px);box-shadow:0 12px 32px rgba(26,58,42,.08);border-color:var(--accent3)}
-.step::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent3),var(--glow));transform:scaleX(0);transform-origin:left;transition:transform .3s}
-.step:hover::after{transform:scaleX(1)}
-.step-n{font-family:'DM Serif Display',serif;font-size:2.8rem;color:var(--cream3);position:absolute;top:.8rem;right:1.2rem;line-height:1;transition:color .25s}
-.step:hover .step-n{color:var(--cream3)}
-.step-ico{width:42px;height:42px;background:var(--glow2);border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;transition:background .25s,transform .25s}
-.step:hover .step-ico{background:var(--accent);transform:scale(1.1)}
-.step:hover .step-ico svg{stroke:var(--glow)}
-.step-ico svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;transition:stroke .25s}
-.step h3{font-size:15px;font-weight:500;margin-bottom:.4rem}
-.step p{font-size:13px;color:var(--ink2);line-height:1.65}
-
-/* MATCHING IA */
-.match-section{background:var(--cream2)}
-.match-ui{background:var(--surface);border-radius:20px;border:1px solid var(--cream3);padding:2rem;margin-top:3rem;max-width:820px;margin-left:auto;margin-right:auto;box-shadow:0 4px 24px rgba(26,58,42,.05)}
-.match-ui-title{font-size:14px;font-weight:500;color:var(--ink2);margin-bottom:1.2rem;display:flex;align-items:center;gap:8px}
-.match-ui-title::before{content:'';width:8px;height:8px;background:var(--accent3);border-radius:50%;display:inline-block;animation:pulse 2s infinite}
-.match-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem}
-.mf-group{display:flex;flex-direction:column;gap:5px}
-.mf-group label{font-size:12px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.8px}
-.mf-group input,.mf-group select,.mf-group textarea{padding:9px 13px;border-radius:10px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border .2s,box-shadow .2s}
-.mf-group input:focus,.mf-group select:focus,.mf-group textarea:focus{border-color:var(--accent3);box-shadow:0 0 0 3px rgba(77,158,114,.12)}
-.mf-group textarea{resize:none;height:68px}
-.mf-wide{grid-column:1/-1}
-.match-btn{width:100%;padding:12px;background:var(--accent);color:var(--glow);border:none;border-radius:22px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:4px}
-.match-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,58,42,.2)}
-.match-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.match-result{margin-top:1.5rem;display:none}
-.match-result.show{display:block}
-.mr-loading{text-align:center;padding:2.5rem;color:var(--ink3);font-size:14px}
-.mr-loading .spinner{width:32px;height:32px;border:2.5px solid var(--cream3);border-top-color:var(--accent3);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.mr-card{background:var(--cream);border-radius:var(--r);border:1px solid var(--cream3);padding:1.5rem;animation:fadeUp .4s ease}
-.mr-header{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
-.mr-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:16px;color:white;flex-shrink:0}
-.mr-name{font-weight:500;font-size:15px}
-.mr-role{font-size:12px;color:var(--ink3)}
-.mr-pct{margin-left:auto;background:var(--accent);color:var(--glow);font-family:'DM Serif Display',serif;font-size:1.5rem;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:popIn .5s .1s both}
-@keyframes popIn{from{transform:scale(0);opacity:0}80%{transform:scale(1.1)}to{transform:scale(1);opacity:1}}
-.mr-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
-.mr-tag{font-size:11px;padding:3px 10px;border-radius:10px;background:var(--glow2);color:var(--accent);font-weight:500;border:1px solid rgba(45,107,74,0.18)}
-.mr-why{font-size:13px;color:var(--ink2);line-height:1.7;background:var(--surface);border-radius:10px;padding:12px 14px;border-left:3px solid var(--accent3)}
-.mr-seeking{font-size:12px;color:var(--ink3);margin-top:12px;text-align:center;font-style:italic}
-.mr-error{font-size:13px;color:#c0392b;background:#fef9f9;border:1px solid #f5c6c6;border-radius:10px;padding:12px 14px}
-.match-another{display:flex;justify-content:center;gap:10px;margin-top:1rem;flex-wrap:wrap}
-
-/* COMPATIBILITY BAR */
-.compat-bar{margin:1rem 0;background:var(--cream3);border-radius:6px;height:8px;overflow:hidden}
-.compat-fill{height:100%;background:linear-gradient(90deg,var(--accent3),var(--glow));border-radius:6px;width:0;transition:width 1.2s .3s ease}
-
-/* FOR WHOM */
-.forwho{background:var(--surface)}
-.fw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-top:3rem}
-.fw-card{padding:1.6rem;border-radius:var(--r);border:1px solid var(--cream3);transition:transform .25s,border-color .25s,box-shadow .25s;cursor:default}
-.fw-card:hover{transform:translateY(-5px);border-color:var(--accent3);box-shadow:0 10px 28px rgba(26,58,42,.07)}
-.fw-ico{font-size:28px;margin-bottom:.9rem;line-height:1}
-.fw-card h3{font-size:14px;font-weight:500;margin-bottom:.4rem}
-.fw-card p{font-size:13px;color:var(--ink2);line-height:1.6}
-.fw-card.hl{background:var(--accent);border-color:transparent}
-.fw-card.hl:hover{box-shadow:0 10px 28px rgba(26,58,42,.25)}
-.fw-card.hl h3,.fw-card.hl p{color:var(--glow)}
-.fw-card.hl p{opacity:.75}
-
-/* FEATURES */
-.features{background:var(--cream2)}
-.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.4rem;margin-top:3rem}
-.feat{padding:1.8rem;border-radius:var(--r);border:1px solid var(--cream3);background:var(--surface);transition:transform .25s,box-shadow .25s;cursor:default}
-.feat:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(26,58,42,.07)}
-.feat-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:18px;background:var(--glow2);transition:background .25s,transform .25s}
-.feat:hover .feat-ico{background:var(--accent);transform:rotate(8deg) scale(1.1)}
-.feat h3{font-size:15px;font-weight:500;margin-bottom:.4rem}
-.feat p{font-size:13px;color:var(--ink2);line-height:1.65}
-.feat.dark{background:var(--accent);border-color:transparent}
-.feat.dark:hover{box-shadow:0 10px 28px rgba(26,58,42,.3)}
-.feat.dark h3,.feat.dark p{color:var(--glow)}
-.feat.dark .feat-ico{background:rgba(200,240,216,0.15)}
-.feat.dark .feat-ico:hover{background:rgba(200,240,216,0.3)}
-.feat.dark p{opacity:.8}
-
-/* ROADMAP */
-.roadmap{background:var(--surface)}
-.road-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.8rem;margin-top:3rem}
-.road-card{border-radius:var(--r);padding:1.8rem;border:1px solid var(--cream3);background:var(--cream);transition:transform .25s,box-shadow .25s;cursor:default}
-.road-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(26,58,42,.07)}
-.road-card.now{border-color:var(--accent3);background:linear-gradient(140deg,rgba(200,240,216,0.25),var(--surface))}
-.phase-badge{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:500;padding:3px 9px;border-radius:6px;margin-bottom:1rem;background:var(--cream2);color:var(--ink3)}
-.road-card.now .phase-badge{background:var(--glow2);color:var(--accent)}
-.road-card h3{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:.9rem}
-.road-list{list-style:none;display:flex;flex-direction:column;gap:7px}
-.road-list li{font-size:13px;color:var(--ink2);display:flex;align-items:flex-start;gap:9px;line-height:1.5}
-.road-list li::before{content:'';width:5px;height:5px;background:var(--accent3);border-radius:50%;margin-top:7px;flex-shrink:0}
-
-/* CTA */
-.cta-sec{background:var(--accent);padding:6rem 2rem;text-align:center;position:relative;overflow:hidden}
-.cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 60% 40%,rgba(77,158,114,.15) 0%,transparent 60%);pointer-events:none}
-.cta-sec h2{font-family:'DM Serif Display',serif;font-size:clamp(2.1rem,4.5vw,3.2rem);color:var(--glow);line-height:1.15;margin-bottom:1rem}
-.cta-sec p{color:rgba(200,240,216,0.72);font-size:16px;max-width:400px;margin:0 auto 2.5rem;font-weight:300;line-height:1.7}
-.cta-form{display:flex;gap:8px;max-width:420px;margin:0 auto;justify-content:center;flex-wrap:wrap}
-.cta-input{flex:1;min-width:200px;padding:13px 18px;border-radius:22px;border:1px solid rgba(200,240,216,0.2);background:rgba(255,255,255,0.09);color:var(--glow);font-size:14px;outline:none;font-family:'DM Sans',sans-serif;transition:border .2s,box-shadow .2s}
-.cta-input::placeholder{color:rgba(200,240,216,0.38)}
-.cta-input:focus{border-color:rgba(200,240,216,0.5);box-shadow:0 0 0 3px rgba(200,240,216,.1)}
-.cta-submit{background:var(--glow);color:var(--accent);padding:13px 26px;border-radius:22px;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
-.cta-submit:hover{opacity:.9;transform:translateY(-1px)}
-.cta-count{margin-top:1.2rem;font-size:13px;color:rgba(200,240,216,.55)}
-.cta-count span{color:rgba(200,240,216,.9);font-weight:500}
-
-/* CONFETTI */
-.confetti-piece{position:fixed;width:8px;height:8px;top:-10px;border-radius:2px;animation:confettiFall 2.5s ease-in forwards;z-index:9999;pointer-events:none}
-@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
-
-/* TOAST */
-.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:12px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{background:var(--accent2)}
-.toast.error{background:#c0392b}
-
-/* FAQ */
-.faq-sec{background:var(--cream2)}
-.faq-list{margin-top:3rem;display:flex;flex-direction:column;gap:10px;max-width:760px;margin-left:auto;margin-right:auto}
-.faq-item{border:1px solid var(--cream3);border-radius:var(--r);background:var(--surface);overflow:hidden;transition:border-color .25s}
-.faq-item.open{border-color:var(--accent3)}
-.faq-q{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;cursor:pointer;gap:1rem;font-size:14px;font-weight:500;color:var(--ink);user-select:none}
-.faq-q svg{width:18px;height:18px;stroke:var(--ink3);fill:none;stroke-width:2;flex-shrink:0;transition:transform .3s,stroke .2s}
-.faq-item.open .faq-q svg{transform:rotate(45deg);stroke:var(--accent3)}
-.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease}
-.faq-item.open .faq-a{max-height:300px}
-.faq-a p{padding:0 1.4rem 1.2rem;font-size:13px;color:var(--ink2);line-height:1.75;border-top:1px solid var(--cream3)}
-
-/* CONTACT */
-.contact-sec{background:var(--surface)}
-.contact-box{max-width:600px;margin:3rem auto 0;background:var(--cream);border:1px solid var(--cream3);border-radius:20px;padding:3rem 2.5rem}
-.contact-box-head{text-align:center;margin-bottom:2rem}
-.contact-ico{width:56px;height:56px;background:var(--glow2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;font-size:24px}
-.contact-box-head h3{font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:.5rem;letter-spacing:-.3px}
-.contact-box-head p{font-size:14px;color:var(--ink2);line-height:1.7}
-.contact-form{display:flex;flex-direction:column;gap:12px}
-.contact-form input,.contact-form textarea{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--cream3);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;transition:border .2s,box-shadow .2s}
-.contact-form input:focus,.contact-form textarea:focus{border-color:var(--accent3);box-shadow:0 0 0 3px rgba(77,158,114,.1)}
-.contact-form textarea{resize:none;line-height:1.6}
-.contact-form label{font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;display:block}
-.contact-field{display:flex;flex-direction:column}
-.contact-send-btn{width:100%;padding:13px;background:var(--accent);color:var(--glow);border:none;border-radius:22px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:4px}
-.contact-send-btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,58,42,.2)}
-.contact-send-btn:disabled{opacity:.45;cursor:not-allowed}
-.contact-session-note{font-size:12px;color:var(--ink3);text-align:center;margin-top:.6rem;display:none}
-.contact-session-note a{color:var(--accent2);font-weight:500}
-.contact-session-note.show{display:block}
-
-/* MODAL T&C */
-.modal-overlay{position:fixed;inset:0;background:rgba(15,14,12,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:1.5rem;opacity:0;pointer-events:none;transition:opacity .25s}
-.modal-overlay.open{opacity:1;pointer-events:all}
-.modal-box{background:var(--surface);border-radius:20px;max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(15,14,12,.25);transform:translateY(20px);transition:transform .25s}
-.modal-overlay.open .modal-box{transform:translateY(0)}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 1.8rem;border-bottom:1px solid var(--cream3)}
-.modal-head h3{font-family:'DM Serif Display',serif;font-size:1.3rem;letter-spacing:-.3px}
-.modal-close{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--cream3);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink3);transition:all .2s;line-height:1}
-.modal-close:hover{background:var(--cream2);color:var(--ink)}
-.modal-body{overflow-y:auto;padding:1.8rem;flex:1}
-.modal-body h4{font-size:13px;font-weight:500;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;margin:1.4rem 0 .5rem}
-.modal-body h4:first-child{margin-top:0}
-.modal-body p,.modal-body li{font-size:13px;color:var(--ink2);line-height:1.75}
-.modal-body ul{padding-left:1.2rem;display:flex;flex-direction:column;gap:4px}
-.modal-foot{padding:1rem 1.8rem;border-top:1px solid var(--cream3);text-align:right}
-.modal-foot button{background:var(--accent);color:var(--glow);padding:10px 24px;border-radius:22px;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
-.modal-foot button:hover{background:var(--accent2)}
-
-footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
-.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
-.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px;color:rgba(255,255,255,.85);align-self:start}
-.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.footer-brand .logo-mark svg{width:15px;height:15px;fill:var(--glow)}
-.footer-brand em{font-style:normal;color:var(--accent3)}
-.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
-.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
-.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
-.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
-footer strong{color:rgba(255,255,255,.75)}
-.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
-.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
-.footer-links a:hover{color:rgba(255,255,255,.8)}
-@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
-@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}}
-
-@media(max-width:640px){
-.nav-links{display:none}
-.hamburger{display:flex}
-.match-form{grid-template-columns:1fr}
-.road-grid{grid-template-columns:1fr}
-.stats{gap:1.8rem}
-.fw-card.hl{order:-1}
-}
-</style>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
 <div id="scroll-progress"></div>
 <div id="toast" class="toast"></div>
 
-<!-- NAV -->
+<!-- ============ NAV ============ -->
 <nav>
-  <div class="logo">
-    <div class="logo-mark">
-      <svg viewBox="0 0 16 16"><path d="M8 2L14 6V10L8 14L2 10V6L8 2Z"/><circle cx="8" cy="8" r="2.5" fill="rgba(26,58,42,0.8)"/></svg>
-    </div>
+  <a href="index.html" class="logo">
+    <span class="logo-mark">
+      <img src="logo.png" alt="Nextwork">
+    </span>
     <span class="logo-word">next<span>work</span></span>
-  </div>
+  </a>
   <div class="nav-links">
     <a href="#how" data-section="how">Cómo funciona</a>
     <a href="#match" data-section="match">Matching IA</a>
-    <a href="oportunidades.html">Oportunidades</a>
-    <a href="buscar.html">Perfiles</a>
-    <a href="publicaciones.html">Publicaciones</a>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span id="nav-auth" style="display:flex;align-items:center;gap:8px"><a href="login.html" style="font-size:13px;color:var(--ink2);font-weight:500;padding:7px 14px;border-radius:22px;border:1.5px solid var(--cream3);transition:all .2s" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--cream3)';this.style.color='var(--ink2)'">Iniciar sesión</a><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  <div class="nav-right">
+    <a href="login.html" class="nav-login">Iniciar sesión</a>
+    <a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>
     <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">
       <span></span><span></span><span></span>
     </button>
@@ -325,68 +39,92 @@ footer strong{color:rgba(255,255,255,.75)}
 <div class="mobile-menu" id="mobile-menu">
   <a href="#how" onclick="closeMenu()">Cómo funciona</a>
   <a href="#match" onclick="closeMenu()">Matching IA</a>
+  <a href="oportunidades.html">Oportunidades</a>
+  <a href="buscar.html">Perfiles</a>
   <a href="#roadmap" onclick="closeMenu()">Roadmap</a>
-  <a href="crear-perfil.html" style="width:100%"><button class="nav-cta" style="width:100%">Crear mi perfil</button></a>
+  <a href="login.html">Iniciar sesión</a>
+  <a href="crear-perfil.html" style="border:none"><button class="nav-cta">Crear mi perfil</button></a>
 </div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-orb"></div>
-  <div class="badge"><span class="badge-dot"></span>Beta abierta · Nextwork 2026</div>
-  <h1>Tu próximo <em>equipo</em> no está en un currículum</h1>
-  <p class="hero-sub">Conectamos talento, visión y proyectos por afinidad real — no por palabras clave. El lugar donde los equipos que importan se forman.</p>
-  <div class="hero-actions">
-    <button class="btn-primary" onclick="document.getElementById('match').scrollIntoView({behavior:'smooth'})">Probar el matching →</button>
-    <a href="crear-perfil.html"><button class="btn-secondary">Crear mi perfil</button></a>
-  </div>
-  <div class="proof">
-    <div class="avs">
-      <div class="av" style="background:#2d6b4a" title="Andrés S. · Dev Fullstack">AS</div>
-      <div class="av" style="background:#c4581a" title="María R. · Diseñadora UX">MR</div>
-      <div class="av" style="background:#185fa5" title="Luis P. · Founder">LP</div>
-      <div class="av" style="background:#853f9d" title="Karen C. · Marketing">KC</div>
-      <div class="av" style="background:#1a6b6b" title="Diego V. · Data Science">DV</div>
+<!-- ============ HERO ============ -->
+<section class="hero" data-screen-label="Hero">
+  <div class="hero-grid"></div>
+  <svg class="hero-net" viewBox="0 0 920 620" fill="none" aria-hidden="true">
+    <g stroke="#4d9e72" stroke-width="1" opacity=".22">
+      <path d="M150 180 L380 120 M380 120 L560 260 M150 180 L300 360 M300 360 L560 260 M560 260 L740 200 M560 260 L640 430 M300 360 L500 470 M640 430 L500 470 M740 200 L780 380 M640 430 L780 380"/>
+    </g>
+    <g fill="#4d9e72">
+      <circle cx="150" cy="180" r="3.5" opacity=".4"/><circle cx="380" cy="120" r="3.5" opacity=".5"/>
+      <circle cx="560" cy="260" r="4.5" opacity=".8"/><circle cx="300" cy="360" r="3.5" opacity=".5"/>
+      <circle cx="740" cy="200" r="3.5" opacity=".45"/><circle cx="640" cy="430" r="3.5" opacity=".5"/>
+      <circle cx="500" cy="470" r="3.5" opacity=".4"/><circle cx="780" cy="380" r="3" opacity=".35"/>
+    </g>
+  </svg>
+  <div class="hero-inner">
+    <div class="badge"><span class="badge-dot"></span>Beta abierta · Nextwork 2026</div>
+    <h1>Tu próximo <em>equipo</em> no está en un currículum</h1>
+    <p class="hero-sub">Conectamos talento, visión y proyectos por afinidad real — no por palabras clave. El lugar donde se forman los equipos que importan.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="document.getElementById('match').scrollIntoView({behavior:'smooth'})">Probar el matching
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <a href="crear-perfil.html"><button class="btn-link">Crear mi perfil
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button></a>
     </div>
-    <p class="proof-txt"><strong id="live-count">+1.400 personas</strong> ya en lista de espera</p>
+    <div class="proof">
+      <div class="avs">
+        <div class="av" style="background:#1a3a2a" title="Andrés S. · Dev Fullstack">AS</div>
+        <div class="av" style="background:#2d6b4a" title="María R. · Diseñadora UX">MR</div>
+        <div class="av" style="background:#1a6b6b" title="Luis P. · Founder">LP</div>
+        <div class="av" style="background:#4d9e72" title="Karen C. · Marketing">KC</div>
+        <div class="av" style="background:#3f6b52" title="Diego V. · Data Science">DV</div>
+      </div>
+      <p class="proof-txt"><strong id="live-count">+1.400 personas</strong> ya en lista de espera</p>
+    </div>
   </div>
 </section>
 
-<!-- STATS -->
+<!-- ============ STATS ============ -->
 <div class="stats" id="stats-bar">
-  <div class="stat"><span class="stat-n" data-count="3" data-suffix=" min">3 min</span><span class="stat-l">Para crear tu perfil</span></div>
-  <div class="stat"><span class="stat-n" data-count="92" data-suffix="%">92%</span><span class="stat-l">Afinidad en matches</span></div>
-  <div class="stat"><span class="stat-n">0 spam</span><span class="stat-l">Sin ruido ni contactos random</span></div>
-  <div class="stat"><span class="stat-n">$0</span><span class="stat-l">Para empezar</span></div>
+  <div class="inner">
+    <div class="stat"><span class="stat-n" data-count="3" data-suffix=" min">3 min</span><span class="stat-l">Para crear tu perfil</span></div>
+    <div class="stat"><span class="stat-n" data-count="92" data-suffix="%">92%</span><span class="stat-l">Afinidad en matches</span></div>
+    <div class="stat"><span class="stat-n">1:1</span><span class="stat-l">Conexión directa, sin intermediarios</span></div>
+    <div class="stat"><span class="stat-n">$0</span><span class="stat-l">Para empezar hoy</span></div>
+  </div>
 </div>
 
-<!-- HOW -->
-<section class="how" id="how">
+<!-- ============ HOW ============ -->
+<section class="how" id="how" data-screen-label="Cómo funciona">
   <div class="inner">
-    <p class="stag reveal">Cómo funciona</p>
-    <h2 class="stitle reveal">De perfil a equipo<br>en cuatro pasos</h2>
-    <p class="ssub reveal">Diseñado para que la conexión sea rápida, relevante y sin fricción.</p>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">01</span>Cómo funciona</span>
+      <h2 class="stitle">De perfil a equipo<br>en cuatro pasos</h2>
+      <p class="ssub">Diseñado para que la conexión sea rápida, relevante y sin fricción.</p>
+    </div>
     <div class="steps stagger">
       <div class="step">
-        <span class="step-n">01</span>
-        <div class="step-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <span class="step-n">PASO 01</span>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <h3>Define tu perfil</h3>
         <p>Habilidades, visión, tipo de proyecto y cómo colaboras. Más allá del CV.</p>
       </div>
       <div class="step">
-        <span class="step-n">02</span>
-        <div class="step-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <span class="step-n">PASO 02</span>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5 10.1 10.9 5.5 9l4.6-1.4L12 3z"/><path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/></svg></div>
         <h3>La IA hace match</h3>
         <p>Cruzamos objetivos, valores y visión — no solo palabras clave en un CV.</p>
       </div>
       <div class="step">
-        <span class="step-n">03</span>
-        <div class="step-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <span class="step-n">PASO 03</span>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
         <h3>Conecta y propone</h3>
         <p>Sin intermediarios. Habla directo y propón colaboración, contratación o co-fundación.</p>
       </div>
       <div class="step">
-        <span class="step-n">04</span>
-        <div class="step-ico"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <span class="step-n">PASO 04</span>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
         <h3>Construye con seguridad</h3>
         <p>Acuerdos protegidos, pagos en custodia y mediación integrada.</p>
       </div>
@@ -394,15 +132,21 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </section>
 
-<!-- MATCHING IA -->
-<section class="match-section" id="match">
+<!-- ============ MATCHING IA (dark) ============ -->
+<section class="match-section" id="match" data-screen-label="Matching IA">
   <div class="inner">
-    <p class="stag reveal">Matching con IA</p>
-    <h2 class="stitle reveal">Prueba el algoritmo<br>ahora mismo</h2>
-    <p class="ssub reveal">Ingresa tu perfil y la IA de Nextwork encontrará tu match ideal — y te explicará por qué.</p>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">02</span>Matching con IA</span>
+      <h2 class="stitle">Prueba el algoritmo<br><em>ahora mismo</em></h2>
+      <p class="ssub">Ingresa tu perfil y la IA de Nextwork encontrará tu match ideal — y te explicará por qué.</p>
+    </div>
 
     <div class="match-ui reveal">
-      <p class="match-ui-title">Simulador de matching · Nextwork Beta</p>
+      <div class="match-ui-bar">
+        <span class="dot"></span>
+        <span>Simulador de matching · Nextwork Beta</span>
+        <span class="live">EN VIVO</span>
+      </div>
       <div class="match-form">
         <div class="mf-group">
           <label>Tu nombre</label>
@@ -432,7 +176,9 @@ footer strong{color:rgba(255,255,255,.75)}
           <textarea id="m-vision" placeholder="Ej. Busco un proyecto con impacto social donde pueda liderar la parte técnica y crecer como co-fundador…" maxlength="300"></textarea>
         </div>
       </div>
-      <button class="match-btn" id="match-btn" onclick="runMatch()">Encontrar mi match →</button>
+      <button class="match-btn" id="match-btn" onclick="runMatch()">Encontrar mi match
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
 
       <div class="match-result" id="match-result">
         <div class="mr-loading" id="mr-loading">
@@ -445,34 +191,37 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </section>
 
-<!-- FOR WHOM -->
-<section class="forwho" id="para-quien">
+<!-- ============ FOR WHOM ============ -->
+<section class="forwho" id="para-quien" data-screen-label="Para quién">
   <div class="inner">
-    <p class="stag reveal">Para quién</p>
-    <h2 class="stitle reveal">Si tienes visión,<br>Nextwork es para ti</h2>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">03</span>Para quién</span>
+      <h2 class="stitle">Si tienes visión,<br>Nextwork es para ti</h2>
+    </div>
     <div class="fw-grid stagger">
       <div class="fw-card hl">
-        <div class="fw-ico">◈</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7-5.5-3.5L6.5 20 8 13 3 9l6.5-.5L12 2z"/></svg></div>
+        <span class="hl-tag">El perfil estrella</span>
         <h3>Emprendedores</h3>
-        <p>Tienes la idea. Nextwork te ayuda a armar el equipo que la ejecuta.</p>
+        <p>Tienes la idea. Nextwork te ayuda a armar el equipo que la ejecuta — co-fundadores, devs y creativos con fit real.</p>
       </div>
       <div class="fw-card">
-        <div class="fw-ico" style="font-size:22px">⟷</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7.5 7.5"/><path d="M3 21l7.5-7.5"/></svg></div>
         <h3>Freelancers</h3>
         <p>Proyectos alineados con tu visión, no solo con tu tarifa.</p>
       </div>
       <div class="fw-card">
-        <div class="fw-ico" style="font-size:22px">△</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3l9-16z"/></svg></div>
         <h3>Startups</h3>
-        <p>Encuentra cofundadores y colaboradores con fit real — técnico y cultural.</p>
+        <p>Encuentra cofundadores y colaboradores con fit técnico y cultural.</p>
       </div>
       <div class="fw-card">
-        <div class="fw-ico" style="font-size:22px">◎</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></div>
         <h3>Estudiantes</h3>
-        <p>Tu proyecto merece un equipo. Nextwork te conecta con quienes lo harán real.</p>
+        <p>Tu proyecto merece un equipo. Te conectamos con quienes lo harán real.</p>
       </div>
       <div class="fw-card">
-        <div class="fw-ico" style="font-size:22px">⬡</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01M14 9h.01M14 13h.01M14 17h.01"/></svg></div>
         <h3>Pymes</h3>
         <p>Colaboradores externos con experiencia y alineación, sin intermediarios.</p>
       </div>
@@ -480,232 +229,271 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </section>
 
-<!-- FEATURES -->
-<section class="features">
+<!-- ============ FEATURES ============ -->
+<section class="features" data-screen-label="Funcionalidades">
   <div class="inner">
-    <p class="stag reveal">Funcionalidades</p>
-    <h2 class="stitle reveal">Todo lo que necesitas<br>para colaborar de verdad</h2>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">04</span>Funcionalidades</span>
+      <h2 class="stitle">Todo lo que necesitas<br>para colaborar de verdad</h2>
+    </div>
     <div class="feat-grid stagger">
-      <div class="feat dark">
-        <div class="feat-ico">◈</div>
+      <div class="feat">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/><path d="M19 4l.7 1.8L21.5 6.5 19.7 7.2 19 9l-.7-1.8L16.5 6.5l1.8-.7L19 4z"/></svg></div>
         <h3>Perfil multidimensional</h3>
         <p>No solo habilidades técnicas. Define tu visión, metodología y cómo trabajas.</p>
       </div>
       <div class="feat">
-        <div class="feat-ico">⟷</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7.5 7.5"/><path d="M3 21l7.5-7.5"/></svg></div>
         <h3>Doble rol</h3>
         <p>Ofrece y busca al mismo tiempo. Sin ambigüedad entre contratar y ser contratado.</p>
       </div>
       <div class="feat">
-        <div class="feat-ico">⬡</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.6 7.6 10.4 16M16.4 7.6 13.6 16M8.5 6h7"/></svg></div>
         <h3>Red de proyectos</h3>
         <p>Publica tu proyecto o explora los que necesitan lo que tú ofreces.</p>
       </div>
       <div class="feat">
-        <div class="feat-ico">◎</div>
-        <h3>Acuerdos protegidos</h3>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Acuerdos protegidos <span class="soon">Pronto</span></h3>
         <p>Contratos digitales, pagos en custodia y mediación integrada.</p>
       </div>
       <div class="feat">
-        <div class="feat-ico">△</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1-6.3-4.6-6.3 4.6L7.9 13.9 2 9.4h7.6L12 2z"/></svg></div>
         <h3>Reputación verificada</h3>
         <p>Historial real de colaboraciones y calificaciones validadas por pares.</p>
       </div>
       <div class="feat">
-        <div class="feat-ico">◌</div>
-        <h3>Financiamiento colectivo</h3>
-        <p>Próximamente: inversión colectiva y fondos compartidos para proyectos con tracción.</p>
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.2c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1.1 1.8-2.5 1.8-2.5.8-2.5 2 1.1 2 2.5 2 2.5-.8 2.5-2"/></svg></div>
+        <h3>Financiamiento colectivo <span class="soon">Pronto</span></h3>
+        <p>Inversión colectiva y fondos compartidos para proyectos con tracción.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- OPORTUNIDADES PREVIEW -->
-<section class="opp-preview" id="oportunidades" style="background:var(--cream2);padding:5.5rem 2rem">
+<!-- ============ PROFILES ============ -->
+<section class="profiles" id="perfiles" data-screen-label="Perfiles">
   <div class="inner">
-    <p class="stag reveal">Oportunidades</p>
-    <h2 class="stitle reveal">Proyectos que necesitan<br>lo que tú ofreces</h2>
-    <p class="ssub reveal">Startups, ideas y proyectos buscando talento, cofundadores y colaboradores ahora mismo.</p>
-    <div class="opp-grid stagger" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1.4rem;margin-top:3rem">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">05</span>Perfiles</span>
+      <h2 class="stitle">Talento que ya<br>está en Nextwork</h2>
+      <p class="ssub">Personas reales con visión, habilidades y ganas de construir. Conoce a quienes podrían ser tu próximo equipo.</p>
+    </div>
+    <div class="prof-grid stagger">
 
-      <div class="opp-card" style="background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.6rem;transition:transform .25s,box-shadow .25s;cursor:default">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
-          <span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;background:var(--glow2);color:var(--accent);padding:3px 10px;border-radius:6px;border:1px solid rgba(45,107,74,.18)">🚀 Startup</span>
-          <span style="font-size:11px;color:var(--ink3);margin-left:auto">Santiago, Chile</span>
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#1a3a2a">MG</div>
+          <div class="prof-id">
+            <p class="prof-name">Matías González</p>
+            <p class="prof-role">Dev Fullstack · Santiago, CL</p>
+          </div>
         </div>
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:.4rem;letter-spacing:-.2px">Plataforma de salud mental para universitarios</h3>
-        <p style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:1rem">Buscamos CTO co-fundador para construir el MVP. Tenemos validación, primeros usuarios y tracción en redes.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.1rem">
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">React Native</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">Node.js</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">Product</span>
-        </div>
-        <div style="margin-bottom:1rem">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:4px"><span>Equipo completado</span><span style="color:var(--accent2);font-weight:500">60%</span></div>
-          <div style="background:var(--cream3);border-radius:4px;height:5px"><div style="width:60%;height:100%;background:linear-gradient(90deg,var(--accent3),var(--glow));border-radius:4px"></div></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:1rem">
-          <span>💰 Equity 5–10%</span><span>⏱ 3 meses</span><span>👥 2 posiciones</span>
-        </div>
-        <a href="oportunidades.html"><button style="width:100%;padding:10px;background:var(--accent);color:var(--glow);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">Ver proyecto →</button></a>
+        <span class="prof-avail open"><span class="dot"></span>Disponible para proyectos</span>
+        <div class="prof-tags"><span>React</span><span>Node.js</span><span>AWS</span></div>
+        <p class="prof-seek"><b>Busca</b> · cofundador/a para construir un SaaS B2B con foco en producto.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
       </div>
 
-      <div class="opp-card" style="background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.6rem;transition:transform .25s,box-shadow .25s;cursor:default">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
-          <span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;background:#fef9e7;color:#7d6608;padding:3px 10px;border-radius:6px;border:1px solid #f9e79f">⚡ Freelance</span>
-          <span style="font-size:11px;color:var(--ink3);margin-left:auto">Remoto</span>
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#2d6b4a">VS</div>
+          <div class="prof-id">
+            <p class="prof-name">Valentina Soto</p>
+            <p class="prof-role">CEO ClimateTech · Santiago, CL</p>
+          </div>
         </div>
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:.4rem;letter-spacing:-.2px">Rediseño de marca y landing para fintech B2B</h3>
-        <p style="font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:1rem">Startup fintech necesita diseñador UX/UI para rediseñar su identidad visual y crear landing de conversión.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.1rem">
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">Figma</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">Branding</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:var(--cream2);color:var(--ink2);border:1px solid var(--cream3)">UX Research</span>
-        </div>
-        <div style="margin-bottom:1rem">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:4px"><span>Propuestas recibidas</span><span style="color:var(--accent2);font-weight:500">3 / 5</span></div>
-          <div style="background:var(--cream3);border-radius:4px;height:5px"><div style="width:60%;height:100%;background:linear-gradient(90deg,#f9ca24,#f0932b);border-radius:4px"></div></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:1rem">
-          <span>💵 $800–1.200 USD</span><span>⏱ 6 semanas</span>
-        </div>
-        <a href="oportunidades.html"><button style="width:100%;padding:10px;background:var(--accent);color:var(--glow);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">Ver proyecto →</button></a>
+        <span class="prof-avail seek"><span class="dot"></span>Armando equipo</span>
+        <div class="prof-tags"><span>Impacto</span><span>B2B</span><span>Inversión</span></div>
+        <p class="prof-seek"><b>Busca</b> · CMO o growth lead con visión de largo plazo.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
       </div>
 
-      <div class="opp-card" style="background:var(--accent);border-radius:var(--r);border:1px solid transparent;padding:1.6rem;cursor:default">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
-          <span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;background:rgba(200,240,216,.2);color:var(--glow);padding:3px 10px;border-radius:6px">💡 Idea en desarrollo</span>
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#1a6b6b">FM</div>
+          <div class="prof-id">
+            <p class="prof-name">Felipe Muñoz</p>
+            <p class="prof-role">Diseñador UX/UI · Medellín, CO</p>
+          </div>
         </div>
-        <h3 style="font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:.4rem;letter-spacing:-.2px;color:var(--glow)">App de carpooling para trabajadores de zonas industriales</h3>
-        <p style="font-size:12px;color:rgba(200,240,216,.72);line-height:1.6;margin-bottom:1rem">Tengo la idea validada con 3 empresas ancla. Busco dev y co-founder para construir el MVP juntos.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1.1rem">
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:rgba(200,240,216,.15);color:var(--glow);border:1px solid rgba(200,240,216,.2)">Flutter</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:rgba(200,240,216,.15);color:var(--glow);border:1px solid rgba(200,240,216,.2)">Mapas</span>
-          <span style="font-size:11px;padding:2px 9px;border-radius:8px;background:rgba(200,240,216,.15);color:var(--glow);border:1px solid rgba(200,240,216,.2)">Logística</span>
+        <span class="prof-avail open"><span class="dot"></span>Disponible para proyectos</span>
+        <div class="prof-tags"><span>Figma</span><span>Design Systems</span><span>Mobile</span></div>
+        <p class="prof-seek"><b>Busca</b> · fullstack para construir un producto digital de impacto.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
+      </div>
+
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#4d9e72">IC</div>
+          <div class="prof-id">
+            <p class="prof-name">Isidora Campos</p>
+            <p class="prof-role">Business Developer · Buenos Aires, AR</p>
+          </div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(200,240,216,.6);margin-bottom:1rem">
-          <span>💰 Equity 15–20%</span><span>⏱ 6 meses</span><span>👥 1 posición</span>
+        <span class="prof-avail seek"><span class="dot"></span>Abierta a proyectos</span>
+        <div class="prof-tags"><span>Ventas B2B</span><span>GTM</span><span>Latam</span></div>
+        <p class="prof-seek"><b>Busca</b> · dev con visión de negocio para escalar una startup.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
+      </div>
+
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#3f6b52">TI</div>
+          <div class="prof-id">
+            <p class="prof-name">Tomás Ibáñez</p>
+            <p class="prof-role">Dev Backend Senior · Santiago, CL</p>
+          </div>
         </div>
-        <a href="oportunidades.html"><button style="width:100%;padding:10px;background:var(--glow);color:var(--accent);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Ver proyecto →</button></a>
+        <span class="prof-avail open"><span class="dot"></span>Disponible para proyectos</span>
+        <div class="prof-tags"><span>Python</span><span>APIs</span><span>Escala</span></div>
+        <p class="prof-seek"><b>Busca</b> · co-founder técnico para un proyecto de alto impacto.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
+      </div>
+
+      <div class="prof-card">
+        <div class="prof-head">
+          <div class="prof-av" style="background:#2d6b4a">CR</div>
+          <div class="prof-id">
+            <p class="prof-name">Camila Rojas</p>
+            <p class="prof-role">Growth Hacker · Lima, PE</p>
+          </div>
+        </div>
+        <span class="prof-avail seek"><span class="dot"></span>Abierta a proyectos</span>
+        <div class="prof-tags"><span>SEO</span><span>Paid Ads</span><span>Analytics</span></div>
+        <p class="prof-seek"><b>Busca</b> · una marca con propósito que quiera crecer en serio.</p>
+        <a href="buscar.html"><button class="prof-btn">Ver perfil →</button></a>
       </div>
 
     </div>
-    <div style="text-align:center;margin-top:2.5rem" class="reveal">
-      <a href="oportunidades.html"><button class="btn-primary" style="font-size:14px;padding:14px 36px">Ver todas las oportunidades →</button></a>
+    <div class="opp-more reveal">
+      <a href="buscar.html"><button class="btn btn-primary">Explorar todos los perfiles
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button></a>
     </div>
   </div>
 </section>
 
-<!-- ROADMAP -->
-<section class="roadmap" id="roadmap">
+<!-- ============ ROADMAP ============ -->
+<section class="roadmap" id="roadmap" data-screen-label="Roadmap">
   <div class="inner">
-    <p class="stag reveal">Roadmap</p>
-    <h2 class="stitle reveal">Un ecosistema que<br>crece contigo</h2>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">06</span>Roadmap</span>
+      <h2 class="stitle">Un ecosistema que<br>crece contigo</h2>
+    </div>
     <div class="road-grid stagger">
       <div class="road-card now">
         <span class="phase-badge">Ahora · Beta</span>
         <h3>Plataforma de conexión</h3>
         <ul class="road-list">
-          <li>Perfiles con habilidades y visión</li>
-          <li>Matching por afinidad con IA</li>
-          <li>Mensajería directa entre usuarios</li>
-          <li>Publicación de proyectos y roles</li>
-          <li>Búsqueda y filtros avanzados</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Perfiles con habilidades y visión</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Matching por afinidad con IA</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mensajería directa entre usuarios</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Publicación de proyectos y roles</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Búsqueda y filtros avanzados</li>
         </ul>
       </div>
       <div class="road-card">
         <span class="phase-badge">Próxima fase</span>
         <h3>Capa de confianza y pagos</h3>
         <ul class="road-list">
-          <li>Contratos digitales simples</li>
-          <li>Pagos en custodia (escrow)</li>
-          <li>Mediación de acuerdos</li>
-          <li>Reputación y verificación de perfil</li>
-          <li>Comisiones por transacción</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Contratos digitales simples</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Pagos en custodia (escrow)</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mediación de acuerdos</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Reputación y verificación de perfil</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Comisiones por transacción</li>
         </ul>
       </div>
       <div class="road-card">
         <span class="phase-badge">Futuro</span>
         <h3>Ecosistema de financiamiento</h3>
         <ul class="road-list">
-          <li>Financiamiento colectivo</li>
-          <li>Tokens de participación y equity</li>
-          <li>Perfiles premium y featured</li>
-          <li>API para integraciones</li>
-          <li>Comunidades temáticas</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Financiamiento colectivo</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tokens de participación y equity</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Perfiles premium y featured</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>API para integraciones</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Comunidades temáticas</li>
         </ul>
       </div>
       <div class="road-card">
         <span class="phase-badge">Visión</span>
         <h3>El ecosistema completo</h3>
         <ul class="road-list">
-          <li>IA que aprende de tus colaboraciones</li>
-          <li>Recomendaciones de proyectos en tiempo real</li>
-          <li>Marketplace de servicios especializados</li>
-          <li>Fondo de aceleración para proyectos</li>
-          <li>Expansión regional Latinoamérica</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>IA que aprende de tus colaboraciones</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Recomendaciones en tiempo real</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Marketplace de servicios especializados</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Fondo de aceleración para proyectos</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Expansión regional Latinoamérica</li>
         </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="cta-sec" id="cta">
+<!-- ============ CTA ============ -->
+<section class="cta-sec" id="cta" data-screen-label="CTA">
+  <div class="cta-net"></div>
   <div class="inner">
-    <h2 class="reveal">Tu equipo ideal<br>te está buscando</h2>
+    <span class="eyebrow center">Empieza hoy</span>
+    <h2 class="reveal">Tu equipo ideal<br><em>te está buscando</em></h2>
     <p class="reveal">Crea tu perfil en minutos y empieza a conectar con personas que comparten tu visión.</p>
-    <div class="reveal" style="display:flex;flex-direction:column;align-items:center;gap:1rem;margin-top:2rem">
+    <div class="reveal" style="display:flex;flex-direction:column;align-items:center;gap:1rem">
       <a href="crear-perfil.html">
-        <button class="cta-submit" style="padding:16px 40px;font-size:15px;border-radius:28px">Crear mi perfil gratis →</button>
+        <button class="btn btn-mint" style="padding:16px 36px;font-size:15px">Crear mi perfil gratis
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </a>
-      <span style="font-size:13px;color:rgba(200,240,216,.5)">Tarda menos de 3 minutos · Sin tarjeta de crédito</span>
+      <span class="cta-note">Tarda menos de 3 minutos · Sin tarjeta de crédito</span>
     </div>
   </div>
 </section>
 
-<!-- FAQ -->
-<section class="faq-sec" id="faq">
+<!-- ============ FAQ ============ -->
+<section class="faq-sec" id="faq" data-screen-label="FAQ">
   <div class="inner">
-    <p class="stag reveal">Preguntas frecuentes</p>
-    <h2 class="stitle reveal">Todo lo que necesitas<br>saber antes de empezar</h2>
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="idx">07</span>Preguntas frecuentes</span>
+      <h2 class="stitle">Todo lo que necesitas<br>saber antes de empezar</h2>
+    </div>
     <div class="faq-list reveal">
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Qué es Nextwork y para qué sirve?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Qué es Nextwork y para qué sirve?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>Nextwork es una plataforma de conexión profesional que usa inteligencia artificial para hacer match entre personas según afinidad real: habilidades, visión, valores y tipo de colaboración que buscan. No es un portal de empleo tradicional — es el lugar donde se forman los equipos que importan.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo funciona el matching con IA?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo funciona el matching con IA?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>El algoritmo analiza tu perfil completo — rol, habilidades, descripción personal, tipo de colaboración y visión — y lo cruza con otros perfiles. Prioriza la complementariedad y alineación de objetivos por sobre los títulos o palabras clave en un CV.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Es gratuito usar Nextwork?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Es gratuito usar Nextwork?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>Sí. Crear tu perfil y recibir matches es completamente gratuito durante la beta. En fases futuras habrá funcionalidades premium opcionales, pero siempre existirá un nivel gratuito funcional.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Cuándo abre la plataforma al público?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cuándo abre la plataforma al público?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>Actualmente estamos en beta cerrada recopilando perfiles. Las personas que crean su perfil ahora quedan en lista de espera y serán las primeras en acceder. Te notificaremos por email en cuanto esté disponible.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo buscar trabajo y ofrecer mis servicios al mismo tiempo?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Puedo buscar trabajo y ofrecer mis servicios al mismo tiempo?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>Exactamente. Nextwork tiene doble rol: puedes estar abierto a oportunidades laborales y al mismo tiempo ofrecer servicios como freelance o buscar cofundador/a para tu propio proyecto. Tú defines qué buscas en cada momento.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo protegen mi información personal?<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo protegen mi información personal?<span class="pm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></div>
         <div class="faq-a"><p>Tus datos se almacenan de forma segura y nunca se venden a terceros. Tú controlas qué información es pública en tu perfil. El correo electrónico no se muestra directamente — la comunicación inicial ocurre dentro de la plataforma.</p></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CONTACTO -->
-<section class="contact-sec" id="contacto">
+<!-- ============ CONTACT ============ -->
+<section class="contact-sec" id="contacto" data-screen-label="Contacto">
   <div class="inner">
-    <p class="stag reveal" style="text-align:center">Contacto</p>
-    <h2 class="stitle reveal" style="text-align:center">¿Tienes alguna pregunta?</h2>
+    <div class="sec-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
+      <span class="eyebrow center"><span class="idx">08</span>Contacto</span>
+      <h2 class="stitle">¿Tienes alguna pregunta?</h2>
+    </div>
     <div class="contact-box reveal">
       <div class="contact-box-head">
-        <div class="contact-ico">✉️</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
         <h3>Escríbenos</h3>
         <p>Estamos construyendo Nextwork con propósito y nos encanta escuchar a nuestra comunidad. Te respondemos a la brevedad.</p>
       </div>
@@ -722,14 +510,14 @@ footer strong{color:rgba(255,255,255,.75)}
           <label>Mensaje</label>
           <textarea id="contact-message" rows="5" placeholder="Cuéntanos tu consulta, sugerencia o lo que tengas en mente…"></textarea>
         </div>
-        <button class="contact-send-btn" id="contact-send-btn" onclick="sendContact()">Enviar a Team@nextwork.cl</button>
-        <p class="contact-session-note" id="contact-session-note">Para enviar necesitas <a href="crear-perfil.html">crear tu perfil</a> primero.</p>
+        <button class="contact-send-btn" onclick="sendContact()">Enviar a Team@nextwork.cl</button>
+        <p class="contact-note">Responderemos a <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a> · normalmente en 24 h.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- MODAL T&C -->
+<!-- ============ MODAL T&C ============ -->
 <div class="modal-overlay" id="tc-modal" onclick="closeTCifOverlay(event)">
   <div class="modal-box">
     <div class="modal-head">
@@ -758,7 +546,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <p>Podemos actualizar estos términos en cualquier momento. Si los cambios son relevantes, te notificaremos por correo. El uso continuado implica aceptación de los términos vigentes.</p>
       <h4>8. Contacto</h4>
       <p>Para consultas sobre estos términos escríbenos a <strong>Team@nextwork.cl</strong>.</p>
-      <p style="margin-top:1.5rem;font-size:11px;color:var(--ink3)">Última actualización: mayo 2026 · Nextwork · nextwork.cl</p>
+      <p style="margin-top:1.5rem;font-size:11px;color:var(--ink-3)">Última actualización: mayo 2026 · Nextwork · nextwork.cl</p>
     </div>
     <div class="modal-foot">
       <button onclick="closeTC()">Entendido</button>
@@ -766,33 +554,34 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </div>
 
+<!-- ============ FOOTER ============ -->
 <footer>
   <div class="footer-top">
-    <a href="index.html" class="footer-brand">
-      <div class="logo-mark"><svg viewBox="0 0 20 20"><polygon points="10,1 19,6 19,14 10,19 1,14 1,6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="10" cy="10" r="3.5" fill="currentColor"/></svg></div>
-      <span>Next<em>work</em></span>
-    </a>
+    <div class="footer-brand">
+      <a href="index.html" class="fb-logo">
+        <span class="logo-mark"><img src="logo.png" alt="Nextwork"></span>
+        <span>Next<em>work</em></span>
+      </a>
+      <p>El lugar donde se forman los equipos que importan. Construido con propósito en Chile.</p>
+    </div>
     <div class="footer-col">
       <h4>General</h4>
       <ul>
         <li><a href="crear-perfil.html">Registrarse</a></li>
-        <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+        <li><a href="login.html">Iniciar sesión</a></li>
         <li><a href="#faq">Centro de ayuda</a></li>
         <li><a href="#how">Acerca de</a></li>
-        <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
-        <li><a href="#">Blog</a></li>
         <li><a href="desarrolladores.html">Desarrolladores</a></li>
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Navegar por Nextwork</h4>
+      <h4>Navegar</h4>
       <ul>
         <li><a href="#how">Cómo funciona</a></li>
         <li><a href="#match">Matching IA</a></li>
         <li><a href="oportunidades.html">Oportunidades</a></li>
         <li><a href="buscar.html">Buscar perfiles</a></li>
         <li><a href="dashboard.html">Mi Dashboard</a></li>
-        <li><a href="crear-perfil.html">Crear mi perfil</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -800,7 +589,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <ul>
         <li><a href="top-startups.html">Top Startups</a></li>
         <li><a href="top-universidades.html">Top Universidades</a></li>
-        <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+        <li><a href="publicaciones.html">Publicaciones</a></li>
       </ul>
     </div>
   </div>
@@ -811,317 +600,12 @@ footer strong{color:rgba(255,255,255,.75)}
       <a onclick="openTC()">Términos y condiciones</a>
       <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
     </div>
-    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+    <span class="copy"><strong>Nextwork</strong> · nextwork.cl · 2026</span>
   </div>
 </footer>
 
-<script>
-/* ── SCROLL PROGRESS ── */
-window.addEventListener('scroll',()=>{
-  const h=document.documentElement;
-  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
-  document.getElementById('scroll-progress').style.width=pct+'%';
-  updateActiveNav();
-},{passive:true});
-
-/* ── ACTIVE NAV ── */
-function updateActiveNav(){
-  const sections=['how','match','roadmap'];
-  const links=document.querySelectorAll('.nav-links a[data-section]');
-  let current='';
-  sections.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&el.getBoundingClientRect().top<=80)current=id;
-  });
-  links.forEach(a=>{
-    a.classList.toggle('active',a.dataset.section===current&&current!=='');
-  });
-}
-
-/* ── MOBILE MENU ── */
-function toggleMenu(){
-  const m=document.getElementById('mobile-menu');
-  const h=document.getElementById('hamburger');
-  m.classList.toggle('open');
-  h.classList.toggle('open');
-}
-function closeMenu(){
-  document.getElementById('mobile-menu').classList.remove('open');
-  document.getElementById('hamburger').classList.remove('open');
-}
-
-/* ── INTERSECTION OBSERVER ── */
-const io=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting)e.target.classList.add('visible');
-  });
-},{threshold:.12});
-document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.stagger').forEach(el=>io.observe(el));
-
-
-/* ── TOAST ── */
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show '+(type||'');
-  clearTimeout(t._timer);
-  t._timer=setTimeout(()=>t.classList.remove('show'),3200);
-}
-
-
-/* ── MATCHING ENGINE ── */
-const matchProfiles={
-  dev:[
-    {name:'Sebastián Reyes',role:'Product Manager · 5 años exp.',location:'Santiago, Chile',initials:'SR',color:'#185fa5',tags:['Product Strategy','Agile','B2B SaaS','Growth'],seeking:'Un tech lead para co-fundar una startup EdTech'},
-    {name:'Isidora Campos',role:'Business Developer · 4 años exp.',location:'Buenos Aires, Argentina',initials:'IC',color:'#c4581a',tags:['Ventas B2B','Partnerships','GTM','Latam'],seeking:'Dev con visión de negocio para escalar startup'},
-    {name:'Felipe Muñoz',role:'Diseñador UX/UI · 6 años exp.',location:'Medellín, Colombia',initials:'FM',color:'#853f9d',tags:['Figma','Design Systems','Mobile','User Research'],seeking:'Fullstack para construir producto digital de impacto'},
-  ],
-  design:[
-    {name:'Matías González',role:'Dev Fullstack · 7 años exp.',location:'Santiago, Chile',initials:'MG',color:'#2d6b4a',tags:['React','Node.js','AWS','Startups'],seeking:'Diseñador/a con foco en conversión y producto'},
-    {name:'Camila Rojas',role:'Growth Hacker · 3 años exp.',location:'Lima, Perú',initials:'CR',color:'#c4581a',tags:['SEO','Paid Ads','Funnel','Analytics'],seeking:'Diseñador/a para construir marca con propósito'},
-    {name:'Diego Vargas',role:'Founder en stealth · ex-Google',location:'Ciudad de México, México',initials:'DV',color:'#1a6b6b',tags:['Producto','Fintech','UX Strategy','Funding'],seeking:'Lead designer para lanzar MVP en Q3'},
-  ],
-  marketing:[
-    {name:'Valentina Soto',role:'CEO Startup ClimateTech · 2 años exp.',location:'Santiago, Chile',initials:'VS',color:'#2d6b4a',tags:['Impacto Social','B2B','SaaS','Inversión'],seeking:'CMO o growth lead con visión de largo plazo'},
-    {name:'Andrés Pérez',role:'Founder · SaaS para pymes',location:'Bogotá, Colombia',initials:'AP',color:'#185fa5',tags:['B2B','Automatización','Ventas','Pymes'],seeking:'Marketing estratégico para escalar en Latam'},
-    {name:'Natalia Herrera',role:'Directora de Producto · ex-Falabella',location:'Santiago, Chile',initials:'NH',color:'#853f9d',tags:['E-commerce','Producto','Data','Equipos'],seeking:'Estratega de marketing para redefinir la marca'},
-  ],
-  founder:[
-    {name:'Tomás Ibáñez',role:'Dev Backend Senior · 8 años exp.',location:'Santiago, Chile',initials:'TI',color:'#2d6b4a',tags:['Python','APIs','Escala','Infraestructura'],seeking:'Co-founder técnico para proyecto de alto impacto'},
-    {name:'Renata Morales',role:'Inversora Ángel · ex-Cornershop',location:'Santiago, Chile',initials:'RM',color:'#c4581a',tags:['Startups','Early Stage','Latam','Mentoring'],seeking:'Founders con tracción y visión clara'},
-    {name:'Javier Cruz',role:'CFO Freelance · Startups Latam',location:'Buenos Aires, Argentina',initials:'JC',color:'#1a6b6b',tags:['Finanzas','Cap Table','Fundraising','Due Diligence'],seeking:'Co-founder con idea validada para ir a Serie A'},
-  ],
-  default:[
-    {name:'Andrea Molina',role:'Consultora de Innovación · 6 años exp.',location:'Santiago, Chile',initials:'AM',color:'#853f9d',tags:['Innovación','Metodologías Ágiles','Equipos','Proyectos'],seeking:'Socio/a con habilidades complementarias y ambición'},
-    {name:'Pablo Leiva',role:'Full-Stack Developer · Independiente',location:'Valparaíso, Chile',initials:'PL',color:'#185fa5',tags:['React','Node','Proyectos propios','Open Source'],seeking:'Personas apasionadas con proyectos reales'},
-    {name:'Mariana Vidal',role:'Diseñadora & Founder · Studio MV',location:'Montevideo, Uruguay',initials:'MV',color:'#c4581a',tags:['Branding','UX','Emprendimiento','Creatividad'],seeking:'Equipo multidisciplinar para proyecto ambicioso'},
-  ]
-};
-
-function detectCategory(role,skills,vision){
-  const text=(role+' '+skills+' '+vision).toLowerCase();
-  if(/dev|program|código|backend|frontend|react|node|python|software|ingenier|fullstack|stack/.test(text))return'dev';
-  if(/diseñ|ux|ui|figma|visual|brand|product design|ilustr|graphic/.test(text))return'design';
-  if(/market|growth|seo|redes|contenido|comunidad|ads|ventas|sales|comunic/.test(text))return'marketing';
-  if(/founder|co-fund|startup|emprendedor|ceo|cto|lanz|idea|negocio/.test(text))return'founder';
-  return'default';
-}
-
-function buildWhyText(profile, userName, userRole, userSkills, colabType){
-  const name=userName||'tú';
-  const whyMap={
-    '#185fa5':`${name} aporta la visión técnica que ${profile.name} necesita para ejecutar su hoja de ruta. La experiencia de ${profile.name} en producto y estrategia complementa perfectamente las habilidades de ${userRole.toLowerCase()||'tu perfil'} en ${userSkills.split(',')[0]||'el área'}. Juntos cubren el 100% del stack fundador.`,
-    '#c4581a':`${profile.name} ha desarrollado redes comerciales en Latam que acelerarían directamente el trabajo de ${name}. Donde ${name} tiene profundidad técnica y creativa, ${profile.name} tiene la conexión con el mercado y los tomadores de decisión. Un match complementario de alto valor.`,
-    '#2d6b4a':`La combinación de ${userSkills.split(',')[0]||'tus habilidades'} con la experiencia de ${profile.name} en ${profile.tags[0]} crea un perfil difícil de encontrar en el mercado. ${profile.name} busca exactamente el tipo de colaboración que ${name} propone: ${colabType||'trabajo de alto impacto'}.`,
-    '#853f9d':`${profile.name} lleva tiempo buscando alguien con el perfil de ${name}: alguien que combine visión y ejecución. Su experiencia en ${profile.tags[1]} se alinea directamente con lo que ${name} describe en su búsqueda. La afinidad de valores y metodología es lo que más destaca en este match.`,
-    '#1a6b6b':`Ambos comparten una visión orientada al impacto real, no solo a la facturación. ${profile.name} complementa a ${name} aportando ${profile.tags[0]} y ${profile.tags[2]}, dos áreas donde la combinación genera sinergia inmediata. Este match tiene alto potencial de escala.`,
-  };
-  return whyMap[profile.color]||`${name} y ${profile.name} comparten una visión compatible y habilidades complementarias. ${profile.name} aporta ${profile.tags[0]} y ${profile.tags[1]}, lo que cubre las brechas del perfil de ${name}. La afinidad de objetivos hace de este match uno de los más sólidos del algoritmo.`;
-}
-
-async function runMatch(){
-  const name=document.getElementById('m-name').value.trim();
-  const role=document.getElementById('m-role').value.trim();
-  const skills=document.getElementById('m-skills').value.trim();
-  const type=document.getElementById('m-type').value;
-  const vision=document.getElementById('m-vision').value.trim();
-
-  if(!role||!skills||!vision){
-    showToast('Completa tu rol, habilidades y qué buscas','error');
-    if(!role)document.getElementById('m-role').focus();
-    else if(!skills)document.getElementById('m-skills').focus();
-    else document.getElementById('m-vision').focus();
-    return;
-  }
-
-  const btn=document.getElementById('match-btn');
-  const resultEl=document.getElementById('match-result');
-  const loadingEl=document.getElementById('mr-loading');
-  const outputEl=document.getElementById('mr-output');
-
-  btn.disabled=true;
-  resultEl.classList.add('show');
-  loadingEl.style.display='block';
-  outputEl.style.display='none';
-  outputEl.innerHTML='';
-
-  await new Promise(r=>setTimeout(r,2000+Math.random()*800));
-
-  const cat=detectCategory(role,skills,vision);
-  const pool=matchProfiles[cat]||matchProfiles.default;
-  const m=pool[Math.floor(Math.random()*pool.length)];
-  const pct=82+Math.floor(Math.random()*15);
-  const why=buildWhyText(m,name,role,skills,type);
-
-  outputEl.innerHTML=`
-    <div class="mr-card">
-      <div class="mr-header">
-        <div class="mr-av" style="background:${m.color}">${m.initials}</div>
-        <div>
-          <p class="mr-name">${m.name}</p>
-          <p class="mr-role">${m.role} · ${m.location}</p>
-        </div>
-        <div class="mr-pct">${pct}%</div>
-      </div>
-      <div class="compat-bar"><div class="compat-fill" id="compat-fill"></div></div>
-      <div class="mr-tags">${m.tags.map(t=>`<span class="mr-tag">${t}</span>`).join('')}</div>
-      <div class="mr-why"><strong>Por qué hacen match:</strong> ${why}</div>
-      <p class="mr-seeking">Busca: "${m.seeking}"</p>
-    </div>
-    <div class="match-another">
-      <button class="match-btn" style="max-width:220px" onclick="runMatch()">Otro match →</button>
-      <a href="crear-perfil.html" style="max-width:280px;width:100%"><button class="match-btn" style="width:100%;background:var(--accent2)">Crear mi perfil →</button></a>
-    </div>`;
-
-  loadingEl.style.display='none';
-  outputEl.style.display='block';
-  setTimeout(()=>{
-    const fill=document.getElementById('compat-fill');
-    if(fill)fill.style.width=pct+'%';
-  },100);
-  btn.disabled=false;
-  showToast('¡Match encontrado! '+pct+'% de afinidad','success');
-}
-
-/* ── WAITLIST COUNT ANIMATED ── */
-const countObserver=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      const el=e.target;
-      const target=parseInt(el.dataset.count);
-      if(!target)return;
-      const suffix=el.dataset.suffix||'';
-      let curr=0;
-      const step=Math.ceil(target/40);
-      const timer=setInterval(()=>{
-        curr=Math.min(curr+step,target);
-        el.textContent=curr+suffix;
-        if(curr>=target)clearInterval(timer);
-      },35);
-      countObserver.unobserve(el);
-    }
-  });
-},{threshold:.5});
-document.querySelectorAll('.stat-n[data-count]').forEach(el=>countObserver.observe(el));
-
-/* ── FAQ ACCORDION ── */
-function toggleFaq(btn){
-  const item=btn.closest('.faq-item');
-  const isOpen=item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(el=>el.classList.remove('open'));
-  if(!isOpen)item.classList.add('open');
-}
-
-/* ── MODAL T&C ── */
-function openTC(){
-  document.getElementById('tc-modal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeTC(){
-  document.getElementById('tc-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-function closeTCifOverlay(e){
-  if(e.target===document.getElementById('tc-modal'))closeTC();
-}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTC();});
-
-/* ── CONTACT FORM ── */
-(function initContact(){
-  const profile=JSON.parse(localStorage.getItem('nw_profile')||'null');
-  const btn=document.getElementById('contact-send-btn');
-  const note=document.getElementById('contact-session-note');
-  const emailInput=document.getElementById('contact-email');
-  if(profile&&profile.email){
-    emailInput.value=profile.email;
-    emailInput.readOnly=true;
-  } else {
-    btn.disabled=true;
-    note.classList.add('show');
-  }
-})();
-
-function sendContact(){
-  const email=document.getElementById('contact-email').value.trim();
-  const subject=document.getElementById('contact-subject').value.trim();
-  const message=document.getElementById('contact-message').value.trim();
-  if(!subject||!message){
-    showToast('Completa el asunto y el mensaje','error');
-    return;
-  }
-  const mailto='mailto:Team@nextwork.cl'
-    +'?subject='+encodeURIComponent(subject)
-    +'&body='+encodeURIComponent(message+'\n\n— '+email);
-  window.location.href=mailto;
-  showToast('Abriendo tu cliente de correo…','success');
-}
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-/* ── LIVE WAITLIST COUNT (Supabase) ── */
-(async function loadWaitlistCount(){
-  try{
-    const SUPA_URL='https://vkewxmrutpjmdrxsqdea.supabase.co';
-    const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0';
-    const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
-    const {count,error}=await sb.from('waitlist').select('*',{count:'exact',head:true});
-    if(error||count===null)return;
-    const el=document.getElementById('live-count');
-    if(!el)return;
-    // Animate from 0 to real count
-    let curr=0;
-    const target=count;
-    const step=Math.max(1,Math.ceil(target/30));
-    const timer=setInterval(()=>{
-      curr=Math.min(curr+step,target);
-      el.textContent='+'+curr+(curr>=100?' personas':curr>=10?' personas':' personas');
-      if(curr>=target)clearInterval(timer);
-    },40);
-  }catch(e){}
-})();
-</script>
-<script>
-(async()=>{
-  const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');
-  const {data:{session}}=await sb.auth.getSession();
-  const el=document.getElementById('nav-auth');
-  if(!el||!session)return;
-  const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
-  if(!p)return;
-  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
-  const firstName=(p.name||'').split(' ')[0];
-  const avatarHtml=`<div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div>`;
-  el.innerHTML=`
-    <div style="position:relative" id="nw-user-menu">
-      <button onclick="document.getElementById('nw-dropdown').classList.toggle('nw-open')" style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:4px 8px 4px 4px;border-radius:24px;transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='none'">
-        ${avatarHtml}
-        <span style="font-size:13px;font-weight:500;color:#3d3b36">${firstName}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a7870" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div id="nw-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #dedad1;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.1);min-width:190px;overflow:hidden;z-index:200">
-        <a href="dashboard.html" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:#3d3b36;text-decoration:none;transition:background .15s" onmouseover="this.style.background='#f5f2eb'" onmouseout="this.style.background='none'"><span>📊</span> Mi Dashboard</a>
-        <a href="perfil-publico.html" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:#3d3b36;text-decoration:none;transition:background .15s" onmouseover="this.style.background='#f5f2eb'" onmouseout="this.style.background='none'"><span>👤</span> Ver mi perfil</a>
-        <a href="buscar.html" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:#3d3b36;text-decoration:none;transition:background .15s" onmouseover="this.style.background='#f5f2eb'" onmouseout="this.style.background='none'"><span>🔍</span> Buscar perfiles</a>
-        <div style="height:1px;background:#f0ece4;margin:4px 0"></div>
-        <button onclick="(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');await sb.auth.signOut();localStorage.removeItem('nw_profile');window.location.href='index.html';})()" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:#b91c1c;background:none;border:none;cursor:pointer;width:100%;text-align:left;font-family:inherit;transition:background .15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'"><span>🚪</span> Cerrar sesión</button>
-      </div>
-    </div>`;
-  /* Cerrar dropdown al hacer click afuera */
-  document.addEventListener('click',function(e){
-    const menu=document.getElementById('nw-user-menu');
-    if(menu&&!menu.contains(e.target)){
-      const dd=document.getElementById('nw-dropdown');
-      if(dd)dd.classList.remove('nw-open');
-    }
-  });
-})();
-/* Toggle dropdown via class */
-document.addEventListener('DOMContentLoaded',function(){
-  const style=document.createElement('style');
-  style.textContent='#nw-dropdown.nw-open{display:block!important}';
-  document.head.appendChild(style);
-});
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
-
