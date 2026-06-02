@@ -1060,10 +1060,12 @@ async function signUpAndSave(){
 
   const {data,error}=await _sb.auth.signUp({email,password});
   if(error){
-    const msg=error.message.includes('already registered')
-      ?'Este email ya tiene cuenta. <a href="login.html" style="color:#b91c1c;font-weight:600">Inicia sesión aquí →</a>'
-      :error.message;
-    errEl.innerHTML=msg;errEl.style.display='block';
+    if(error.message.includes('already registered')){
+  errEl.innerHTML='Este email ya tiene cuenta. <a href="login.html" style="color:#b91c1c;font-weight:600">Inicia sesión aquí →</a>';
+}else{
+  errEl.textContent=error.message;
+}
+errEl.style.display='block';
     btn.textContent='Publicar mi perfil →';btn.disabled=false;
     return;
   }
