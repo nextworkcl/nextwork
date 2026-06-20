@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nextwork-preview",
+      "runtimeExecutable": "C:\\Users\\pmora\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "C:\\Users\\pmora\\Downloads"],
+      "port": 3456
+    }
+  ]
+}
