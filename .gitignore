@@ -1,0 +1,6 @@
+.wrangler/
+.claude/
+principal.zip
+*.zip
+node_modules/
+.DS_Store
