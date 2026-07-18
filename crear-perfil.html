@@ -1157,7 +1157,7 @@ errEl.style.display='block';
   }catch(e){console.warn('Email notif error:',e);}
 
   /* Guardar perfil en Supabase */
-  await _sb.from('profiles').insert({
+  const {error:insErr}=await _sb.from('profiles').insert({
     id:data.user.id,email,
     name:profile.name,role:profile.role,location:profile.location,
     link:profile.link,strava:profile.strava,bio:profile.bio,
@@ -1167,6 +1167,13 @@ errEl.style.display='block';
     vision:profile.vision,photo:profile.photo,banner:profile.banner,
     status:profile.status
   });
+  if(insErr){
+    errEl.textContent='Tu cuenta se creó, pero no pudimos guardar el perfil: '+insErr.message+'. Inicia sesión e inténtalo de nuevo.';
+    errEl.style.display='block';
+    btn.textContent='Publicar mi perfil →';btn.disabled=false;
+    saveProfile(); /* backup local para no perder lo escrito */
+    return;
+  }
 
   saveProfile(); /* backup localStorage */
 
@@ -1205,7 +1212,7 @@ document.head.appendChild(style);
       <h4>General</h4>
       <ul>
         <li><a href="crear-perfil.html">Registrarse</a></li>
-        <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+        <li><a href="login.html">Iniciar sesión</a></li>
         <li><a href="index.html#faq">Centro de ayuda</a></li>
         <li><a href="index.html#how">Acerca de</a></li>
         <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
