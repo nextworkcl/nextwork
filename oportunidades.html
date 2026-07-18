@@ -27,6 +27,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop
 .logo-word span{color:var(--accent2)}
 .nav-right{display:flex;align-items:center;gap:1.5rem}
 .nav-back{font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:6px;transition:color .2s}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-links a.active{color:var(--accent2);font-weight:500}
 .nav-back:hover{color:var(--accent2)}
 .nav-back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
 .nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .2s}
@@ -169,11 +172,12 @@ footer strong{color:rgba(255,255,255,.75)}
     </div>
     <span class="logo-word">next<span>work</span></span>
   </a>
+  <div class="nav-links">
+    <a href="buscar.html">Explorar perfiles</a>
+    <a href="oportunidades.html" class="active">Oportunidades</a>
+    <a href="publicaciones.html">Comunidad</a>
+  </div>
   <div class="nav-right">
-    <a href="index.html" class="nav-back">
-      <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-      Volver al inicio
-    </a>
     <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
   </div>
 </nav>
