@@ -58,6 +58,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop
 .form-group{margin-bottom:1.4rem}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 label{display:block;font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.label-voice{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.label-voice label{margin-bottom:0}
+.voice-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--accent2);background:var(--glow2);border:1px solid var(--accent3);border-radius:20px;padding:4px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:none;letter-spacing:0;transition:background .2s,color .2s,box-shadow .2s}
+.voice-btn:hover{background:var(--accent3);color:#fff}
+.voice-btn.recording{background:#dc2626;border-color:#dc2626;color:#fff;animation:voicePulse 1.3s infinite}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+.voice-btn.hidden{display:none}
+.voice-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 input[type=text],input[type=email],input[type=url],select,textarea{
   width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--cream3);
   background:var(--surface);font-family:'DM Sans',sans-serif;font-size:14px;
@@ -432,7 +440,10 @@ footer strong{color:rgba(255,255,255,.75)}
     <hr class="sdivider">
 
     <div class="form-group">
-      <label>Descripción personal</label>
+      <div class="label-voice">
+        <label>Descripción personal</label>
+        <button type="button" class="voice-btn" id="voice-bio" onclick="toggleVoice('f-bio','voice-bio','cnt-bio',300)"><span class="voice-dot"></span>Dictar por voz</button>
+      </div>
       <textarea id="f-bio" rows="3" placeholder="Ej. Soy una persona curiosa, apasionada por el diseño y la tecnología. Me gusta trabajar en equipos pequeños donde cada persona importa…" maxlength="300" oninput="countChars(this,'cnt-bio',300)"></textarea>
       <p class="char-count"><span id="cnt-bio">0</span>/300</p>
       <p class="field-hint">Una presentación breve y auténtica de quién eres más allá del trabajo</p>
@@ -472,7 +483,10 @@ footer strong{color:rgba(255,255,255,.75)}
     <hr class="sdivider">
 
     <div class="form-group">
-      <label>¿Qué ofreces? Cuéntalo con tus palabras *</label>
+      <div class="label-voice">
+        <label>¿Qué ofreces? Cuéntalo con tus palabras *</label>
+        <button type="button" class="voice-btn" id="voice-offer" onclick="toggleVoice('f-offer','voice-offer','cnt-offer',400)"><span class="voice-dot"></span>Dictar por voz</button>
+      </div>
       <textarea id="f-offer" rows="4" placeholder="Ej. Tengo 5 años desarrollando productos digitales en startups. Soy fuerte en frontend y me apasiona crear experiencias que la gente realmente quiera usar…" maxlength="400" oninput="countChars(this,'cnt-offer',400)"></textarea>
       <p class="char-count"><span id="cnt-offer">0</span>/400</p>
       <p class="field-err" id="err-offer">Cuéntanos qué ofreces (mínimo 30 caracteres)</p>
@@ -544,7 +558,10 @@ footer strong{color:rgba(255,255,255,.75)}
     </div>
 
     <div class="form-group">
-      <label>¿Qué buscas en un proyecto o equipo? *</label>
+      <div class="label-voice">
+        <label>¿Qué buscas en un proyecto o equipo? *</label>
+        <button type="button" class="voice-btn" id="voice-vision" onclick="toggleVoice('f-vision','voice-vision','cnt-vision',400)"><span class="voice-dot"></span>Dictar por voz</button>
+      </div>
       <textarea id="f-vision" rows="4" placeholder="Ej. Busco un proyecto con impacto social real donde pueda liderar el área técnica. Me importa trabajar con personas que compartan valores de transparencia y crecimiento…" maxlength="400" oninput="countChars(this,'cnt-vision',400)"></textarea>
       <p class="char-count"><span id="cnt-vision">0</span>/400</p>
       <p class="field-err" id="err-vision">Cuéntanos qué buscas (mínimo 30 caracteres)</p>
@@ -812,6 +829,63 @@ function toggleChip(el){
 function countChars(el,countId,max){
   document.getElementById(countId).textContent=el.value.length;
 }
+
+/* ─── PERFIL POR VOZ (Web Speech API) ─── */
+let _voiceRec=null,_voiceActive=null;
+function _voiceStopUI(btn){btn.classList.remove('recording');btn.innerHTML='<span class="voice-dot"></span>Dictar por voz';}
+function toggleVoice(targetId,btnId,cntId,maxLen){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Tu navegador no soporta dictado por voz. Prueba en Chrome.','error');return;}
+  const btn=document.getElementById(btnId);
+  const ta=document.getElementById(targetId);
+  /* Si ya se está grabando este campo, detener */
+  if(_voiceActive===btnId&&_voiceRec){_voiceRec.stop();return;}
+  /* Si había otra grabación activa, detenerla */
+  if(_voiceRec){try{_voiceRec.stop();}catch(e){}}
+
+  const rec=new SR();
+  rec.lang='es-CL';rec.continuous=true;rec.interimResults=true;
+  _voiceRec=rec;_voiceActive=btnId;
+
+  const base=ta.value?ta.value.trim()+' ':'';
+  let finalText='';
+
+  btn.classList.add('recording');
+  btn.innerHTML='<span class="voice-dot"></span>Grabando… toca para parar';
+
+  rec.onresult=(e)=>{
+    let interim='';finalText='';
+    for(let i=0;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal)finalText+=t;else interim+=t;
+    }
+    const combined=(base+finalText+interim).slice(0,maxLen);
+    ta.value=combined;
+    if(cntId)document.getElementById(cntId).textContent=combined.length;
+  };
+  rec.onerror=(e)=>{
+    _voiceStopUI(btn);_voiceRec=null;_voiceActive=null;
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')
+      showToast('Permite el acceso al micrófono para dictar.','error');
+    else if(e.error==='no-speech')
+      showToast('No se detectó voz. Intenta de nuevo.','error');
+  };
+  rec.onend=()=>{
+    const combined=(base+finalText).trim().slice(0,maxLen);
+    ta.value=combined;
+    if(cntId)document.getElementById(cntId).textContent=combined.length;
+    _voiceStopUI(btn);_voiceRec=null;_voiceActive=null;
+  };
+  try{rec.start();}catch(e){_voiceStopUI(btn);_voiceRec=null;_voiceActive=null;}
+}
+/* Ocultar los botones de voz si el navegador no soporta reconocimiento */
+(function(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    if(document.readyState!=='loading')document.querySelectorAll('.voice-btn').forEach(b=>b.classList.add('hidden'));
+    else document.addEventListener('DOMContentLoaded',()=>document.querySelectorAll('.voice-btn').forEach(b=>b.classList.add('hidden')));
+  }
+})();
 
 /* ─── TOAST ─── */
 function showToast(msg,type=''){
