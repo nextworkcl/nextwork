@@ -579,16 +579,16 @@ footer strong{color:rgba(255,255,255,.75)}
     <!-- AUTH GATE -->
     <div id="auth-gate">
       <div style="background:var(--surface);border:1px solid var(--cream3);border-radius:var(--r);padding:2rem 2rem 1.5rem;margin-bottom:1rem">
-        <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="text-align:center;margin-bottom:1.5rem" id="auth-intro">
           <div style="font-size:2.5rem;margin-bottom:.6rem">🚀</div>
-          <h3 style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:.4rem">Casi listo</h3>
-          <p style="font-size:14px;color:var(--ink3);line-height:1.5">Crea tu cuenta para publicar tu perfil en Nextwork.<br>Es gratis y tarda 10 segundos.</p>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:.4rem" id="auth-title">Casi listo</h3>
+          <p style="font-size:14px;color:var(--ink3);line-height:1.5" id="auth-subtitle">Crea tu cuenta para publicar tu perfil en Nextwork.<br>Es gratis y tarda 10 segundos.</p>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="auth-email-group">
           <label>Email</label>
           <input type="email" id="auth-email" placeholder="tu@email.com">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="auth-pw-group">
           <label>Contraseña</label>
           <div style="position:relative">
             <input type="password" id="auth-password" placeholder="Mínimo 6 caracteres" style="padding-right:44px">
@@ -599,8 +599,8 @@ footer strong{color:rgba(255,255,255,.75)}
         </div>
         <div id="auth-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#b91c1c;margin-bottom:1rem"></div>
         <button id="auth-btn" onclick="signUpAndSave()" class="btn-next" style="width:100%;max-width:none;margin-bottom:.8rem">Publicar mi perfil →</button>
-        <p style="text-align:center;font-size:11.5px;color:var(--ink3);line-height:1.5;margin-bottom:.8rem">Al crear tu cuenta aceptas nuestra <a href="privacidad.html" target="_blank" style="color:var(--accent2);font-weight:500">Política de Privacidad</a>. Tu correo nunca se muestra a otros usuarios.</p>
-        <p style="text-align:center;font-size:13px;color:var(--ink3)">¿Ya tienes cuenta? <a href="login.html" style="color:var(--accent2);font-weight:500">Iniciar sesión</a></p>
+        <p id="auth-consent" style="text-align:center;font-size:11.5px;color:var(--ink3);line-height:1.5;margin-bottom:.8rem">Al crear tu cuenta aceptas nuestra <a href="privacidad.html" target="_blank" style="color:var(--accent2);font-weight:500">Política de Privacidad</a>. Tu correo nunca se muestra a otros usuarios.</p>
+        <p id="auth-login-link" style="text-align:center;font-size:13px;color:var(--ink3)">¿Ya tienes cuenta? <a href="login.html" style="color:var(--accent2);font-weight:500">Iniciar sesión</a></p>
       </div>
     </div>
 
@@ -1121,6 +1121,7 @@ const _sb=window.supabase.createClient(
 );
 
 async function signUpAndSave(){
+  if(editMode) return saveProfileEdits();
   const email=document.getElementById('auth-email').value.trim();
   const password=document.getElementById('auth-password').value;
   const errEl=document.getElementById('auth-error');
@@ -1200,6 +1201,80 @@ function launchConfetti(){
 const style=document.createElement('style');
 style.textContent='@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}';
 document.head.appendChild(style);
+
+/* ─── MODO EDICIÓN (usuario con sesión existente) ─── */
+let editMode=false, editUserId=null;
+
+function collectAllFields(){
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  profile.name=g('f-name');profile.role=g('f-role');profile.email=g('f-email');
+  profile.location=g('f-location');profile.link=g('f-link');profile.strava=g('f-strava');
+  profile.bio=g('f-bio');profile.offer=g('f-offer');profile.vision=g('f-vision');
+  profile.exp=parseInt(document.getElementById('f-exp').value)||0;
+}
+
+function prefillForm(p){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  set('f-name',p.name);set('f-role',p.role);set('f-email',p.email);
+  set('f-location',p.location);set('f-link',p.link);set('f-strava',p.strava);
+  set('f-bio',p.bio);set('f-offer',p.offer);set('f-vision',p.vision);
+  ['bio','offer','vision'].forEach(f=>{const c=document.getElementById('cnt-'+f),el=document.getElementById('f-'+f);if(c&&el)c.textContent=el.value.length;});
+  if(document.getElementById('f-email'))document.getElementById('f-email').readOnly=true;
+  try{updateInitials();}catch(e){}
+  if(typeof p.exp==='number'){const s=document.getElementById('f-exp');if(s){s.value=p.exp;updateExp();}}
+  profile.skills=Array.isArray(p.skills)?p.skills.slice():[];renderSkills();renderSuggestions();
+  profile.hobbies=Array.isArray(p.hobbies)?p.hobbies.slice():[];renderHobbies();renderHobbySuggestions();
+  profile.status=Array.isArray(p.status)?p.status.slice():[];
+  profile.status.forEach(v=>{const inp=document.querySelector('.status-opt input[value="'+(window.CSS&&CSS.escape?CSS.escape(v):v)+'"]');if(inp){inp.checked=true;const opt=inp.closest('.status-opt');if(opt)opt.classList.add('selected');}});
+  profile.collab=Array.isArray(p.collab)?p.collab.slice():[];
+  profile.collab.forEach(v=>{const inp=document.querySelector('.collab-opt input[value="'+(window.CSS&&CSS.escape?CSS.escape(v):v)+'"]');if(inp){inp.checked=true;const opt=inp.closest('.collab-opt');if(opt)opt.classList.add('selected');}});
+  profile.availability=Array.isArray(p.availability)?p.availability.slice():[];
+  profile.availability.forEach(v=>{document.querySelectorAll('.avail-chip').forEach(c=>{if(c.textContent.trim()===v)c.classList.add('selected');});});
+  if(p.color){profile.color=p.color;document.querySelectorAll('.av-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.color===p.color));}
+  if(p.photo){profile.photo=p.photo;const prev=document.getElementById('av-preview');if(prev){prev.innerHTML='<img src="'+p.photo+'" alt="foto">';prev.style.background='transparent';}const rb=document.getElementById('av-remove-btn');if(rb)rb.classList.add('show');const cols=document.getElementById('av-colors');if(cols){cols.style.opacity='0.4';cols.style.pointerEvents='none';}}
+  else if(p.color){const prev=document.getElementById('av-preview');if(prev)prev.style.background=p.color;}
+  if(p.banner){profile.banner=p.banner;const wrap=document.getElementById('banner-wrap');if(wrap){let img=wrap.querySelector('img');if(!img){img=document.createElement('img');wrap.insertBefore(img,wrap.firstChild);}img.src=p.banner;const ba=document.getElementById('banner-actions');if(ba)ba.style.display='flex';}}
+}
+
+async function saveProfileEdits(){
+  const errEl=document.getElementById('auth-error');
+  const btn=document.getElementById('auth-btn');
+  errEl.style.display='none';
+  collectAllFields();
+  if(!profile.name||!profile.role){errEl.textContent='Tu nombre y rol no pueden quedar vacíos.';errEl.style.display='block';return;}
+  btn.textContent='Guardando...';btn.disabled=true;
+  const {error}=await _sb.from('profiles').upsert({
+    id:editUserId,email:profile.email,
+    name:profile.name,role:profile.role,location:profile.location,
+    link:profile.link,strava:profile.strava,bio:profile.bio,
+    color:profile.color,exp:profile.exp,
+    skills:profile.skills,hobbies:profile.hobbies,offer:profile.offer,
+    collab:profile.collab,availability:profile.availability,
+    vision:profile.vision,photo:profile.photo,banner:profile.banner,
+    status:profile.status
+  });
+  if(error){errEl.textContent='No pudimos guardar los cambios: '+error.message;errEl.style.display='block';btn.textContent='Guardar cambios →';btn.disabled=false;return;}
+  saveProfile();
+  showToast('Perfil actualizado ✓','success');
+  setTimeout(()=>{window.location.href='dashboard.html';},900);
+}
+
+/* Detectar sesión al cargar: si hay usuario logueado → modo edición */
+(async function initEditMode(){
+  try{
+    const {data:{session}}=await _sb.auth.getSession();
+    if(!session)return; /* sin sesión → flujo de registro normal */
+    editMode=true;editUserId=session.user.id;
+    /* Ocultar la parte de crear cuenta */
+    ['auth-email-group','auth-pw-group','auth-consent','auth-login-link'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    const t=document.getElementById('auth-title');if(t)t.textContent='Editar tu perfil';
+    const st=document.getElementById('auth-subtitle');if(st)st.innerHTML='Actualiza tu información y guarda los cambios.';
+    const btn=document.getElementById('auth-btn');if(btn)btn.textContent='Guardar cambios →';
+    /* Traer perfil existente y precargar */
+    const {data:p}=await _sb.from('profiles').select('*').eq('id',editUserId).single();
+    if(p)prefillForm(p);
+  }catch(e){}
+})();
 </script>
 
 <footer>
