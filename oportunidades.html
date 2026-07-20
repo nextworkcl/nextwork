@@ -273,7 +273,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <h4>General</h4>
       <ul>
         <li><a href="crear-perfil.html">Registrarse</a></li>
-        <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+        <li><a href="login.html">Iniciar sesión</a></li>
         <li><a href="index.html#faq">Centro de ayuda</a></li>
         <li><a href="index.html#how">Acerca de</a></li>
         <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
@@ -413,6 +413,7 @@ function openProject(id){
   t._timer=setTimeout(()=>t.classList.remove('show'),3500);
 }
 
+document.getElementById('stat-active').textContent=CARDS.length;
 renderCards(getSorted(CARDS));
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>

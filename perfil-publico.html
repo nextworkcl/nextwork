@@ -168,6 +168,16 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </div>
 
+<!-- GATE: profile not found -->
+<div id="not-found" style="display:none">
+  <div class="gate">
+    <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
+    <h2>Perfil no encontrado</h2>
+    <p>Este perfil no existe o fue eliminado.</p>
+    <a href="buscar.html" class="gate-btn">Explorar perfiles →</a>
+  </div>
+</div>
+
 <!-- PROFILE -->
 <div id="profile-page" style="display:none">
   <div class="page-wrap">
@@ -187,7 +197,7 @@ footer strong{color:rgba(255,255,255,.75)}
                 <svg viewBox="0 0 20 20" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 Compartir
               </button>
-              <a href="crear-perfil.html"><button class="btn-edit">✏️ Editar perfil</button></a>
+              <a href="crear-perfil.html" id="edit-link"><button class="btn-edit">✏️ Editar perfil</button></a>
             </div>
             <div class="hero-name" id="hero-name"></div>
             <div class="hero-role" id="hero-role"></div>
@@ -238,7 +248,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <!-- RIGHT: SIDEBAR -->
       <div>
         <!-- CONTACT -->
-        <div class="contact-card">
+        <div class="contact-card" id="contact-card" style="display:none">
           <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
           <h3>¿Quieres conectar?</h3>
           <p>Envía un mensaje directo o postula a colaborar juntos</p>
@@ -247,7 +257,7 @@ footer strong{color:rgba(255,255,255,.75)}
         </div>
 
         <!-- MATCH -->
-        <div class="match-card" id="match-card">
+        <div class="match-card" id="match-card" style="display:none">
           <h4>Compatibilidad contigo</h4>
           <div class="match-pct" id="match-pct">—</div>
           <div class="match-label">de afinidad</div>
@@ -262,7 +272,7 @@ footer strong{color:rgba(255,255,255,.75)}
         </div>
 
         <!-- NEXTWORK CTA -->
-        <div style="background:var(--glow2);border:1px solid rgba(77,158,114,.2);border-radius:var(--r);padding:1.3rem;text-align:center">
+        <div id="join-cta" style="background:var(--glow2);border:1px solid rgba(77,158,114,.2);border-radius:var(--r);padding:1.3rem;text-align:center">
           <div style="font-size:1.5rem;margin-bottom:.5rem">🚀</div>
           <div style="font-weight:600;font-size:14px;color:var(--accent);margin-bottom:.4rem">¿Eres de Nextwork?</div>
           <div style="font-size:13px;color:var(--accent2);margin-bottom:1rem">Crea tu perfil y aparece en los matches de la comunidad</div>
@@ -284,7 +294,7 @@ footer strong{color:rgba(255,255,255,.75)}
     </a>
     <div class="footer-col"><h4>General</h4><ul>
       <li><a href="crear-perfil.html">Registrarse</a></li>
-      <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+      <li><a href="login.html">Iniciar sesión</a></li>
       <li><a href="index.html#faq">Centro de ayuda</a></li>
       <li><a href="index.html#how">Acerca de</a></li>
       <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
@@ -317,6 +327,10 @@ footer strong{color:rgba(255,255,255,.75)}
 
 <script>
 const profile = JSON.parse(localStorage.getItem('nw_profile') || 'null');
+const params = new URLSearchParams(window.location.search);
+const viewId = params.get('id');
+let isOwnProfile = true;
+let viewerSession = null;
 
 const COLLAB_LABELS = {
   cofundador:'🚀 Co-fundador', proyecto:'💡 Proyecto puntual',
@@ -369,26 +383,16 @@ function shareProfile(){
 }
 
 function contactar(){
-  const p=profile;
-  if(p&&p.email){
-    window.location.href='mailto:'+p.email+'?subject=Conexión desde Nextwork&body=Hola '+p.name.split(' ')[0]+', vi tu perfil en Nextwork y me gustaría conectar.';
-  } else {
-    showToast('📧 Agrega tu email en el perfil para recibir mensajes');
-  }
+  showToast('🔒 Mensajería disponible en la beta — ¡crea tu perfil para conectar!');
 }
 
-function renderProfile(p){
+function renderProfile(p, ownProfile){
+  isOwnProfile = ownProfile;
   document.getElementById('profile-page').style.display='block';
   document.title = (p.name||'Perfil')+' · Nextwork';
 
-  /* NAV */
   const color=getColor(p.name);
   const initials=getInitials(p.name);
-  document.getElementById('nav-user').innerHTML=`
-    <a href="dashboard.html" style="display:flex;align-items:center;gap:.6rem;font-size:13.5px;font-weight:500;color:var(--ink)">
-      <div style="width:34px;height:34px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid var(--accent3)">${initials}</div>
-      ${p.name.split(' ')[0]}
-    </a>`;
 
   /* BANNER */
   const banner=document.getElementById('hero-banner');
@@ -423,7 +427,7 @@ function renderProfile(p){
   /* LINKS */
   const links=document.getElementById('hero-links');
   let linksHTML='';
-  if(p.linkedin) linksHTML+=`<a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>`;
+  if(p.link) linksHTML+=`<a href="${p.link.startsWith('http')?p.link:'https://'+p.link}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>`;
   if(p.strava) linksHTML+=`<a href="${p.strava.startsWith('http')?p.strava:'https://'+p.strava}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>Strava</a>`;
   if(p.email) linksHTML+=`<a href="mailto:${p.email}" class="hero-link"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${p.email}</a>`;
   links.innerHTML=linksHTML;
@@ -448,13 +452,13 @@ function renderProfile(p){
 
   /* COLLAB */
   const collabLabels=Object.keys(COLLAB_LABELS);
-  const hasCollab=p.collabTypes&&p.collabTypes.length;
+  const hasCollab=p.collab&&p.collab.length;
   const hasAvail=p.availability&&p.availability.length;
   if(hasCollab||hasAvail){
     document.getElementById('section-collab').style.display='block';
     if(hasCollab){
       document.getElementById('collab-grid').innerHTML=collabLabels.map(k=>`
-        <div class="collab-chip${p.collabTypes.includes(k)?' active':''}">${COLLAB_LABELS[k]}</div>`).join('');
+        <div class="collab-chip${p.collab.includes(k)?' active':''}">${COLLAB_LABELS[k]}</div>`).join('');
     }
     if(hasAvail){
       document.getElementById('avail-wrap').innerHTML=p.availability.map(a=>`
@@ -470,24 +474,12 @@ function renderProfile(p){
 
   /* HOBBIES */
   if(p.hobbies){
-    const hobbiesArr=p.hobbies.split(',').map(h=>h.trim()).filter(Boolean);
+    const hobbiesArr=Array.isArray(p.hobbies)?p.hobbies:String(p.hobbies).split(',').map(h=>h.trim()).filter(Boolean);
     if(hobbiesArr.length){
       document.getElementById('section-hobbies').style.display='block';
       document.getElementById('hobbies-wrap').innerHTML=hobbiesArr.map(h=>`<span class="hobby">${h}</span>`).join('');
     }
   }
-
-  /* MATCH */
-  const pct=Math.floor(Math.random()*20+75);
-  document.getElementById('match-pct').textContent=pct+'%';
-  setTimeout(()=>document.getElementById('match-bar-fill').style.width=pct+'%',300);
-  const attrs=[];
-  if(p.skills&&p.skills.length) attrs.push('Habilidades complementarias');
-  if(p.collabTypes&&p.collabTypes.length) attrs.push('Tipo de colaboración compatible');
-  if(p.location) attrs.push('Misma zona geográfica');
-  attrs.push('Visión y valores alineados');
-  document.getElementById('match-attrs').innerHTML=attrs.slice(0,3).map(a=>`
-    <div class="match-attr"><div class="match-attr-dot"></div>${a}</div>`).join('');
 
   /* SUGGESTED */
   document.getElementById('suggested-list').innerHTML=SUGGESTED.map(s=>`
@@ -496,6 +488,53 @@ function renderProfile(p){
       <div><div class="sug-name">${s.name}</div><div class="sug-role">${s.role}</div></div>
       <div class="sug-follow">+ Seguir</div>
     </div>`).join('');
+
+  /* EDIT LINK — solo el dueño puede editar */
+  document.getElementById('edit-link').style.display=isOwnProfile?'':'none';
+
+  /* CONTACT CARD — no tiene sentido "contactarte a ti mismo" */
+  document.getElementById('contact-card').style.display=isOwnProfile?'none':'block';
+
+  /* MATCH CARD — solo si vemos el perfil de otra persona y estamos logueados */
+  const matchCard=document.getElementById('match-card');
+  if(!isOwnProfile && viewerSession){
+    matchCard.style.display='block';
+    const pct=Math.floor(Math.random()*20+75);
+    document.getElementById('match-pct').textContent=pct+'%';
+    setTimeout(()=>document.getElementById('match-bar-fill').style.width=pct+'%',300);
+    const attrs=[];
+    if(p.skills&&p.skills.length) attrs.push('Habilidades complementarias');
+    if(p.collab&&p.collab.length) attrs.push('Tipo de colaboración compatible');
+    if(p.location) attrs.push('Misma zona geográfica');
+    attrs.push('Visión y valores alineados');
+    document.getElementById('match-attrs').innerHTML=attrs.slice(0,3).map(a=>`
+      <div class="match-attr"><div class="match-attr-dot"></div>${a}</div>`).join('');
+  } else {
+    matchCard.style.display='none';
+  }
+
+  /* JOIN CTA — ocultar si el visitante ya es parte de Nextwork */
+  const joinCta=document.getElementById('join-cta');
+  if(joinCta) joinCta.style.display=viewerSession?'none':'block';
+}
+
+async function renderNavUser(){
+  const navEl=document.getElementById('nav-user');
+  if(!viewerSession){
+    navEl.innerHTML=`<a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>`;
+    return;
+  }
+  const {data:me}=await _sb.from('profiles').select('name,color,photo').eq('id',viewerSession.user.id).single();
+  if(!me){
+    navEl.innerHTML=`<a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>`;
+    return;
+  }
+  const initials=getInitials(me.name);
+  navEl.innerHTML=`
+    <a href="dashboard.html" style="display:flex;align-items:center;gap:.6rem;font-size:13.5px;font-weight:500;color:var(--ink)">
+      <div style="width:34px;height:34px;border-radius:50%;background:${me.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid var(--accent3);overflow:hidden">${me.photo?`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      ${(me.name||'').split(' ')[0]}
+    </a>`;
 }
 
 /* INIT */
@@ -505,15 +544,30 @@ const _sb=window.supabase.createClient(
 );
 (async()=>{
   const {data:{session}}=await _sb.auth.getSession();
+  viewerSession=session;
+  await renderNavUser();
+
+  if(viewId){
+    /* Viendo el perfil de alguien via ?id= */
+    if(session && session.user.id===viewId){
+      const {data:p}=await _sb.from('profiles').select('*').eq('id',viewId).single();
+      if(p){localStorage.setItem('nw_profile',JSON.stringify(p));renderProfile(p,true);return;}
+    }
+    const {data:p2}=await _sb.from('perfiles_publicos').select('*').eq('id',viewId).single();
+    if(p2){renderProfile(p2,false);return;}
+    document.getElementById('not-found').style.display='block';
+    return;
+  }
+
+  /* Perfil propio (sin ?id=) */
   if(session){
     const {data:p}=await _sb.from('profiles').select('*').eq('id',session.user.id).single();
-    if(p){localStorage.setItem('nw_profile',JSON.stringify(p));renderProfile(p);return;}
+    if(p){localStorage.setItem('nw_profile',JSON.stringify(p));renderProfile(p,true);return;}
   }
   const local=JSON.parse(localStorage.getItem('nw_profile')||'null');
-  if(local&&local.name){renderProfile(local);}
+  if(local&&local.name){renderProfile(local,true);}
   else{
     document.getElementById('gate').style.display='block';
-    document.getElementById('nav-user').innerHTML=`<a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>`;
   }
 })();
 </script>

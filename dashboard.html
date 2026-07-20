@@ -88,7 +88,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .see-all:hover{text-decoration:underline}
 
 /* MATCH CARDS */
-.matches-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
 .match-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem;transition:box-shadow .2s,transform .2s;cursor:pointer}
 .match-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
 .match-header{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.7rem}
@@ -169,8 +168,35 @@ footer strong{color:rgba(255,255,255,.75)}
 .footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
 .footer-links a:hover{color:rgba(255,255,255,.8)}
 
+/* QUICK EDIT MODAL */
+.qe-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(15,14,12,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:1.2rem}
+.qe-overlay.open{display:flex}
+.qe-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.qe-head{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;border-bottom:1px solid var(--cream3)}
+.qe-head h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.qe-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--cream2);color:var(--ink2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qe-close:hover{background:var(--cream3)}
+.qe-body{padding:1.2rem 1.4rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.qe-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.qe-group input,.qe-group textarea{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border .2s}
+.qe-group input:focus,.qe-group textarea:focus{border-color:var(--accent3)}
+.qe-group textarea{resize:vertical;min-height:70px;line-height:1.5}
+.qe-skills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.qe-skill{display:inline-flex;align-items:center;gap:5px;background:var(--glow2);color:var(--accent2);padding:4px 10px;border-radius:14px;font-size:12px}
+.qe-skill button{background:none;border:none;color:var(--accent2);cursor:pointer;font-size:13px;line-height:1;padding:0}
+.qe-foot{padding:1rem 1.4rem;border-top:1px solid var(--cream3);display:flex;gap:.9rem;align-items:center}
+.qe-btn-save{flex:1;padding:11px;border-radius:22px;background:var(--accent);color:var(--glow);border:none;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+.qe-btn-save:hover{background:var(--accent2)}
+.qe-btn-save:disabled{opacity:.6;cursor:not-allowed}
+.qe-err{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none}
+.preview-badge{font-size:10px;font-weight:600;color:var(--ink3);background:var(--cream2);padding:2px 8px;border-radius:8px;vertical-align:middle;margin-left:6px;letter-spacing:.3px}
+.matches-empty{background:var(--surface);border-radius:var(--r);border:1px dashed var(--cream3);padding:2rem 1.5rem;text-align:center;margin-bottom:1.5rem}
+.matches-empty .mi{font-size:2rem;margin-bottom:.6rem}
+.matches-empty p:first-of-type{font-weight:600;font-size:14.5px;margin-bottom:.3rem;color:var(--ink)}
+.matches-empty p:last-child{font-size:13px;color:var(--ink3);max-width:420px;margin:0 auto}
+
 @media(max-width:1100px){.layout{grid-template-columns:250px 1fr}.right-sidebar{display:none}}
-@media(max-width:720px){.layout{grid-template-columns:1fr;padding:1.2rem 1rem 4rem}.matches-grid{grid-template-columns:1fr}.left-sidebar{order:-1}}
+@media(max-width:720px){.layout{grid-template-columns:1fr;padding:1.2rem 1rem 4rem}.left-sidebar{order:-1}}
 @media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
 @media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}.nav-links{display:none}}
 </style>
@@ -217,7 +243,7 @@ footer strong{color:rgba(255,255,255,.75)}
           <div class="profile-name" id="dash-name"></div>
           <div class="profile-role" id="dash-role"></div>
           <div class="profile-loc" id="dash-loc"></div>
-          <a href="crear-perfil.html" class="profile-edit">Editar perfil</a>
+          <button class="profile-edit" id="quick-edit-btn" onclick="openQuickEdit()" style="width:100%;background:none;cursor:pointer;font-family:'DM Sans',sans-serif">✏️ Editar perfil</button>
         </div>
       </div>
 
@@ -252,26 +278,29 @@ footer strong{color:rgba(255,255,255,.75)}
       <div class="welcome-banner">
         <div class="banner-tag">✨ Tu espacio en Nextwork</div>
         <h2 id="welcome-msg">¡Bienvenido de vuelta!</h2>
-        <p>Tienes nuevos matches y oportunidades recomendadas basadas en tu perfil.</p>
+        <p>Completa tu perfil para estar listo cuando lancemos el matching con IA.</p>
       </div>
 
       <!-- MATCHES -->
       <div class="section-head">
-        <h3>Tus matches de hoy</h3>
-        <a href="index.html#match" class="see-all">Ver todos →</a>
+        <h3>Tus matches</h3>
       </div>
-      <div class="matches-grid" id="matches-grid"></div>
+      <div class="matches-empty">
+        <div class="mi">🧠</div>
+        <p>El motor de matching con IA está en construcción</p>
+        <p>En cuanto esté listo, aquí verás a las personas que mejor complementan tu proyecto.</p>
+      </div>
 
       <!-- OPORTUNIDADES -->
       <div class="section-head">
-        <h3>Oportunidades recomendadas</h3>
+        <h3>Oportunidades recomendadas<span class="preview-badge">VISTA PREVIA</span></h3>
         <a href="oportunidades.html" class="see-all">Ver todas →</a>
       </div>
       <div class="opp-list" id="opp-list"></div>
 
       <!-- PUBLICACIONES -->
       <div class="section-head">
-        <h3>De la comunidad</h3>
+        <h3>De la comunidad<span class="preview-badge">VISTA PREVIA</span></h3>
         <a href="publicaciones.html" class="see-all">Ver más →</a>
       </div>
       <div id="posts-list"></div>
@@ -314,6 +343,33 @@ footer strong{color:rgba(255,255,255,.75)}
 
 <div class="toast" id="toast"></div>
 
+<!-- QUICK EDIT MODAL -->
+<div class="qe-overlay" id="qe-overlay" onclick="if(event.target===this)closeQuickEdit()">
+  <div class="qe-box">
+    <div class="qe-head">
+      <h3>Editar perfil</h3>
+      <button class="qe-close" onclick="closeQuickEdit()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="qe-body">
+      <div id="qe-err" class="qe-err"></div>
+      <div class="qe-group"><label>Rol</label><input type="text" id="qe-role" maxlength="70"></div>
+      <div class="qe-group"><label>Ubicación</label><input type="text" id="qe-location" maxlength="50"></div>
+      <div class="qe-group"><label>Descripción personal</label><textarea id="qe-bio" maxlength="300"></textarea></div>
+      <div class="qe-group"><label>¿Qué ofreces?</label><textarea id="qe-offer" maxlength="400"></textarea></div>
+      <div class="qe-group"><label>¿Qué buscas?</label><textarea id="qe-vision" maxlength="400"></textarea></div>
+      <div class="qe-group">
+        <label>Habilidades</label>
+        <input type="text" id="qe-skill-input" placeholder="Escribe y presiona Enter…" onkeydown="handleQeSkillKey(event)">
+        <div class="qe-skills" id="qe-skills-list"></div>
+      </div>
+    </div>
+    <div class="qe-foot">
+      <a href="crear-perfil.html" style="flex:0 0 auto;font-size:12.5px;color:var(--ink3)">Edición completa →</a>
+      <button class="qe-btn-save" id="qe-save-btn" onclick="saveQuickEdit()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   <div class="footer-top">
     <a href="index.html" class="footer-brand">
@@ -322,7 +378,7 @@ footer strong{color:rgba(255,255,255,.75)}
     </a>
     <div class="footer-col"><h4>General</h4><ul>
       <li><a href="crear-perfil.html">Registrarse</a></li>
-      <li><a href="crear-perfil.html">Iniciar sesión</a></li>
+      <li><a href="login.html">Iniciar sesión</a></li>
       <li><a href="index.html#faq">Centro de ayuda</a></li>
       <li><a href="index.html#how">Acerca de</a></li>
       <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
@@ -366,19 +422,14 @@ async function logout(){
   window.location.href='index.html';
 }
 
+let currentProfile=null, currentUserId=null, qeSkills=[];
+
 const TIPS = [
   'Añade al menos 5 habilidades para aparecer en más búsquedas de matching.',
   'Los perfiles con foto reciben 3x más conexiones. ¡Sube la tuya!',
   'Comparte una publicación esta semana para aumentar tu visibilidad.',
   'Postula a una oportunidad hoy — los mejores equipos se forman rápido.',
   'Conecta tu LinkedIn para que otros puedan conocer tu trayectoria completa.',
-];
-
-const MATCHES = [
-  {av:'SC',c:'#1a3a2a',name:'Sofía Contreras',role:'Founder · MindPath',pct:94,skills:['Salud mental','Product','Growth']},
-  {av:'MR',c:'#1e4a8a',name:'Matías Rojas',role:'CTO · Rocketbot',pct:89,skills:['React','Node.js','IA']},
-  {av:'AL',c:'#4a1a5a',name:'Alejandra Luna',role:'UX Designer · Freelance',pct:85,skills:['Figma','UX','Branding']},
-  {av:'FN',c:'#6b3a1a',name:'Felipe Navarro',role:'Investor · Platanus',pct:82,skills:['Fundraising','Startups','VC']},
 ];
 
 const OPPS = [
@@ -392,12 +443,25 @@ const POSTS = [
   {av:'JV',c:'#1a2a5a',name:'Jorge Valdés',role:'PM · Buk',time:'hace 5h',body:'5 cosas que aprendí en mi primer año como PM en una startup: 1. El roadmap es mentira hasta que está en producción...',likes:312,comments:68},
 ];
 
-const ACTIVITY = [
-  {icon:'👁️',text:'3 personas vieron tu perfil',time:'hoy'},
-  {icon:'🤝',text:'Nuevo match: Matías Rojas',time:'hace 2h'},
-  {icon:'💼',text:'Oportunidad nueva: EdTech Co-founder',time:'hace 4h'},
-  {icon:'🌟',text:'Tu perfil está al 75%',time:'ayer'},
-];
+function formatMonthYear(iso){
+  try{
+    const d=new Date(iso);
+    if(isNaN(d))return null;
+    const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return months[d.getMonth()]+' '+d.getFullYear();
+  }catch(e){return null;}
+}
+
+function buildActivity(p){
+  const items=[];
+  const joined=formatMonthYear(p.created_at);
+  items.push({icon:'🚀',text:'Te uniste a Nextwork',time:joined||''});
+  const {pct}=calcCompletion(p);
+  items.push({icon:pct>=80?'🌟':'📝',text:`Tu perfil está al ${pct}%`,time:''});
+  if(p.photo) items.push({icon:'🖼️',text:'Subiste tu foto de perfil',time:''});
+  if(p.skills&&p.skills.length) items.push({icon:'⚡',text:`Agregaste ${p.skills.length} habilidad${p.skills.length===1?'':'es'}`,time:''});
+  return items.slice(0,4);
+}
 
 function getInitials(name){
   if(!name) return '?';
@@ -418,7 +482,7 @@ function calcCompletion(p){
     {label:'Habilidades',done:!!(p.skills&&p.skills.length>0)},
     {label:'Bio / descripción',done:!!p.bio},
     {label:'Email de contacto',done:!!p.email},
-    {label:'Tipo de colaboración',done:!!(p.collabTypes&&p.collabTypes.length>0)},
+    {label:'Tipo de colaboración',done:!!(p.collab&&p.collab.length>0)},
   ];
   const done=checks.filter(c=>c.done).length;
   return {pct:Math.round((done/checks.length)*100),checks};
@@ -474,25 +538,13 @@ function renderDashboard(p){
     </div>`).join('');
 
   /* STATS */
-  document.getElementById('stat-views').textContent=Math.floor(Math.random()*40+10);
-  document.getElementById('stat-matches').textContent=Math.floor(Math.random()*15+4);
-  document.getElementById('stat-opps').textContent=Math.floor(Math.random()*8+2);
-  document.getElementById('stat-since').textContent='Mayo 2026';
+  document.getElementById('stat-views').textContent='0';
+  document.getElementById('stat-matches').textContent='0';
+  document.getElementById('stat-opps').textContent='0';
+  document.getElementById('stat-since').textContent=formatMonthYear(p.created_at)||'Recién llegado';
 
   /* TIP */
   document.getElementById('tip-text').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
-
-  /* MATCHES */
-  document.getElementById('matches-grid').innerHTML=MATCHES.map((m,i)=>`
-    <div class="match-card">
-      <div class="match-header">
-        <div class="match-av" style="background:${m.c}">${m.av}</div>
-        <div><div class="match-name">${m.name}</div><div class="match-role">${m.role}</div></div>
-      </div>
-      <div class="match-pct">⚡ ${m.pct}% match</div>
-      <div class="match-skills">${m.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
-      <button class="match-btn" id="mbtn-${i}" onclick="connectMatch(${i},'${m.name}')">Conectar</button>
-    </div>`).join('');
 
   /* OPPS */
   document.getElementById('opp-list').innerHTML=OPPS.map(o=>`
@@ -518,10 +570,10 @@ function renderDashboard(p){
     </div>`).join('');
 
   /* ACTIVITY */
-  document.getElementById('activity-list').innerHTML=ACTIVITY.map(a=>`
+  document.getElementById('activity-list').innerHTML=buildActivity(p).map(a=>`
     <div class="activity-item">
       <div class="act-icon">${a.icon}</div>
-      <div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>
+      <div><div class="act-text">${a.text}</div>${a.time?`<div class="act-time">${a.time}</div>`:''}</div>
     </div>`).join('');
 }
 
@@ -532,13 +584,15 @@ function renderDashboard(p){
     const {data:p}=await _sb.from('profiles').select('*').eq('id',session.user.id).single();
     if(p){
       localStorage.setItem('nw_profile',JSON.stringify(p));
+      currentProfile=p; currentUserId=session.user.id;
       renderDashboard(p);
       return;
     }
   }
-  /* fallback localStorage */
+  /* fallback localStorage (sin sesion real -> no se puede editar via update) */
   const local=JSON.parse(localStorage.getItem('nw_profile')||'null');
   if(local&&local.name){
+    currentProfile=local; currentUserId=null;
     renderDashboard(local);
   } else {
     document.getElementById('gate').style.display='block';
@@ -546,15 +600,68 @@ function renderDashboard(p){
   }
 })();
 
-function connectMatch(i, name){
-  const btn=document.getElementById('mbtn-'+i);
-  if(btn.classList.contains('connected')){
-    showToast('Ya estás conectado con '+name);
+/* ── EDICIÓN RÁPIDA (sin salir del dashboard) ── */
+function openQuickEdit(){
+  if(!currentUserId){
+    window.location.href='crear-perfil.html';
     return;
   }
-  btn.classList.add('connected');
-  btn.textContent='✓ Conectado';
-  showToast('🤝 ¡Conectaste con '+name+'!');
+  document.getElementById('qe-role').value=currentProfile.role||'';
+  document.getElementById('qe-location').value=currentProfile.location||'';
+  document.getElementById('qe-bio').value=currentProfile.bio||'';
+  document.getElementById('qe-offer').value=currentProfile.offer||'';
+  document.getElementById('qe-vision').value=currentProfile.vision||'';
+  qeSkills=Array.isArray(currentProfile.skills)?currentProfile.skills.slice():[];
+  renderQeSkills();
+  document.getElementById('qe-err').style.display='none';
+  document.getElementById('qe-overlay').classList.add('open');
+}
+function closeQuickEdit(){
+  document.getElementById('qe-overlay').classList.remove('open');
+}
+function renderQeSkills(){
+  document.getElementById('qe-skills-list').innerHTML=qeSkills.map((s,i)=>
+    `<span class="qe-skill">${s}<button type="button" onclick="removeQeSkill(${i})">×</button></span>`).join('');
+}
+function handleQeSkillKey(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const inp=document.getElementById('qe-skill-input');
+    const v=inp.value.trim();
+    if(v && qeSkills.length<12 && !qeSkills.includes(v)){qeSkills.push(v);renderQeSkills();}
+    inp.value='';
+  }
+}
+function removeQeSkill(i){qeSkills.splice(i,1);renderQeSkills();}
+
+async function saveQuickEdit(){
+  const errEl=document.getElementById('qe-err');
+  const btn=document.getElementById('qe-save-btn');
+  errEl.style.display='none';
+  const role=document.getElementById('qe-role').value.trim();
+  if(!role){errEl.textContent='El rol no puede quedar vacío.';errEl.style.display='block';return;}
+  btn.textContent='Guardando...';btn.disabled=true;
+  const updates={
+    role,
+    location:document.getElementById('qe-location').value.trim(),
+    bio:document.getElementById('qe-bio').value.trim(),
+    offer:document.getElementById('qe-offer').value.trim(),
+    vision:document.getElementById('qe-vision').value.trim(),
+    skills:qeSkills
+  };
+  const {error}=await _sb.from('profiles').update(updates).eq('id',currentUserId);
+  if(error){
+    errEl.textContent='No pudimos guardar los cambios: '+error.message;
+    errEl.style.display='block';
+    btn.textContent='Guardar cambios';btn.disabled=false;
+    return;
+  }
+  currentProfile={...currentProfile,...updates};
+  localStorage.setItem('nw_profile',JSON.stringify(currentProfile));
+  renderDashboard(currentProfile);
+  closeQuickEdit();
+  showToast('Perfil actualizado ✓');
+  btn.textContent='Guardar cambios';btn.disabled=false;
 }
 </script>
 </body>
