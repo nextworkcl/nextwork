@@ -769,6 +769,13 @@ function personChip(p,initials,color){
 async function loadConnections(){
   if(!currentUserId)return;
 
+  /* Visitas reales al perfil */
+  try{
+    const {count:viewCount}=await _sb.from('profile_views').select('*',{count:'exact',head:true}).eq('profile_id',currentUserId);
+    const viewsEl=document.getElementById('stat-views');
+    if(viewsEl&&viewCount!==null)viewsEl.textContent=viewCount;
+  }catch(e){}
+
   /* Solicitudes pendientes RECIBIDAS */
   const {data:incoming}=await _sb.from('connections').select('*').eq('to_id',currentUserId).eq('status','pending');
 

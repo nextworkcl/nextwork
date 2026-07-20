@@ -394,7 +394,7 @@ function renderContactCard(state, extra){
       <div style="font-size:2rem;margin-bottom:.6rem">⏳</div>
       <h3>Solicitud enviada</h3>
       <p>Te avisaremos cuando responda.</p>
-      <button class="btn-contact-outline" disabled style="opacity:.6;cursor:default">Esperando respuesta</button>`;
+      <button class="btn-contact-outline" onclick="cancelConnectionRequest('${extra}')">Cancelar solicitud</button>`;
   } else if(state==='pending_received'){
     body.innerHTML=`
       <div style="font-size:2rem;margin-bottom:.6rem">🤝</div>
@@ -441,17 +441,24 @@ async function checkConnectionStatus(){
     }
     return;
   }
-  if(conn.status==='pending'&&conn.from_id===myId){renderContactCard('pending_sent');return;}
+  if(conn.status==='pending'&&conn.from_id===myId){renderContactCard('pending_sent',conn.id);return;}
   if(conn.status==='pending'&&conn.to_id===myId){renderContactCard('pending_received',conn.id);return;}
   renderContactCard('declined');
 }
 
 async function sendConnectionRequest(){
   if(!viewerSession){showToast('🔒 Inicia sesión para conectar');return;}
-  const {error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:viewedProfileId});
+  const {data,error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:viewedProfileId}).select().single();
   if(error){showToast('No pudimos enviar la solicitud');return;}
   showToast('Solicitud enviada ✓');
-  renderContactCard('pending_sent');
+  renderContactCard('pending_sent',data.id);
+}
+
+async function cancelConnectionRequest(connId){
+  const {error}=await _sb.from('connections').delete().eq('id',connId);
+  if(error){showToast('No pudimos cancelar la solicitud');return;}
+  showToast('Solicitud cancelada');
+  renderContactCard('none');
 }
 
 async function respondConnectionRequest(connId, accept){
@@ -637,6 +644,7 @@ const _sb=window.supabase.createClient(
       viewedProfileId=viewId;
       renderProfile(p2,false);
       checkConnectionStatus();
+      if(session)_sb.from('profile_views').insert({profile_id:viewId,viewer_id:session.user.id}).then(()=>{},()=>{});
       return;
     }
     document.getElementById('not-found').style.display='block';

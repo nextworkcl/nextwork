@@ -155,6 +155,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.success{background:var(--accent2)}
 
+/* PUBLISH MODAL */
+.pub-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,14,12,.55);align-items:center;justify-content:center;padding:1.2rem}
+.pub-overlay.open{display:flex}
+.pub-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.pub-head{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;border-bottom:1px solid var(--cream3)}
+.pub-head h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.pub-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--cream2);color:var(--ink2);font-size:17px;cursor:pointer}
+.pub-body{padding:1.2rem 1.4rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.pub-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.pub-group input,.pub-group textarea,.pub-group select{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none}
+.pub-group textarea{resize:vertical;min-height:80px}
+.pub-foot{padding:1rem 1.4rem;border-top:1px solid var(--cream3);display:flex;justify-content:flex-end}
+.pub-err{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none}
+
 @media(max-width:640px){
   nav{padding:0 1.2rem}
   .toolbar{padding:.8rem 1rem}
@@ -246,6 +260,15 @@ footer strong{color:rgba(255,255,255,.75)}
   <div class="real-people-grid" id="real-people-grid"></div>
 </div>
 
+<!-- OPORTUNIDADES REALES -->
+<div class="real-people-wrap" id="real-opps-wrap" style="display:none">
+  <div class="section-label-row">
+    <h3>Oportunidades publicadas por la comunidad</h3>
+    <span class="live-badge"><span class="dot"></span>EN VIVO</span>
+  </div>
+  <div class="cards-grid" id="real-opps-grid" style="margin-bottom:1rem"></div>
+</div>
+
 <div class="section-label-row">
   <h3>Proyectos de ejemplo</h3>
   <span class="preview-badge">VISTA PREVIA</span>
@@ -294,7 +317,37 @@ footer strong{color:rgba(255,255,255,.75)}
 <div class="publish-bar">
   <h2>¿Tienes un proyecto?</h2>
   <p>Publica tu oportunidad y encuentra el equipo ideal en menos de 48 horas</p>
-  <a href="crear-perfil.html"><button>Publicar mi proyecto →</button></a>
+  <button onclick="openPublishModal()">Publicar mi proyecto →</button>
+</div>
+
+<!-- MODAL PUBLICAR OPORTUNIDAD -->
+<div class="pub-overlay" id="pub-overlay" onclick="if(event.target===this)closePublishModal()">
+  <div class="pub-box">
+    <div class="pub-head">
+      <h3>Publicar oportunidad</h3>
+      <button class="pub-close" onclick="closePublishModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="pub-body">
+      <div id="pub-err" class="pub-err"></div>
+      <div class="pub-group"><label>Título</label><input type="text" id="pub-title" maxlength="120" placeholder="Ej. Busco CTO para mi startup de logística"></div>
+      <div class="pub-group"><label>Descripción</label><textarea id="pub-desc" maxlength="1000" placeholder="Cuenta de qué se trata, en qué etapa está y qué buscas"></textarea></div>
+      <div class="pub-group">
+        <label>Tipo</label>
+        <select id="pub-type">
+          <option value="startup">🚀 Startup</option>
+          <option value="freelance">⚡ Freelance</option>
+          <option value="idea">💡 Idea</option>
+          <option value="collab">🤝 Colaboración</option>
+          <option value="equity">📈 Equity</option>
+        </select>
+      </div>
+      <div class="pub-group"><label>Ubicación</label><input type="text" id="pub-location" maxlength="60" placeholder="Ej. Santiago, Chile o Remoto"></div>
+      <div class="pub-group"><label>Habilidades (separadas por coma)</label><input type="text" id="pub-skills" maxlength="200" placeholder="Ej. React, Ventas B2B, Diseño"></div>
+    </div>
+    <div class="pub-foot">
+      <button class="card-btn" id="pub-btn" style="width:auto;padding:10px 24px" onclick="publishOpportunity()">Publicar →</button>
+    </div>
+  </div>
 </div>
 
 <footer>
@@ -503,6 +556,86 @@ function renderPersonCard(p){
     document.getElementById('real-people-grid').innerHTML=real.map(renderPersonCard).join('');
   }catch(e){}
 })();
+
+/* ── PUBLICAR OPORTUNIDAD ── */
+function openPublishModal(){
+  document.getElementById('pub-err').style.display='none';
+  document.getElementById('pub-overlay').classList.add('open');
+}
+function closePublishModal(){
+  document.getElementById('pub-overlay').classList.remove('open');
+}
+async function publishOpportunity(){
+  const errEl=document.getElementById('pub-err');
+  errEl.style.display='none';
+  const {data:{session}}=await _sb2.auth.getSession();
+  if(!session){
+    errEl.innerHTML='Necesitas <a href="crear-perfil.html" style="color:#b91c1c;font-weight:600">crear tu perfil</a> para publicar.';
+    errEl.style.display='block';
+    return;
+  }
+  const title=document.getElementById('pub-title').value.trim();
+  const description=document.getElementById('pub-desc').value.trim();
+  const type=document.getElementById('pub-type').value;
+  const location=document.getElementById('pub-location').value.trim();
+  const skills=document.getElementById('pub-skills').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  if(title.length<5){errEl.textContent='El título debe tener al menos 5 caracteres.';errEl.style.display='block';return;}
+  if(description.length<10){errEl.textContent='La descripción debe tener al menos 10 caracteres.';errEl.style.display='block';return;}
+
+  const btn=document.getElementById('pub-btn');
+  btn.textContent='Publicando...';btn.disabled=true;
+  const {error}=await _sb2.from('opportunities').insert({author_id:session.user.id,title,description,type,location,skills});
+  btn.textContent='Publicar →';btn.disabled=false;
+
+  if(error){errEl.textContent='No pudimos publicar: '+error.message;errEl.style.display='block';return;}
+
+  closePublishModal();
+  document.getElementById('pub-title').value='';
+  document.getElementById('pub-desc').value='';
+  document.getElementById('pub-location').value='';
+  document.getElementById('pub-skills').value='';
+  const t=document.getElementById('toast');
+  t.textContent='¡Oportunidad publicada! ✓';
+  t.className='toast show success';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3500);
+  loadRealOpportunities();
+}
+
+const TYPE_LABELS={startup:'🚀 Startup',freelance:'⚡ Freelance',idea:'💡 Idea',collab:'🤝 Colaboración',equity:'📈 Equity'};
+
+function renderRealOpportunity(o){
+  const author=o._author||{};
+  return `
+    <div class="opp-card">
+      <div class="card-top">
+        <span class="type-badge type-${o.type}">${TYPE_LABELS[o.type]||o.type}</span>
+        ${o.location?`<span class="card-location">📍 ${o.location}</span>`:''}
+      </div>
+      <p class="card-title">${o.title}</p>
+      <p class="card-desc">${o.description}</p>
+      <div class="card-skills">${(o.skills||[]).map(s=>`<span class="skill-pill">${s}</span>`).join('')}</div>
+      <div class="card-meta">
+        <span>Por <a href="perfil-publico.html?id=${o.author_id}" style="color:var(--accent2);font-weight:500">${author.name||'Usuario'}</a></span>
+      </div>
+      <button class="card-btn" onclick="window.location.href='perfil-publico.html?id=${o.author_id}'">Ver perfil y conectar →</button>
+    </div>`;
+}
+
+async function loadRealOpportunities(){
+  try{
+    const {data,error}=await _sb2.from('opportunities').select('*').order('created_at',{ascending:false}).limit(50);
+    if(error||!data||!data.length)return;
+    const authorIds=[...new Set(data.map(o=>o.author_id))];
+    const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
+    const byId={};(authors||[]).forEach(a=>byId[a.id]=a);
+    const enriched=data.map(o=>({...o,_author:byId[o.author_id]}));
+    document.getElementById('real-opps-wrap').style.display='block';
+    document.getElementById('real-opps-grid').innerHTML=enriched.map(renderRealOpportunity).join('');
+  }catch(e){}
+}
+loadRealOpportunities();
 </script>
 </body>
 </html>
