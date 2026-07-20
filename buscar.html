@@ -362,6 +362,7 @@ let query='';
 let activeChipRole='';
 let visibleCount=12;
 const PAGE_SIZE=6;
+let REAL_PROFILES=[]; /* perfiles reales cargados, filtrados por texto de busqueda */
 
 /* ─── RENDER ─── */
 function renderCards(list){
@@ -443,6 +444,31 @@ function getFiltered(){
 function applyFilters(){
   visibleCount=PAGE_SIZE*2;
   renderCards(getFiltered());
+  renderRealFiltered();
+}
+
+/* Filtra los perfiles reales solo por texto de busqueda (los checkboxes de
+   rol/ciudad/colaboracion usan categorias que no calzan 1:1 con datos reales,
+   asi que se aplican unicamente a los perfiles de ejemplo) */
+function renderRealFiltered(){
+  const wrap=document.getElementById('real-profiles-wrap');
+  const grid=document.getElementById('real-profiles-grid');
+  if(!wrap||!grid||!REAL_PROFILES.length)return;
+  const q=query.toLowerCase();
+  const filtered=!q?REAL_PROFILES:REAL_PROFILES.filter(p=>{
+    const skills=Array.isArray(p.skills)?p.skills.join(' '):'';
+    return (p.name||'').toLowerCase().includes(q)
+      ||(p.role||'').toLowerCase().includes(q)
+      ||(p.bio||'').toLowerCase().includes(q)
+      ||(p.location||'').toLowerCase().includes(q)
+      ||skills.toLowerCase().includes(q);
+  });
+  if(!filtered.length){
+    wrap.style.display='none';
+    return;
+  }
+  wrap.style.display='block';
+  grid.innerHTML=filtered.map(renderRealCard).join('');
 }
 
 /* ─── SEARCH ─── */
@@ -549,10 +575,8 @@ function renderRealCard(p){
   try{
     const {data,error}=await _sb2.from('perfiles_publicos').select('*').order('id',{ascending:false}).limit(24);
     if(error||!data)return;
-    const real=data.filter(p=>p.name&&p.name.trim().length>1);
-    if(!real.length)return;
-    document.getElementById('real-profiles-wrap').style.display='block';
-    document.getElementById('real-profiles-grid').innerHTML=real.map(renderRealCard).join('');
+    REAL_PROFILES=data.filter(p=>p.name&&p.name.trim().length>1);
+    renderRealFiltered();
   }catch(e){}
 })();
 </script>
