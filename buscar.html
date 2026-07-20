@@ -98,6 +98,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .verified-ico{width:15px;height:15px;background:var(--accent2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .verified-ico svg{width:8px;height:8px;stroke:#fff;fill:none;stroke-width:3}
 
+/* SECTION LABELS */
+.section-label-row{display:flex;align-items:center;gap:9px;margin-bottom:1rem}
+.section-label-row h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.live-badge{font-size:10px;font-weight:700;color:var(--accent2);background:var(--glow2);padding:2px 9px;border-radius:8px;letter-spacing:.4px;display:inline-flex;align-items:center;gap:4px}
+.live-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent3)}
+.preview-badge{font-size:10px;font-weight:700;color:var(--ink3);background:var(--cream2);padding:2px 9px;border-radius:8px;letter-spacing:.4px}
+.real-profiles-wrap{margin-bottom:2.2rem;padding-bottom:2.2rem;border-bottom:1px solid var(--cream3)}
+
 /* FEATURED BADGE */
 .featured-badge{position:absolute;top:8px;right:8px;background:rgba(200,240,216,.85);color:var(--accent);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;backdrop-filter:blur(4px);letter-spacing:.5px}
 
@@ -213,6 +221,20 @@ footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
   <!-- MAIN -->
   <div class="main-area">
 
+    <!-- REAL PROFILES (miembros reales de la comunidad) -->
+    <div class="real-profiles-wrap" id="real-profiles-wrap" style="display:none">
+      <div class="section-label-row">
+        <h3>Miembros de la comunidad</h3>
+        <span class="live-badge"><span class="dot"></span>EN VIVO</span>
+      </div>
+      <div class="profiles-grid" id="real-profiles-grid"></div>
+    </div>
+
+    <div class="section-label-row">
+      <h3>Explora perfiles de ejemplo</h3>
+      <span class="preview-badge">VISTA PREVIA</span>
+    </div>
+
     <!-- CHIP FILTERS (visible en mobile) -->
     <div class="chip-row" id="chip-row">
       <div class="chip active" onclick="setChip(this,'')">Todos</div>
@@ -274,7 +296,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
     <div class="footer-col"><h4>General</h4><ul>
       <li><a href="crear-perfil.html">Registrarse</a></li>
       <li><a href="login.html">Iniciar sesión</a></li>
-      <li><a href="#">Centro de ayuda</a></li>
+      <li><a href="index.html#faq">Centro de ayuda</a></li>
       <li><a href="index.html#how">Acerca de</a></li>
       <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
       <li><a href="#">Blog</a></li>
@@ -298,7 +320,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
     <div class="footer-links">
       <a href="index.html#faq">Preguntas frecuentes</a>
       <a href="index.html#contacto">Contacto</a>
-      <a href="#">Términos y condiciones</a>
+      <a href="index.html">Términos y condiciones</a>
       <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
     </div>
     <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
@@ -463,8 +485,7 @@ function connectUser(btn,name){
 
 /* ─── GO PROFILE ─── */
 function goProfile(name){
-  // In the future would go to that user's profile — for now open own profile as demo
-  window.location.href='perfil-publico.html';
+  showToast('🔒 Perfil de ejemplo — disponible en la beta');
 }
 
 /* ─── TOAST ─── */
@@ -479,6 +500,60 @@ function showToast(msg){
 renderCards(getFiltered());
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
-<script>(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');const {data:{session}}=await sb.auth.getSession();const el=document.getElementById('nav-auth');if(!el||!session)return;const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();if(!p)return;const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;})();</script>
+<script>
+const _sb2=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+/* NAV AUTH */
+(async()=>{
+  const {data:{session}}=await _sb2.auth.getSession();
+  const el=document.getElementById('nav-auth');
+  if(!el||!session)return;
+  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
+  if(!p)return;
+  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;
+})();
+
+/* MIEMBROS REALES DE LA COMUNIDAD */
+function renderRealCard(p){
+  const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const color=p.color||'#2d6b4a';
+  const skillsHtml=(Array.isArray(p.skills)?p.skills:[]).slice(0,4).map(s=>`<span class="ctag ctag-skill">${s}</span>`).join('');
+  const bio=p.bio?p.bio:'Este miembro aún no agregó una descripción.';
+  return `
+    <div class="profile-card" onclick="window.location.href='perfil-publico.html?id=${p.id}'">
+      <div class="card-banner" style="background:linear-gradient(135deg,${color}cc,${color}88)">
+        <div class="card-avatar-wrap">
+          <div class="card-avatar" style="background:${color};overflow:hidden">
+            ${p.photo?`<img src="${p.photo}" alt="${p.name||''}">`:initials}
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${p.name||'Sin nombre'}</div>
+        <div class="card-role">${p.role||''}${p.location?' · '+p.location:''}</div>
+        <div class="card-bio">${bio}</div>
+        <div class="card-tags">${skillsHtml}</div>
+        <div class="card-footer" style="justify-content:flex-end;border-top:1px solid var(--cream3)">
+          <span style="font-size:12px;color:var(--accent2);font-weight:500">Ver perfil →</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+(async()=>{
+  try{
+    const {data,error}=await _sb2.from('perfiles_publicos').select('*').order('id',{ascending:false}).limit(24);
+    if(error||!data)return;
+    const real=data.filter(p=>p.name&&p.name.trim().length>1);
+    if(!real.length)return;
+    document.getElementById('real-profiles-wrap').style.display='block';
+    document.getElementById('real-profiles-grid').innerHTML=real.map(renderRealCard).join('');
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
