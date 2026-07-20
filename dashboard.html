@@ -771,6 +771,21 @@ async function loadConnections(){
 
   /* Solicitudes pendientes RECIBIDAS */
   const {data:incoming}=await _sb.from('connections').select('*').eq('to_id',currentUserId).eq('status','pending');
+
+  /* Insignia de notificacion en el avatar del nav */
+  const navAv=document.querySelector('#nav-user .nav-avatar');
+  if(navAv){
+    navAv.style.position='relative';
+    const existing=navAv.querySelector('.nav-badge');
+    if(existing)existing.remove();
+    if(incoming&&incoming.length){
+      const dot=document.createElement('span');
+      dot.className='nav-badge';
+      dot.style.cssText='position:absolute;top:-2px;right:-2px;width:11px;height:11px;background:#dc2626;border-radius:50%;border:2px solid var(--cream2)';
+      navAv.appendChild(dot);
+    }
+  }
+
   const reqWrap=document.getElementById('requests-wrap');
   const reqGrid=document.getElementById('requests-grid');
   if(incoming&&incoming.length){
