@@ -88,6 +88,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .see-all{font-size:13px;color:var(--accent2);font-weight:500}
 .see-all:hover{text-decoration:underline}
 
+.req-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
+@media(max-width:720px){.req-grid{grid-template-columns:1fr}}
+
 /* MATCH CARDS */
 .match-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem;transition:box-shadow .2s,transform .2s;cursor:pointer}
 .match-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
@@ -99,6 +102,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .match-skills{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.8rem}
 .skill-tag{padding:2px 8px;background:var(--cream2);color:var(--ink2);border-radius:10px;font-size:11px}
 .match-btn{width:100%;padding:6px;border-radius:20px;border:1.5px solid var(--accent);color:var(--accent);background:transparent;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.req-actions{display:flex;gap:.5rem}
+.req-btn-accept{flex:1;padding:6px;border-radius:20px;border:none;background:var(--accent);color:var(--glow);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.req-btn-accept:hover{background:var(--accent2)}
+.req-btn-decline{flex:1;padding:6px;border-radius:20px;border:1.5px solid var(--cream3);background:transparent;color:var(--ink3);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.req-btn-decline:hover{border-color:#b91c1c;color:#b91c1c}
+.conn-email{font-size:11.5px;color:var(--accent2);font-weight:500;word-break:break-all}
 .match-btn:hover,.match-btn.connected{background:var(--accent);color:var(--glow);border-color:var(--accent)}
 
 /* OPP CARDS */
@@ -284,6 +293,22 @@ footer strong{color:rgba(255,255,255,.75)}
         <div class="banner-tag">✨ Tu espacio en Nextwork</div>
         <h2 id="welcome-msg">¡Bienvenido de vuelta!</h2>
         <p>Completa tu perfil para estar listo cuando lancemos el matching con IA.</p>
+      </div>
+
+      <!-- SOLICITUDES DE CONEXION -->
+      <div id="requests-wrap" style="display:none">
+        <div class="section-head">
+          <h3>Solicitudes de conexión</h3>
+        </div>
+        <div class="req-grid" id="requests-grid"></div>
+      </div>
+
+      <!-- TUS CONEXIONES -->
+      <div id="connections-wrap" style="display:none">
+        <div class="section-head">
+          <h3>Tus conexiones</h3>
+        </div>
+        <div class="req-grid" id="connections-grid"></div>
       </div>
 
       <!-- MATCHES -->
@@ -614,6 +639,7 @@ function renderDashboard(p){
       localStorage.setItem('nw_profile',JSON.stringify(p));
       currentProfile=p; currentUserId=session.user.id;
       renderDashboard(p);
+      loadConnections();
       return;
     }
   }
@@ -730,6 +756,73 @@ async function confirmDeleteAccount(){
   localStorage.removeItem('nw_profile');
   await _sb.auth.signOut();
   window.location.href='index.html?deleted=1';
+}
+
+/* ── SOLICITUDES DE CONEXIÓN ── */
+function personChip(p,initials,color){
+  return `<div class="match-header">
+    <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+    <div><div class="match-name"><a href="perfil-publico.html?id=${p.id}" style="color:inherit">${p.name||'Sin nombre'}</a></div><div class="match-role">${p.role||''}</div></div>
+  </div>`;
+}
+
+async function loadConnections(){
+  if(!currentUserId)return;
+
+  /* Solicitudes pendientes RECIBIDAS */
+  const {data:incoming}=await _sb.from('connections').select('*').eq('to_id',currentUserId).eq('status','pending');
+  const reqWrap=document.getElementById('requests-wrap');
+  const reqGrid=document.getElementById('requests-grid');
+  if(incoming&&incoming.length){
+    const senderIds=incoming.map(r=>r.from_id);
+    const {data:senders}=await _sb.from('perfiles_publicos').select('*').in('id',senderIds);
+    const byId={};(senders||[]).forEach(s=>byId[s.id]=s);
+    reqGrid.innerHTML=incoming.map(r=>{
+      const p=byId[r.from_id]||{id:r.from_id,name:'Usuario'};
+      const initials=getInitials(p.name);
+      const color=p.color||getColor(p.name);
+      return `<div class="match-card">
+        ${personChip(p,initials,color)}
+        <div class="req-actions">
+          <button class="req-btn-accept" onclick="respondToRequest('${r.id}',true)">Aceptar</button>
+          <button class="req-btn-decline" onclick="respondToRequest('${r.id}',false)">Rechazar</button>
+        </div>
+      </div>`;
+    }).join('');
+    reqWrap.style.display='block';
+  } else {
+    reqWrap.style.display='none';
+  }
+
+  /* Conexiones aceptadas */
+  const {data:accepted}=await _sb.from('connections').select('*')
+    .or(`from_id.eq.${currentUserId},to_id.eq.${currentUserId}`).eq('status','accepted');
+  const connWrap=document.getElementById('connections-wrap');
+  const connGrid=document.getElementById('connections-grid');
+  if(accepted&&accepted.length){
+    const otherIds=accepted.map(c=>c.from_id===currentUserId?c.to_id:c.from_id);
+    const {data:others}=await _sb.from('profiles').select('id,name,role,color,photo,email').in('id',otherIds);
+    connGrid.innerHTML=(others||[]).map(p=>{
+      const initials=getInitials(p.name);
+      const color=p.color||getColor(p.name);
+      return `<div class="match-card">
+        ${personChip(p,initials,color)}
+        ${p.email?`<a href="mailto:${p.email}" class="conn-email">${p.email}</a>`:''}
+      </div>`;
+    }).join('');
+    connWrap.style.display='block';
+  } else {
+    connWrap.style.display='none';
+  }
+}
+
+async function respondToRequest(connId, accept){
+  const {error}=await _sb.from('connections')
+    .update({status:accept?'accepted':'declined',responded_at:new Date().toISOString()})
+    .eq('id',connId);
+  if(error){showToast('No pudimos procesar tu respuesta');return;}
+  showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
+  loadConnections();
 }
 </script>
 </body>

@@ -250,11 +250,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <div>
         <!-- CONTACT -->
         <div class="contact-card" id="contact-card" style="display:none">
-          <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
-          <h3>¿Quieres conectar?</h3>
-          <p>Envía un mensaje directo o postula a colaborar juntos</p>
-          <button class="btn-contact" onclick="contactar()">Enviar mensaje</button>
-          <button class="btn-contact-outline" onclick="showToast('🔒 Disponible en la beta — ¡ya casi!')">Proponer colaboración</button>
+          <div id="contact-card-body"></div>
         </div>
 
         <!-- MATCH -->
@@ -382,8 +378,89 @@ function shareProfile(){
   }).catch(()=>showToast('🔗 '+window.location.href));
 }
 
-function contactar(){
-  showToast('🔒 Mensajería disponible en la beta — ¡crea tu perfil para conectar!');
+/* ── SOLICITUDES DE CONEXIÓN ── */
+let viewedProfileId=null;
+
+function renderContactCard(state, extra){
+  const body=document.getElementById('contact-card-body');
+  if(state==='none'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
+      <h3>¿Quieres conectar?</h3>
+      <p>Envía una solicitud. Si acepta, ambos podrán ver sus datos de contacto.</p>
+      <button class="btn-contact" onclick="sendConnectionRequest()">Solicitar conexión</button>`;
+  } else if(state==='pending_sent'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">⏳</div>
+      <h3>Solicitud enviada</h3>
+      <p>Te avisaremos cuando responda.</p>
+      <button class="btn-contact-outline" disabled style="opacity:.6;cursor:default">Esperando respuesta</button>`;
+  } else if(state==='pending_received'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">🤝</div>
+      <h3>Quiere conectar contigo</h3>
+      <p>Acepta para compartir datos de contacto entre ambos.</p>
+      <button class="btn-contact" onclick="respondConnectionRequest('${extra}',true)">Aceptar</button>
+      <button class="btn-contact-outline" onclick="respondConnectionRequest('${extra}',false)">Rechazar</button>`;
+  } else if(state==='accepted'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">✅</div>
+      <h3>¡Están conectados!</h3>
+      <p id="connected-email-wrap">Cargando contacto…</p>`;
+  } else if(state==='declined'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
+      <h3>Solicitud no aceptada</h3>
+      <p>Esta persona no aceptó la solicitud de conexión.</p>`;
+  } else if(state==='login'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>
+      <h3>¿Quieres conectar?</h3>
+      <p>Inicia sesión para enviar una solicitud de conexión.</p>
+      <a href="login.html" style="display:block"><button class="btn-contact">Iniciar sesión</button></a>`;
+  }
+}
+
+async function checkConnectionStatus(){
+  if(isOwnProfile||!viewedProfileId)return;
+  if(!viewerSession){renderContactCard('login');return;}
+  const myId=viewerSession.user.id;
+  const {data}=await _sb.from('connections').select('*')
+    .or(`and(from_id.eq.${myId},to_id.eq.${viewedProfileId}),and(from_id.eq.${viewedProfileId},to_id.eq.${myId})`)
+    .limit(1);
+  const conn=data&&data[0];
+  if(!conn){renderContactCard('none');return;}
+  if(conn.status==='accepted'){
+    renderContactCard('accepted');
+    const {data:full}=await _sb.from('profiles').select('email').eq('id',viewedProfileId).single();
+    const wrap=document.getElementById('connected-email-wrap');
+    if(wrap){
+      wrap.innerHTML=(full&&full.email)
+        ?`<a href="mailto:${full.email}" style="color:var(--accent2);font-weight:600">${full.email}</a>`
+        :'No pudimos cargar el contacto.';
+    }
+    return;
+  }
+  if(conn.status==='pending'&&conn.from_id===myId){renderContactCard('pending_sent');return;}
+  if(conn.status==='pending'&&conn.to_id===myId){renderContactCard('pending_received',conn.id);return;}
+  renderContactCard('declined');
+}
+
+async function sendConnectionRequest(){
+  if(!viewerSession){showToast('🔒 Inicia sesión para conectar');return;}
+  const {error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:viewedProfileId});
+  if(error){showToast('No pudimos enviar la solicitud');return;}
+  showToast('Solicitud enviada ✓');
+  renderContactCard('pending_sent');
+}
+
+async function respondConnectionRequest(connId, accept){
+  const {error}=await _sb.from('connections')
+    .update({status:accept?'accepted':'declined',responded_at:new Date().toISOString()})
+    .eq('id',connId);
+  if(error){showToast('No pudimos procesar tu respuesta');return;}
+  showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
+  checkConnectionStatus();
 }
 
 function renderProfile(p, ownProfile){
@@ -554,7 +631,12 @@ const _sb=window.supabase.createClient(
       if(p){localStorage.setItem('nw_profile',JSON.stringify(p));renderProfile(p,true);return;}
     }
     const {data:p2}=await _sb.from('perfiles_publicos').select('*').eq('id',viewId).single();
-    if(p2){renderProfile(p2,false);return;}
+    if(p2){
+      viewedProfileId=viewId;
+      renderProfile(p2,false);
+      checkConnectionStatus();
+      return;
+    }
     document.getElementById('not-found').style.display='block';
     return;
   }
