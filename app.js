@@ -246,22 +246,27 @@ async function runMatch() {
   showToast('¡Match encontrado! ' + pct + '% de afinidad', 'success');
 }
 
-/* ── LIVE COUNTER (Supabase) ── */
+/* ── LIVE COUNTER (Supabase) ──
+   Cuenta perfiles reales via la vista publica perfiles_publicos
+   (la tabla waitlist esta bloqueada para lectura publica a proposito,
+   por eso NO se consulta aqui). */
 (async function loadLiveCount() {
+  const el = document.getElementById('proof-txt');
+  if (!el) return;
   try {
     const SUPA_URL = 'https://vkewxmrutpjmdrxsqdea.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0';
     const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-    const { count, error } = await sb.from('waitlist').select('*', { count: 'exact', head: true });
-    if (error || count === null) return;
-    const el = document.getElementById('live-count');
-    if (!el) return;
+    const { data, error } = await sb.from('perfiles_publicos').select('name');
+    if (error || !data) { el.textContent = 'Sé de los primeros en construir en Nextwork'; return; }
+    const count = data.filter(p => p.name && p.name.trim().length > 1).length;
+    if (!count) { el.textContent = 'Sé de los primeros en construir en Nextwork'; return; }
     let curr = 0;
     const step = Math.max(1, Math.ceil(count / 30));
     const timer = setInterval(() => {
       curr = Math.min(curr + step, count);
-      el.textContent = '+' + curr + ' personas';
+      el.innerHTML = '<strong>' + curr + '</strong> ' + (curr === 1 ? 'persona ya construyendo en Nextwork' : 'personas ya construyendo en Nextwork');
       if (curr >= count) clearInterval(timer);
     }, 40);
-  } catch (e) {}
+  } catch (e) { el.textContent = 'Sé de los primeros en construir en Nextwork'; }
 })();
