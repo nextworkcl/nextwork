@@ -441,6 +441,7 @@ const _sb2=window.supabase.createClient(
   const {count}=await _sb2.from('connections').select('*',{count:'exact',head:true}).eq('to_id',session.user.id).eq('status','pending');
   const badge=count?'<span style="position:absolute;top:-1px;right:-1px;width:11px;height:11px;background:#dc2626;border-radius:50%;border:2px solid #fff"></span>':'';
   el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;
+  CURRENT_VIEWER_ID=session.user.id;
   activateComposer(session,p);
 })();
 
@@ -484,6 +485,7 @@ async function publishPost(){
 
 /* ── PUBLICACIONES REALES ── */
 let REAL_POSTS=[];
+let CURRENT_VIEWER_ID=null;
 
 function timeAgo(iso){
   const diff=(Date.now()-new Date(iso).getTime())/1000;
@@ -497,6 +499,8 @@ function renderRealPost(p){
   const author=p._author||{};
   const initials=(author.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const color=author.color||'#2d6b4a';
+  const isMine=CURRENT_VIEWER_ID&&p.author_id===CURRENT_VIEWER_ID;
+  const likeCount=p._likeCount||0;
   return `
     <div class="post">
       <div class="post-header">
@@ -506,8 +510,15 @@ function renderRealPost(p){
           <div class="post-role">${author.role||''}</div>
           <div class="post-time">${timeAgo(p.created_at)}</div>
         </div>
+        ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
       <div class="post-body">${p.body}</div>
+      <div class="post-actions">
+        <button class="action-btn${p._liked?' liked':''}" onclick="toggleRealLike('${p.id}')">
+          <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+          ${likeCount>0?likeCount+' ':''}Me gusta
+        </button>
+      </div>
     </div>`;
 }
 
@@ -526,13 +537,57 @@ async function loadRealPosts(){
     const {data,error}=await _sb2.from('posts').select('*').order('created_at',{ascending:false}).limit(50);
     if(error||!data)return;
     const authorIds=[...new Set(data.map(p=>p.author_id))];
+    const postIds=data.map(p=>p.id);
     const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
     const byId={};(authors||[]).forEach(a=>byId[a.id]=a);
-    REAL_POSTS=data.map(p=>({...p,_author:byId[p.author_id]}));
+
+    let likesByPost={};
+    try{
+      const {data:likes}=await _sb2.from('post_likes').select('post_id,user_id').in('post_id',postIds);
+      (likes||[]).forEach(l=>{
+        if(!likesByPost[l.post_id])likesByPost[l.post_id]={count:0,mine:false};
+        likesByPost[l.post_id].count++;
+        if(CURRENT_VIEWER_ID&&l.user_id===CURRENT_VIEWER_ID)likesByPost[l.post_id].mine=true;
+      });
+    }catch(e){}
+
+    REAL_POSTS=data.map(p=>({
+      ...p,
+      _author:byId[p.author_id],
+      _likeCount:(likesByPost[p.id]||{}).count||0,
+      _liked:(likesByPost[p.id]||{}).mine||false
+    }));
     renderRealPostsFiltered();
   }catch(e){}
 }
 loadRealPosts();
+
+async function toggleRealLike(postId){
+  if(!CURRENT_VIEWER_ID){
+    showToast('Inicia sesión para dar me gusta');
+    return;
+  }
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(!post)return;
+  if(post._liked){
+    await _sb2.from('post_likes').delete().eq('post_id',postId).eq('user_id',CURRENT_VIEWER_ID);
+    post._liked=false;post._likeCount=Math.max(0,post._likeCount-1);
+  } else {
+    const {error}=await _sb2.from('post_likes').insert({post_id:postId,user_id:CURRENT_VIEWER_ID});
+    if(error)return;
+    post._liked=true;post._likeCount++;
+  }
+  renderRealPostsFiltered();
+}
+
+async function deleteRealPost(postId){
+  if(!confirm('¿Eliminar esta publicación?'))return;
+  const {error}=await _sb2.from('posts').delete().eq('id',postId);
+  if(error){showToast('No pudimos eliminar la publicación');return;}
+  REAL_POSTS=REAL_POSTS.filter(p=>p.id!==postId);
+  renderRealPostsFiltered();
+  showToast('Publicación eliminada');
+}
 
 /* MIEMBROS REALES DE LA COMUNIDAD */
 function renderPersonCard(p){
