@@ -106,7 +106,7 @@ nav{
 }
 nav.scrolled{border-bottom-color:var(--line);box-shadow:var(--sh-sm)}
 .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.03em}
-.logo-mark{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .4s var(--ease);overflow:hidden;flex-shrink:0}
+.logo-mark{width:32px;height:32px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;transition:transform .4s var(--ease);overflow:hidden;flex-shrink:0}
 .logo:hover .logo-mark{transform:rotate(-12deg)}
 .logo-mark img{width:100%;height:100%;object-fit:cover;display:block}
 .logo-mark svg{width:16px;height:16px}
@@ -463,7 +463,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.5);font-size:13px}
 .footer-top{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:3rem;padding:clamp(3.2rem,6vw,4.6rem) clamp(1.2rem,5vw,2.6rem) clamp(2.6rem,4vw,3.4rem);max-width:1160px;margin:0 auto;border-bottom:1px solid rgba(255,255,255,.08)}
 .footer-brand{display:flex;flex-direction:column;gap:1.1rem;align-self:start}
 .footer-brand .fb-logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px;letter-spacing:-.03em;color:rgba(255,255,255,.92)}
-.footer-brand .logo-mark{background:none;width:34px;height:34px}
+.footer-brand .logo-mark{background:var(--forest);width:34px;height:34px}
 .footer-brand em{font-style:normal;color:var(--green)}
 .footer-brand p{font-size:13px;line-height:1.65;max-width:26ch;color:rgba(255,255,255,.42)}
 .footer-col h4{font-family:var(--mono);font-size:11px;font-weight:500;color:rgba(255,255,255,.88);margin-bottom:1.3rem;letter-spacing:.14em;text-transform:uppercase}
