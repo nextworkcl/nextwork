@@ -271,6 +271,10 @@ footer strong{color:rgba(255,255,255,.75)}
         <a href="top-startups.html" class="quick-link"><span>🚀</span> Top Startups</a>
         <a href="top-universidades.html" class="quick-link"><span>🎓</span> Top Universidades</a>
       </div>
+
+      <div style="text-align:center;margin-top:.9rem">
+        <button onclick="openDeleteAccount()" style="background:none;border:none;color:var(--ink3);font-size:11.5px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;text-underline-offset:2px" onmouseover="this.style.color='#b91c1c'" onmouseout="this.style.color='var(--ink3)'">Eliminar mi cuenta</button>
+      </div>
     </div>
 
     <!-- MAIN -->
@@ -367,6 +371,29 @@ footer strong{color:rgba(255,255,255,.75)}
     <div class="qe-foot">
       <a href="crear-perfil.html" style="flex:0 0 auto;font-size:12.5px;color:var(--ink3)">Edición completa →</a>
       <button class="qe-btn-save" id="qe-save-btn" onclick="saveQuickEdit()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ELIMINAR CUENTA -->
+<div class="qe-overlay" id="del-overlay" onclick="if(event.target===this)closeDeleteAccount()">
+  <div class="qe-box">
+    <div class="qe-head">
+      <h3>Eliminar mi cuenta</h3>
+      <button class="qe-close" onclick="closeDeleteAccount()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="qe-body">
+      <div id="del-err" class="qe-err"></div>
+      <p style="font-size:13.5px;color:var(--ink2);line-height:1.6">Esto eliminará tu perfil de Nextwork de inmediato: tu información, foto, habilidades y todo lo que hayas publicado dejará de ser visible para otros.</p>
+      <p style="font-size:13.5px;color:var(--ink2);line-height:1.6">Tu cuenta de acceso quedará inactiva y sin datos asociados. Según nuestra <a href="privacidad.html" target="_blank" style="color:var(--accent2);font-weight:500">Política de Privacidad</a>, el cierre completo de la cuenta se procesa dentro de 10 días hábiles.</p>
+      <div class="qe-group">
+        <label>Escribe ELIMINAR para confirmar</label>
+        <input type="text" id="del-confirm-input" placeholder="ELIMINAR" autocomplete="off">
+      </div>
+    </div>
+    <div class="qe-foot">
+      <button onclick="closeDeleteAccount()" style="flex:0 0 auto;background:none;border:1.5px solid var(--cream3);border-radius:22px;padding:11px 18px;font-size:13.5px;color:var(--ink2);cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
+      <button class="qe-btn-save" id="del-confirm-btn" onclick="confirmDeleteAccount()" style="background:#b91c1c" onmouseover="this.style.background='#991616'" onmouseout="this.style.background='#b91c1c'">Eliminar definitivamente</button>
     </div>
   </div>
 </div>
@@ -663,6 +690,46 @@ async function saveQuickEdit(){
   closeQuickEdit();
   showToast('Perfil actualizado ✓');
   btn.textContent='Guardar cambios';btn.disabled=false;
+}
+
+/* ── ELIMINAR CUENTA ── */
+function openDeleteAccount(){
+  if(!currentUserId){
+    showToast('Inicia sesión para eliminar tu cuenta');
+    return;
+  }
+  document.getElementById('del-confirm-input').value='';
+  document.getElementById('del-err').style.display='none';
+  document.getElementById('del-overlay').classList.add('open');
+}
+function closeDeleteAccount(){
+  document.getElementById('del-overlay').classList.remove('open');
+}
+async function confirmDeleteAccount(){
+  const errEl=document.getElementById('del-err');
+  const btn=document.getElementById('del-confirm-btn');
+  const typed=document.getElementById('del-confirm-input').value.trim();
+  errEl.style.display='none';
+
+  if(typed!=='ELIMINAR'){
+    errEl.textContent='Escribe ELIMINAR (en mayúsculas) para confirmar.';
+    errEl.style.display='block';
+    return;
+  }
+
+  btn.textContent='Eliminando...';btn.disabled=true;
+
+  const {error}=await _sb.from('profiles').delete().eq('id',currentUserId);
+  if(error){
+    errEl.textContent='No pudimos eliminar tu cuenta: '+error.message;
+    errEl.style.display='block';
+    btn.textContent='Eliminar definitivamente';btn.disabled=false;
+    return;
+  }
+
+  localStorage.removeItem('nw_profile');
+  await _sb.auth.signOut();
+  window.location.href='index.html?deleted=1';
 }
 </script>
 </body>

@@ -270,3 +270,14 @@ async function runMatch() {
     }, 40);
   } catch (e) { el.textContent = 'Sé de los primeros en construir en Nextwork'; }
 })();
+
+/* ── MENSAJE TRAS ELIMINAR CUENTA ── */
+(function notifyAccountDeleted() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('deleted') === '1') {
+    setTimeout(() => showToast('Tu cuenta fue eliminada. Lamentamos verte ir 👋', 'success'), 400);
+    params.delete('deleted');
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+    window.history.replaceState({}, '', newUrl);
+  }
+})();
