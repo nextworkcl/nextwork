@@ -1146,6 +1146,18 @@ errEl.style.display='block';
     return;
   }
 
+  /* Si Supabase exige confirmar el email, signUp no entrega sesion activa todavia */
+  if(!data.session){
+    saveProfile(); /* backup local para no perder lo escrito */
+    document.getElementById('auth-gate').innerHTML=`
+      <div style="background:var(--surface);border:1px solid var(--cream3);border-radius:var(--r);padding:2.2rem 2rem;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:.8rem">📬</div>
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:.6rem">Revisa tu correo</h3>
+        <p style="font-size:14px;color:var(--ink3);line-height:1.6">Te enviamos un link de confirmación a <strong>${email}</strong>. Ábrelo y luego vuelve a <a href="login.html" style="color:var(--accent2);font-weight:600">iniciar sesión</a> para publicar tu perfil.</p>
+      </div>`;
+    return;
+  }
+
   /* Enviar email de notificación */
   try{
     await emailjs.send('service_kr7yft1','tu26nyi',{

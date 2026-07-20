@@ -94,6 +94,23 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 .sug-btn{font-size:12px;color:var(--accent2);font-weight:500;cursor:pointer;white-space:nowrap}
 .sug-btn:hover{text-decoration:underline}
 
+/* PERSONAS REALES */
+.section-label-row{display:flex;align-items:center;gap:9px;margin-bottom:1rem}
+.section-label-row h3{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ink)}
+.live-badge{font-size:10px;font-weight:700;color:var(--accent2);background:var(--glow2);padding:2px 9px;border-radius:8px;letter-spacing:.4px;display:inline-flex;align-items:center;gap:4px}
+.live-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent3)}
+.preview-badge{font-size:10px;font-weight:700;color:var(--ink3);background:var(--cream2);padding:2px 9px;border-radius:8px;letter-spacing:.4px}
+.real-people-wrap{margin-bottom:1.6rem}
+.real-people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.8rem}
+.person-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.1rem;transition:transform .2s,box-shadow .2s;cursor:pointer}
+.person-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(26,58,42,.08);border-color:var(--accent3)}
+.person-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
+.person-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex-shrink:0;overflow:hidden}
+.person-av img{width:100%;height:100%;object-fit:cover}
+.person-name{font-weight:600;font-size:13.5px;line-height:1.3}
+.person-role{font-size:11.5px;color:var(--ink3)}
+.person-line{font-size:12.5px;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
 footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
 .footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
 .footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px;color:rgba(255,255,255,.85);align-self:start}
@@ -164,6 +181,20 @@ footer strong{color:rgba(255,255,255,.75)}
       <div id="composer-lock" class="composer-locked" style="display:none">
         Para publicar en la comunidad necesitas <a href="crear-perfil.html">crear tu perfil</a> primero. ¡Es gratis y toma 2 minutos!
       </div>
+    </div>
+
+    <!-- PERSONAS REALES DE LA COMUNIDAD -->
+    <div class="real-people-wrap" id="real-people-wrap" style="display:none">
+      <div class="section-label-row">
+        <h3>Miembros de la comunidad</h3>
+        <span class="live-badge"><span class="dot"></span>EN VIVO</span>
+      </div>
+      <div class="real-people-grid" id="real-people-grid"></div>
+    </div>
+
+    <div class="section-label-row">
+      <h3>Publicaciones de ejemplo</h3>
+      <span class="preview-badge">VISTA PREVIA</span>
     </div>
 
     <div id="feed"></div>
@@ -376,6 +407,47 @@ function showToast(msg='Crea tu perfil para interactuar con la comunidad'){
 render();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
-<script>(async()=>{const sb=window.supabase.createClient('https://vkewxmrutpjmdrxsqdea.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0');const {data:{session}}=await sb.auth.getSession();const el=document.getElementById('nav-auth');if(!el||!session)return;const {data:p}=await sb.from('profiles').select('name,color,photo').eq('id',session.user.id).single();if(!p)return;const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;})();</script>
+<script>
+const _sb2=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+/* NAV AUTH */
+(async()=>{
+  const {data:{session}}=await _sb2.auth.getSession();
+  const el=document.getElementById('nav-auth');
+  if(!el||!session)return;
+  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
+  if(!p)return;
+  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="width:34px;height:34px;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;
+})();
+
+/* MIEMBROS REALES DE LA COMUNIDAD */
+function renderPersonCard(p){
+  const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const color=p.color||'#2d6b4a';
+  const line=p.offer||p.bio||'Aún no agregó una descripción.';
+  return `
+    <div class="person-card" onclick="window.location.href='perfil-publico.html?id=${p.id}'">
+      <div class="person-top">
+        <div class="person-av" style="background:${color}">${p.photo?`<img src="${p.photo}" alt="${p.name||''}">`:initials}</div>
+        <div><div class="person-name">${p.name||'Sin nombre'}</div><div class="person-role">${p.role||''}${p.location?' · '+p.location:''}</div></div>
+      </div>
+      <div class="person-line">${line}</div>
+    </div>`;
+}
+(async()=>{
+  try{
+    const {data,error}=await _sb2.from('perfiles_publicos').select('*').order('id',{ascending:false}).limit(24);
+    if(error||!data)return;
+    const real=data.filter(p=>p.name&&p.name.trim().length>1);
+    if(!real.length)return;
+    document.getElementById('real-people-wrap').style.display='block';
+    document.getElementById('real-people-grid').innerHTML=real.map(renderPersonCard).join('');
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

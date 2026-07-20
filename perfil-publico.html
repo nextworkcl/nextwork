@@ -332,26 +332,25 @@ const viewId = params.get('id');
 let isOwnProfile = true;
 let viewerSession = null;
 
+/* Valores reales que guarda crear-perfil.html (deben coincidir exacto) */
 const COLLAB_LABELS = {
-  cofundador:'🚀 Co-fundador', proyecto:'💡 Proyecto puntual',
-  freelance:'⚡ Freelance', mentoria:'🧠 Mentoría',
-  inversor:'💰 Inversor / Advisor', comunidad:'🤝 Comunidad'
-};
-
-const AVAIL_LABELS = {
-  'tiempo-completo':'Tiempo completo','medio-tiempo':'Medio tiempo',
-  'fines-semana':'Fines de semana','remoto':'Remoto','presencial':'Presencial'
+  'Freelance / Proyecto puntual':'⚡ Freelance / Proyecto puntual',
+  'Cofundador/a de startup':'🚀 Cofundador/a de startup',
+  'Colaborador permanente':'🤝 Colaborador permanente',
+  'Contratación con equity':'📈 Contratación con equity',
+  'Mentoría o advisor':'🧭 Mentoría o advisor',
+  'Inversión o financiamiento':'💰 Inversión o financiamiento'
 };
 
 const STATUS_MAP = {
-  'busco-trabajo':{label:'🟢 Buscando trabajo',cls:'badge-trabajo'},
-  'ofrezco-servicios':{label:'⚡ Ofrezco servicios',cls:'badge-proyecto'},
-  'busco-cofundador':{label:'🚀 Busco co-fundador',cls:'badge-cofundador'},
-  'busco-proyecto':{label:'💡 Busco proyecto',cls:'badge-proyecto'},
-  'networking':{label:'🤝 Networking',cls:'badge-networking'},
-  'mentoria':{label:'🧠 Mentoría',cls:'badge-mentoria'},
-  'solo-aprendiendo':{label:'📚 Aprendiendo',cls:'badge-networking'},
-  'no-disponible':{label:'🔴 No disponible',cls:'badge-mentoria'},
+  'Busco trabajo':{label:'💼 Busco trabajo',cls:'badge-trabajo'},
+  'Ofrezco servicios':{label:'⚡ Ofrezco servicios',cls:'badge-proyecto'},
+  'Busco cofundador/a':{label:'🚀 Busco cofundador/a',cls:'badge-cofundador'},
+  'Tengo una idea':{label:'💡 Tengo una idea',cls:'badge-proyecto'},
+  'Busco inversión':{label:'📈 Busco inversión',cls:'badge-networking'},
+  'Estoy contratando':{label:'🤝 Estoy contratando',cls:'badge-cofundador'},
+  'Busco mentoría':{label:'🧭 Busco mentoría',cls:'badge-mentoria'},
+  'Ofrezco mentoría':{label:'🌱 Ofrezco mentoría',cls:'badge-mentoria'},
 };
 
 const SUGGESTED = [
@@ -462,7 +461,7 @@ function renderProfile(p, ownProfile){
     }
     if(hasAvail){
       document.getElementById('avail-wrap').innerHTML=p.availability.map(a=>`
-        <span class="avail-chip${p.availability.includes(a)?' active':''}">${AVAIL_LABELS[a]||a}</span>`).join('');
+        <span class="avail-chip${p.availability.includes(a)?' active':''}">${a}</span>`).join('');
     }
   }
 

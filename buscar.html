@@ -522,7 +522,7 @@ function renderRealCard(p){
   const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const color=p.color||'#2d6b4a';
   const skillsHtml=(Array.isArray(p.skills)?p.skills:[]).slice(0,4).map(s=>`<span class="ctag ctag-skill">${s}</span>`).join('');
-  const bio=p.bio?p.bio:'Este miembro aún no agregó una descripción.';
+  const bio=p.vision?'🌎 '+p.vision:(p.offer?'🎯 '+p.offer:(p.bio||'Este miembro aún no agregó una descripción.'));
   return `
     <div class="profile-card" onclick="window.location.href='perfil-publico.html?id=${p.id}'">
       <div class="card-banner" style="background:linear-gradient(135deg,${color}cc,${color}88)">
