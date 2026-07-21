@@ -2,8 +2,15 @@
 -- Reutiliza el motor de publicaciones/likes/comentarios existente: los posts
 -- de un grupo son filas normales de public.posts con group_id seteado.
 -- Ejecutar completo en Supabase -> SQL Editor -> Run
+--
+-- Nota: si ya intentaste correr una version anterior de este archivo y te
+-- dio error a mitad de camino, este DROP limpia ese estado parcial (la
+-- tabla estaba recien creada y vacia, no hay datos que perder) para que
+-- puedas correr todo el archivo de nuevo sin problema.
+DROP TABLE IF EXISTS public.groups CASCADE;
 
--- ═══ GRUPOS ═══
+-- ═══ TABLAS (sin RLS todavia -- se habilita mas abajo, una vez que ambas
+-- tablas existen, porque las politicas de groups referencian group_members) ═══
 CREATE TABLE public.groups (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(trim(name)) between 3 and 80),
@@ -17,6 +24,20 @@ CREATE TABLE public.groups (
   created_at timestamptz default now()
 );
 
+CREATE TABLE public.group_members (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid references public.groups(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  role text not null default 'member' check (role in ('admin','member')),
+  status text not null check (status in ('approved','pending')),
+  joined_at timestamptz default now(),
+  unique (group_id, user_id)
+);
+
+CREATE INDEX idx_group_members_user_id ON public.group_members(user_id);
+
+
+-- ═══ RLS: GRUPOS ═══
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Cualquiera puede leer grupos"
@@ -39,20 +60,8 @@ CREATE POLICY "Solo el creador borra el grupo"
 REVOKE UPDATE (member_count) ON public.groups FROM authenticated, anon;
 
 
--- ═══ MIEMBROS DE GRUPO ═══
-CREATE TABLE public.group_members (
-  id uuid primary key default gen_random_uuid(),
-  group_id uuid references public.groups(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  role text not null default 'member' check (role in ('admin','member')),
-  status text not null check (status in ('approved','pending')),
-  joined_at timestamptz default now(),
-  unique (group_id, user_id)
-);
-
+-- ═══ RLS: MIEMBROS DE GRUPO ═══
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
-CREATE INDEX idx_group_members_user_id ON public.group_members(user_id);
-CREATE INDEX idx_posts_group_id ON public.posts(group_id);
 
 CREATE POLICY "Ver miembros segun visibilidad"
   ON public.group_members FOR SELECT TO public
@@ -86,6 +95,7 @@ CREATE POLICY "Salir del grupo o admin expulsa"
 
 -- ═══ COLUMNA group_id EN POSTS (null = feed principal) ═══
 ALTER TABLE public.posts ADD COLUMN group_id uuid references public.groups(id) on delete cascade;
+CREATE INDEX idx_posts_group_id ON public.posts(group_id);
 
 DROP POLICY "Cualquiera puede leer publicaciones" ON public.posts;
 CREATE POLICY "Leer publicaciones segun visibilidad"
