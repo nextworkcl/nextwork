@@ -154,6 +154,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <a href="buscar.html">Explorar perfiles</a>
       <a href="oportunidades.html">Oportunidades</a>
       <a href="publicaciones.html">Comunidad</a>
+      <a href="mensajes.html">Mensajes</a>
     </div>
     <div id="nav-user"></div>
   </div>
@@ -411,7 +412,8 @@ function renderContactCard(state, extra){
     body.innerHTML=`
       <div style="font-size:2rem;margin-bottom:.6rem">✅</div>
       <h3>¡Están conectados!</h3>
-      <p id="connected-email-wrap">Cargando contacto…</p>`;
+      <p id="connected-email-wrap">Cargando contacto…</p>
+      <a href="mensajes.html?with=${viewedProfileId}" style="display:block;margin-top:.6rem"><button class="btn-contact">💬 Enviar mensaje</button></a>`;
   } else if(state==='declined'){
     body.innerHTML=`
       <div style="font-size:2rem;margin-bottom:.6rem">✉️</div>

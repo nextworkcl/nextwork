@@ -223,6 +223,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <a href="buscar.html">Explorar perfiles</a>
       <a href="oportunidades.html">Oportunidades</a>
       <a href="publicaciones.html">Comunidad</a>
+      <a href="mensajes.html">Mensajes</a>
     </div>
     <div id="nav-user" style="display:flex;align-items:center;gap:.6rem"></div>
   </div>
@@ -1018,12 +1019,14 @@ function notifText(n){
   if(n.type==='connection_accepted')return `${name} aceptó tu solicitud de conexión`;
   if(n.type==='post_like')return `${name} le dio like a tu publicación`;
   if(n.type==='post_comment')return `${name} comentó tu publicación`;
+  if(n.type==='message')return `${name} te envió un mensaje`;
   return 'Nueva notificación';
 }
 function notifLink(n){
   if(n.type==='connection_request')return '#requests-wrap';
   if(n.type==='connection_accepted')return `perfil-publico.html?id=${n.actor_id}`;
   if(n.type==='post_like'||n.type==='post_comment')return 'publicaciones.html';
+  if(n.type==='message')return `mensajes.html?with=${n.actor_id}`;
   return '#';
 }
 

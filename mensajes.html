@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mensajes · Nextwork</title>
+<link rel="icon" type="image/png" href="logo.png?v=2">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--cream2);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow:hidden}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.2rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-links a.active{color:var(--accent2);font-weight:500}
+.nav-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;cursor:pointer;border:2px solid var(--accent3)}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+
+.msg-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 62px)}
+@media(max-width:760px){.msg-layout{grid-template-columns:1fr}}
+
+.conv-sidebar{border-right:1px solid var(--cream3);overflow-y:auto;background:var(--surface)}
+.conv-sidebar-head{padding:1.2rem 1.2rem .8rem;font-family:'DM Serif Display',serif;font-size:1.3rem}
+.conv-item{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;cursor:pointer;border-left:3px solid transparent;transition:background .15s}
+.conv-item:hover{background:var(--cream2)}
+.conv-item.active{background:var(--glow2);border-left-color:var(--accent2)}
+.conv-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden}
+.conv-info{flex:1;min-width:0}
+.conv-name-row{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.conv-name{font-weight:600;font-size:13.5px}
+.conv-time{font-size:11px;color:var(--ink3);white-space:nowrap}
+.conv-snippet{font-size:12.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-snippet.unread{color:var(--ink);font-weight:600}
+.conv-dot{width:9px;height:9px;border-radius:50%;background:var(--accent2);flex-shrink:0}
+.conv-empty{padding:2rem 1.2rem;text-align:center;color:var(--ink3);font-size:13.5px}
+
+.thread-panel{display:flex;flex-direction:column;min-width:0}
+.thread-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:14px;text-align:center;padding:2rem}
+.thread-header{display:flex;align-items:center;gap:.7rem;padding:.9rem 1.4rem;border-bottom:1px solid var(--cream3);background:var(--surface)}
+.thread-back{display:none;font-size:20px;cursor:pointer;color:var(--ink3);margin-right:.2rem}
+@media(max-width:760px){.thread-back{display:block}}
+.thread-messages{flex:1;overflow-y:auto;padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.5rem}
+.msg-bubble{max-width:65%;padding:.55rem .9rem;border-radius:16px;font-size:13.5px;line-height:1.45;white-space:pre-line;word-break:break-word}
+.msg-bubble.theirs{align-self:flex-start;background:var(--cream2);color:var(--ink);border-bottom-left-radius:4px}
+.msg-bubble.mine{align-self:flex-end;background:var(--accent2);color:#fff;border-bottom-right-radius:4px}
+.msg-time{font-size:10.5px;color:var(--ink3);margin-top:2px}
+.msg-bubble.mine+.msg-time,.msg-time.mine{text-align:right;align-self:flex-end}
+.thread-input-row{display:flex;gap:.6rem;padding:.9rem 1.4rem;border-top:1px solid var(--cream3);background:var(--surface)}
+.thread-input{flex:1;padding:.7rem 1rem;border:1px solid var(--cream3);border-radius:22px;font-family:'DM Sans',sans-serif;font-size:13.5px;background:var(--cream2);resize:none;max-height:100px}
+.thread-input:focus{outline:none;border-color:var(--accent3)}
+.thread-send-btn{background:var(--accent);color:var(--glow);border:none;border-radius:50%;width:42px;height:42px;cursor:pointer;font-size:16px;flex-shrink:0}
+.thread-send-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.gate{text-align:center;padding:5rem 1rem;color:var(--ink3)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 22px;border-radius:24px;font-size:13.5px;opacity:0;pointer-events:none;transition:all .3s;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="buscar.html">Explorar perfiles</a>
+      <a href="oportunidades.html">Oportunidades</a>
+      <a href="publicaciones.html">Comunidad</a>
+      <a href="mensajes.html" class="active">Mensajes</a>
+    </div>
+    <div id="nav-user" style="display:flex;align-items:center;gap:.6rem"></div>
+  </div>
+</nav>
+
+<div id="gate" class="gate" style="display:none">Cargando…</div>
+
+<div id="app" class="msg-layout" style="display:none">
+  <aside class="conv-sidebar" id="conv-sidebar">
+    <div class="conv-sidebar-head">Mensajes</div>
+    <div id="conv-list"></div>
+  </aside>
+  <section class="thread-panel" id="thread-panel">
+    <div class="thread-empty" id="thread-empty">Selecciona una conversación para comenzar a chatear.</div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const _sb=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function getInitials(name){
+  if(!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+function getColor(name){
+  const colors=['#1a3a2a','#1e4a8a','#4a1a5a','#6b3a1a','#1a4a4a','#2d6b4a','#3a2a1a'];
+  let h=0; for(let c of (name||'')) h=(h*31+c.charCodeAt(0))%colors.length;
+  return colors[h];
+}
+function timeAgo(iso){
+  const diff=(Date.now()-new Date(iso).getTime())/1000;
+  if(diff<60)return'ahora';
+  if(diff<3600)return Math.floor(diff/60)+'m';
+  if(diff<86400)return Math.floor(diff/3600)+'h';
+  return Math.floor(diff/86400)+'d';
+}
+function timeShort(iso){
+  return new Date(iso).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+
+let myId=null;
+let myProfile=null;
+let CONVERSATIONS=[]; /* {id,name,role,photo,color,messages:[],lastAt} */
+let activeId=null;
+
+async function loadConversations(){
+  const {data:conns}=await _sb.from('connections').select('*')
+    .or(`from_id.eq.${myId},to_id.eq.${myId}`).eq('status','accepted');
+  const otherIds=new Set((conns||[]).map(c=>c.from_id===myId?c.to_id:c.from_id));
+
+  const {data:msgs}=await _sb.from('messages').select('*')
+    .or(`sender_id.eq.${myId},recipient_id.eq.${myId}`)
+    .order('created_at',{ascending:true});
+
+  const msgsByOther={};
+  (msgs||[]).forEach(m=>{
+    const other=m.sender_id===myId?m.recipient_id:m.sender_id;
+    otherIds.add(other);
+    if(!msgsByOther[other])msgsByOther[other]=[];
+    msgsByOther[other].push(m);
+  });
+
+  const allIds=[...otherIds];
+  let profileById={};
+  if(allIds.length){
+    const {data:profiles}=await _sb.from('perfiles_publicos').select('*').in('id',allIds);
+    (profiles||[]).forEach(p=>profileById[p.id]=p);
+  }
+
+  CONVERSATIONS=allIds.map(id=>{
+    const p=profileById[id]||{id,name:'Usuario'};
+    const messages=msgsByOther[id]||[];
+    const last=messages[messages.length-1];
+    return {
+      id,
+      name:p.name||'Usuario',
+      role:p.role||'',
+      photo:p.photo||null,
+      color:p.color||getColor(p.name),
+      messages,
+      lastAt:last?last.created_at:null,
+      unread:messages.filter(m=>m.recipient_id===myId&&!m.read).length
+    };
+  }).sort((a,b)=>{
+    if(!a.lastAt&&!b.lastAt)return a.name.localeCompare(b.name);
+    if(!a.lastAt)return 1;
+    if(!b.lastAt)return -1;
+    return new Date(b.lastAt)-new Date(a.lastAt);
+  });
+
+  renderConvList();
+}
+
+function renderConvList(){
+  const list=document.getElementById('conv-list');
+  if(!CONVERSATIONS.length){
+    list.innerHTML='<div class="conv-empty">Aún no tienes conexiones aceptadas. Conecta con alguien desde su perfil para poder escribirle.</div>';
+    return;
+  }
+  list.innerHTML=CONVERSATIONS.map(c=>{
+    const last=c.messages[c.messages.length-1];
+    const snippet=last?(last.sender_id===myId?'Tú: ':'')+last.body:'Sin mensajes aún';
+    return `
+    <div class="conv-item${c.id===activeId?' active':''}" onclick="openConversation('${c.id}')">
+      <div class="conv-av" style="background:${c.color}">${c.photo?`<img src="${escapeHtml(c.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(c.name)}</div>
+      <div class="conv-info">
+        <div class="conv-name-row">
+          <span class="conv-name">${escapeHtml(c.name)}</span>
+          ${last?`<span class="conv-time">${timeAgo(last.created_at)}</span>`:''}
+        </div>
+        <div class="conv-snippet${c.unread?' unread':''}">${escapeHtml(snippet)}</div>
+      </div>
+      ${c.unread?`<div class="conv-dot"></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function msgBubble(m){
+  const mine=m.sender_id===myId;
+  return `<div class="msg-bubble ${mine?'mine':'theirs'}">${escapeHtml(m.body)}</div>
+    <div class="msg-time${mine?' mine':''}">${timeShort(m.created_at)}</div>`;
+}
+
+async function openConversation(id){
+  activeId=id;
+  renderConvList();
+  const conv=CONVERSATIONS.find(c=>c.id===id);
+  if(!conv)return;
+
+  document.getElementById('thread-panel').innerHTML=`
+    <div class="thread-header">
+      <span class="thread-back" onclick="closeThread()">←</span>
+      <div class="conv-av" style="background:${conv.color};width:36px;height:36px;font-size:12px">${conv.photo?`<img src="${escapeHtml(conv.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(conv.name)}</div>
+      <div>
+        <div style="font-weight:600;font-size:14px"><a href="perfil-publico.html?id=${conv.id}">${escapeHtml(conv.name)}</a></div>
+        <div style="font-size:12px;color:var(--ink3)">${escapeHtml(conv.role)}</div>
+      </div>
+    </div>
+    <div class="thread-messages" id="thread-messages"></div>
+    <div class="thread-input-row">
+      <textarea class="thread-input" id="thread-input" placeholder="Escribe un mensaje..." rows="1" maxlength="2000" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <button class="thread-send-btn" id="thread-send-btn" onclick="sendMessage()">➤</button>
+    </div>`;
+  renderThreadMessages();
+
+  const unreadIds=conv.messages.filter(m=>m.recipient_id===myId&&!m.read).map(m=>m.id);
+  if(unreadIds.length){
+    await _sb.from('messages').update({read:true}).in('id',unreadIds);
+    conv.messages.forEach(m=>{if(unreadIds.includes(m.id))m.read=true;});
+    conv.unread=0;
+    renderConvList();
+  }
+
+  document.getElementById('app').classList.add('mobile-thread-open');
+}
+
+function renderThreadMessages(){
+  const conv=CONVERSATIONS.find(c=>c.id===activeId);
+  const box=document.getElementById('thread-messages');
+  if(!conv||!box)return;
+  box.innerHTML=conv.messages.length
+    ? conv.messages.map(msgBubble).join('')
+    : `<div style="text-align:center;color:var(--ink3);font-size:13px;margin-top:1rem">Aún no hay mensajes. ¡Escribe el primero!</div>`;
+  box.scrollTop=box.scrollHeight;
+}
+
+function closeThread(){
+  activeId=null;
+  document.getElementById('thread-panel').innerHTML='<div class="thread-empty" id="thread-empty">Selecciona una conversación para comenzar a chatear.</div>';
+  renderConvList();
+}
+
+async function sendMessage(){
+  const input=document.getElementById('thread-input');
+  const btn=document.getElementById('thread-send-btn');
+  if(!input||!activeId)return;
+  const body=input.value.trim();
+  if(!body)return;
+  btn.disabled=true;
+  const {data,error}=await _sb.from('messages').insert({sender_id:myId,recipient_id:activeId,body}).select().single();
+  btn.disabled=false;
+  if(error){showToast(error.message||'No pudimos enviar el mensaje');return;}
+  input.value='';
+  const conv=CONVERSATIONS.find(c=>c.id===activeId);
+  if(conv){
+    conv.messages.push(data);
+    conv.lastAt=data.created_at;
+  }
+  const idx=CONVERSATIONS.findIndex(c=>c.id===activeId);
+  if(idx>0){CONVERSATIONS.unshift(CONVERSATIONS.splice(idx,1)[0]);}
+  renderThreadMessages();
+  renderConvList();
+}
+
+function handleIncomingMessage(m){
+  let conv=CONVERSATIONS.find(c=>c.id===m.sender_id);
+  if(!conv){
+    loadConversations();
+    return;
+  }
+  conv.messages.push(m);
+  conv.lastAt=m.created_at;
+  const idx=CONVERSATIONS.indexOf(conv);
+  if(idx>0)CONVERSATIONS.unshift(CONVERSATIONS.splice(idx,1)[0]);
+
+  if(activeId===m.sender_id){
+    renderThreadMessages();
+    _sb.from('messages').update({read:true}).eq('id',m.id).then(()=>{m.read=true;},()=>{});
+  } else {
+    conv.unread=(conv.unread||0)+1;
+    showToast('Nuevo mensaje de '+conv.name);
+  }
+  renderConvList();
+}
+
+(async()=>{
+  const {data:{session}}=await _sb.auth.getSession();
+  if(!session){
+    document.getElementById('gate').innerHTML='Inicia sesión para ver tus mensajes. <a href="login.html" style="color:var(--accent2);font-weight:600">Iniciar sesión</a>';
+    document.getElementById('gate').style.display='block';
+    return;
+  }
+  myId=session.user.id;
+  const {data:p}=await _sb.from('profiles').select('*').eq('id',myId).single();
+  if(!p){
+    document.getElementById('gate').innerHTML='Crea tu perfil para poder usar los mensajes. <a href="crear-perfil.html" style="color:var(--accent2);font-weight:600">Crear mi perfil</a>';
+    document.getElementById('gate').style.display='block';
+    return;
+  }
+  myProfile=p;
+
+  const ini=getInitials(p.name);
+  document.getElementById('nav-user').innerHTML=`
+    <a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+      <div class="nav-avatar" style="background:${p.color||getColor(p.name)};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div>
+      <span style="font-size:13px;font-weight:500;color:var(--ink)">${escapeHtml((p.name||'').split(' ')[0])}</span>
+    </a>`;
+
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='grid';
+
+  await loadConversations();
+
+  const params=new URLSearchParams(window.location.search);
+  const withId=params.get('with');
+  if(withId){
+    if(!CONVERSATIONS.find(c=>c.id===withId)){
+      const {data:target}=await _sb.from('perfiles_publicos').select('*').eq('id',withId).single();
+      if(target){
+        CONVERSATIONS.unshift({id:target.id,name:target.name||'Usuario',role:target.role||'',photo:target.photo||null,color:target.color||getColor(target.name),messages:[],lastAt:null,unread:0});
+      }
+    }
+    openConversation(withId);
+  }
+
+  _sb.channel('messages-'+myId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`recipient_id=eq.${myId}`},payload=>{
+      handleIncomingMessage(payload.new);
+    })
+    .subscribe();
+})();
+</script>
+</body>
+</html>
