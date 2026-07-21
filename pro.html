@@ -64,7 +64,7 @@ const _sb=window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
 );
 
-const FUNCTIONS_URL='https://vkewxmrutpjmdrxsqdea.supabase.co/functions/v1/create-checkout-session';
+const FUNCTIONS_URL='https://vkewxmrutpjmdrxsqdea.supabase.co/functions/v1/create-mercadopago-subscription';
 
 async function startCheckout(){
   const btn=document.getElementById('cta-btn');
@@ -124,7 +124,7 @@ async function startCheckout(){
       <button class="cta-btn" id="cta-btn" onclick="startCheckout()">Suscribirme →</button>
       <div class="err-box" id="cta-err"></div>
     </div>
-    <p class="gate">Pago procesado de forma segura por Stripe. Cancela cuando quieras.</p>`;
+    <p class="gate">Pago procesado de forma segura por Mercado Pago. Cancela cuando quieras.</p>`;
 })();
 </script>
 </body>
