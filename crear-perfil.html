@@ -1125,6 +1125,13 @@ const _sb=window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
 );
 
+/* Guarda el codigo de invitacion de la URL para usarlo cuando se cree el
+   perfil, incluso si el usuario tiene que confirmar su email antes */
+(()=>{
+  const ref=new URLSearchParams(window.location.search).get('ref');
+  if(ref)localStorage.setItem('nw_ref_code',ref);
+})();
+
 async function signUpAndSave(){
   if(editMode) return saveProfileEdits();
   const email=document.getElementById('auth-email').value.trim();
@@ -1174,6 +1181,16 @@ errEl.style.display='block';
     },'qCCiB5C-ktvGFIFyt');
   }catch(e){console.warn('Email notif error:',e);}
 
+  /* Resolver codigo de invitacion, si vino uno */
+  let referredBy=null;
+  const refCode=localStorage.getItem('nw_ref_code');
+  if(refCode){
+    try{
+      const {data:referrerId}=await _sb.rpc('resolve_referral_code',{code:refCode});
+      if(referrerId)referredBy=referrerId;
+    }catch(e){}
+  }
+
   /* Guardar perfil en Supabase */
   const {error:insErr}=await _sb.from('profiles').insert({
     id:data.user.id,email,
@@ -1183,8 +1200,9 @@ errEl.style.display='block';
     skills:profile.skills,hobbies:profile.hobbies,offer:profile.offer,
     collab:profile.collab,availability:profile.availability,
     vision:profile.vision,photo:profile.photo,banner:profile.banner,
-    status:profile.status
+    status:profile.status,referred_by:referredBy
   });
+  if(!insErr)localStorage.removeItem('nw_ref_code');
   if(insErr){
     errEl.textContent='Tu cuenta se creó, pero no pudimos guardar el perfil: '+insErr.message+'. Inicia sesión e inténtalo de nuevo.';
     errEl.style.display='block';

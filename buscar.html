@@ -609,7 +609,7 @@ function renderRealCard(p){
         </div>
       </div>
       <div class="card-body">
-        <div class="card-name">${escapeHtml(p.name||'Sin nombre')}</div>
+        <div class="card-name">${escapeHtml(p.name||'Sin nombre')}${p.verified?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':''}</div>
         <div class="card-role">${escapeHtml(p.role||'')}${p.location?' · '+escapeHtml(p.location):''}</div>
         <div class="card-bio">${escapeHtml(bio)}</div>
         <div class="card-tags">${skillsHtml}</div>

@@ -312,6 +312,22 @@ footer strong{color:rgba(255,255,255,.75)}
         <div class="req-grid" id="connections-grid"></div>
       </div>
 
+      <!-- MIS INVITACIONES -->
+      <div id="referrals-wrap" style="display:none">
+        <div class="section-head">
+          <h3>Invita a tu red</h3>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--cream3);border-radius:var(--r);padding:1.1rem 1.3rem;margin-bottom:1.5rem">
+          <p style="font-size:13px;color:var(--ink3);margin-bottom:.6rem">Comparte tu link. Cuando alguien crea su perfil con él, aparece aquí.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <input type="text" id="referral-link" readonly style="flex:1;min-width:200px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink2);background:var(--cream2)">
+            <button class="req-btn-accept" onclick="copyReferralLink()">Copiar link</button>
+          </div>
+          <div id="referrals-count" style="font-size:12.5px;color:var(--ink3);margin-top:.7rem"></div>
+          <div class="req-grid" id="referrals-grid" style="margin-top:.7rem"></div>
+        </div>
+      </div>
+
       <!-- QUIEN VISITO TU PERFIL -->
       <div id="viewers-wrap" style="display:none">
         <div class="section-head">
@@ -600,7 +616,7 @@ function renderDashboard(p){
   const color=getColor(p.name);
   document.getElementById('nav-user').innerHTML=`
     <span class="nav-name">${escapeHtml(p.name||'Mi perfil')}</span>
-    ${p.is_admin?`<a href="admin-reportes.html" title="Panel de reportes" style="font-size:18px;text-decoration:none">🛡️</a>`:''}
+    ${p.is_admin?`<a href="admin-reportes.html" title="Panel de reportes" style="font-size:18px;text-decoration:none">🛡️</a><a href="admin-analytics.html" title="Analíticas" style="font-size:18px;text-decoration:none">📊</a>`:''}
     <div style="position:relative">
       <button id="notif-bell" onclick="toggleNotifDropdown(event)" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px;line-height:1" title="Notificaciones">
         🔔
@@ -698,6 +714,7 @@ function renderDashboard(p){
       loadProfileViewers();
       loadBlockedUsers();
       loadMyApplications();
+      loadReferrals();
       return;
     }
   }
@@ -1126,6 +1143,47 @@ async function unblockFromDashboard(blockedId){
   if(error){showToast('No pudimos desbloquear al usuario');return;}
   showToast('Usuario desbloqueado');
   loadBlockedUsers();
+}
+
+/* ── INVITACIONES / REFERIDOS ── */
+async function loadReferrals(){
+  if(!currentUserId)return;
+  try{
+    const {data:me}=await _sb.from('profiles').select('referral_code').eq('id',currentUserId).single();
+    if(!me||!me.referral_code)return;
+    const wrap=document.getElementById('referrals-wrap');
+    const linkEl=document.getElementById('referral-link');
+    linkEl.value=window.location.origin+'/crear-perfil.html?ref='+me.referral_code;
+    wrap.style.display='block';
+
+    const {data:referrals}=await _sb.rpc('get_my_referrals');
+    const countEl=document.getElementById('referrals-count');
+    const grid=document.getElementById('referrals-grid');
+    if(!referrals||!referrals.length){
+      countEl.textContent='Aún no has invitado a nadie.';
+      grid.innerHTML='';
+      return;
+    }
+    countEl.textContent=`${referrals.length} persona${referrals.length===1?'':'s'} se unió con tu invitación`;
+    grid.innerHTML=referrals.map(p=>{
+      const initials=getInitials(p.name);
+      const color=p.color||getColor(p.name);
+      return `<div class="match-card">
+        ${personChip(p,initials,color)}
+        <div style="font-size:11px;color:var(--ink3);margin-top:.3rem">${timeAgo(p.created_at)}</div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+function copyReferralLink(){
+  const linkEl=document.getElementById('referral-link');
+  linkEl.select();
+  navigator.clipboard.writeText(linkEl.value).then(()=>{
+    showToast('Link copiado ✓');
+  },()=>{
+    showToast('No pudimos copiar el link');
+  });
 }
 
 /* ── NOTIFICACIONES REALES ── */

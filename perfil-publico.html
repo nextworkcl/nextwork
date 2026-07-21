@@ -386,6 +386,8 @@ function shareProfile(){
 /* ── SOLICITUDES DE CONEXIÓN ── */
 let viewedProfileId=null;
 let IS_BLOCKED_BY_ME=false;
+let VIEWER_IS_ADMIN=false;
+let VIEWED_PROFILE_VERIFIED=false;
 
 function renderContactCard(state, extra){
   const body=document.getElementById('contact-card-body');
@@ -433,11 +435,24 @@ function renderContactCard(state, extra){
       ${extra?`<button class="btn-contact-outline" onclick="unblockUser()">Desbloquear</button>`:''}`;
   }
   if(state!=='login'){
-    body.innerHTML+=`<div style="margin-top:.8rem;text-align:center;display:flex;gap:.8rem;justify-content:center">
+    body.innerHTML+=`<div style="margin-top:.8rem;text-align:center;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
       <span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="reportProfile()">🚩 Reportar</span>
       ${state!=='blocked'?`<span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="blockUser()">🚫 Bloquear</span>`:''}
+      ${VIEWER_IS_ADMIN?`<span style="font-size:12px;color:var(--accent2);cursor:pointer" onclick="toggleVerified()">${VIEWED_PROFILE_VERIFIED?'✓ Quitar verificación':'✓ Verificar perfil'}</span>`:''}
     </div>`;
   }
+}
+
+async function toggleVerified(){
+  const newValue=!VIEWED_PROFILE_VERIFIED;
+  const {error}=await _sb.rpc('set_profile_verified',{target_id:viewedProfileId,value:newValue});
+  if(error){showToast('No pudimos actualizar la verificación');return;}
+  VIEWED_PROFILE_VERIFIED=newValue;
+  showToast(newValue?'Perfil verificado ✓':'Verificación quitada');
+  const nameEl=document.getElementById('hero-name');
+  const currentName=nameEl.textContent.replace(/✓\s*$/,'').trim();
+  nameEl.innerHTML=escapeHtml(currentName)+(newValue?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':'');
+  checkConnectionStatus();
 }
 
 async function reportProfile(){
@@ -544,7 +559,8 @@ function renderProfile(p, ownProfile){
   }
 
   /* NAME / ROLE / LOC */
-  document.getElementById('hero-name').textContent=p.name||'';
+  VIEWED_PROFILE_VERIFIED=!!p.verified;
+  document.getElementById('hero-name').innerHTML=escapeHtml(p.name||'')+(p.verified?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':'');
   document.getElementById('hero-role').textContent=p.role||'';
   const loc=document.getElementById('hero-loc');
   if(p.location) loc.innerHTML=`📍 ${escapeHtml(p.location)}`;
@@ -681,6 +697,12 @@ const _sb=window.supabase.createClient(
 (async()=>{
   const {data:{session}}=await _sb.auth.getSession();
   viewerSession=session;
+  if(session){
+    try{
+      const {data:me}=await _sb.from('profiles').select('is_admin').eq('id',session.user.id).single();
+      VIEWER_IS_ADMIN=!!(me&&me.is_admin);
+    }catch(e){}
+  }
   await renderNavUser();
 
   if(viewId){
