@@ -447,21 +447,54 @@ function applyFilters(){
   renderRealFiltered();
 }
 
-/* Filtra los perfiles reales solo por texto de busqueda (los checkboxes de
-   rol/ciudad/colaboracion usan categorias que no calzan 1:1 con datos reales,
-   asi que se aplican unicamente a los perfiles de ejemplo) */
+/* Los perfiles reales tienen rol y ubicacion en texto libre (ej. "Co-Founder
+   NextWork", "Santiago, Chile"), no un enum fijo como los datos de ejemplo.
+   Por eso el filtro de Rol/Ciudad matchea por palabras clave (sinonimos en
+   español e ingles) en vez de igualdad exacta. El filtro "Busca colaborar en"
+   SI se deja fuera: no existe un campo equivalente en el perfil real todavia */
+const REAL_ROLE_KEYWORDS={
+  'Fundador':['fundador','founder','ceo','cofounder','co-founder'],
+  'Desarrollador':['desarrollador','developer','engineer','dev ','ingenier','programador','software'],
+  'Diseñador':['diseñador','diseñadora','designer','diseño','ux','ui'],
+  'Marketing':['marketing','growth','marketer'],
+  'Producto':['producto','product'],
+  'Finanzas':['finanzas','finance','cfo','financiero'],
+  'Estudiante':['estudiante','student'],
+  'Inversionista':['inversionista','investor','vc','angel']
+};
+const REAL_CITY_KEYWORDS={
+  'Remoto':['remoto','remote']
+};
+function realKeywordsFor(map,value){
+  return map[value]||[value.toLowerCase()];
+}
+
 function renderRealFiltered(){
   const wrap=document.getElementById('real-profiles-wrap');
   const grid=document.getElementById('real-profiles-grid');
   if(!wrap||!grid||!REAL_PROFILES.length)return;
   const q=query.toLowerCase();
-  const filtered=!q?REAL_PROFILES:REAL_PROFILES.filter(p=>{
+  const checkedRoles=[...document.querySelectorAll('.filter-card:nth-child(1) input:checked')].map(c=>c.value);
+  if(activeChipRole&&!checkedRoles.includes(activeChipRole))checkedRoles.push(activeChipRole);
+  const checkedCities=[...document.querySelectorAll('.filter-card:nth-child(2) input:checked')].map(c=>c.value);
+
+  const filtered=REAL_PROFILES.filter(p=>{
     const skills=Array.isArray(p.skills)?p.skills.join(' '):'';
-    return (p.name||'').toLowerCase().includes(q)
+    const matchQ=!q||(p.name||'').toLowerCase().includes(q)
       ||(p.role||'').toLowerCase().includes(q)
       ||(p.bio||'').toLowerCase().includes(q)
       ||(p.location||'').toLowerCase().includes(q)
       ||skills.toLowerCase().includes(q);
+
+    const role=(p.role||'').toLowerCase();
+    const matchRole=!checkedRoles.length||checkedRoles.some(r=>
+      realKeywordsFor(REAL_ROLE_KEYWORDS,r).some(k=>role.includes(k)));
+
+    const loc=(p.location||'').toLowerCase();
+    const matchCity=!checkedCities.length||checkedCities.some(c=>
+      realKeywordsFor(REAL_CITY_KEYWORDS,c).some(k=>loc.includes(k)));
+
+    return matchQ&&matchRole&&matchCity;
   });
   if(!filtered.length){
     wrap.style.display='none';
@@ -541,8 +574,8 @@ const _sb2=window.supabase.createClient(
   const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
   if(!p)return;
   const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
-  const {count}=await _sb2.from('connections').select('*',{count:'exact',head:true}).eq('to_id',session.user.id).eq('status','pending');
-  const badge=count?'<span style="position:absolute;top:-1px;right:-1px;width:11px;height:11px;background:#dc2626;border-radius:50%;border:2px solid #fff"></span>':'';
+  const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
+  const badge=count?`<span style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${count>9?'9+':count}</span>`:'';
   el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div><span style="font-size:13px;font-weight:500;color:#3d3b36">${(p.name||'').split(' ')[0]}</span></a>`;
 })();
 
