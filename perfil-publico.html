@@ -74,8 +74,28 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .section-title span{font-size:18px}
 .bio-text{font-size:14.5px;color:var(--ink2);line-height:1.7;white-space:pre-line}
 .skills-wrap{display:flex;flex-wrap:wrap;gap:.5rem}
-.skill{padding:6px 14px;background:var(--glow2);color:var(--accent2);border-radius:20px;font-size:13px;font-weight:500;border:1px solid rgba(77,158,114,.2);transition:all .2s}
+.skill{padding:6px 14px;background:var(--glow2);color:var(--accent2);border-radius:20px;font-size:13px;font-weight:500;border:1px solid rgba(77,158,114,.2);transition:all .2s;display:inline-flex;align-items:center;gap:6px}
 .skill:hover{background:var(--accent);color:var(--glow)}
+.endorse-count{font-size:11px;font-weight:700;background:rgba(0,0,0,.08);padding:1px 6px;border-radius:8px}
+.endorse-btn{cursor:pointer;font-size:12px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.08);display:inline-flex;align-items:center;justify-content:center}
+.endorse-btn.mine{background:var(--accent);color:var(--glow)}
+
+.rec-card{background:var(--cream2);border-radius:10px;padding:1rem 1.1rem;margin-bottom:.7rem}
+.rec-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.rec-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden}
+.rec-name{font-weight:600;font-size:13.5px}
+.rec-time{font-size:11.5px;color:var(--ink3)}
+.rec-body{font-size:13.5px;color:var(--ink2);line-height:1.6;white-space:pre-line}
+.rec-actions{display:flex;gap:.5rem;margin-top:.6rem}
+.rec-pending{border:1.5px dashed var(--accent3)}
+
+.simple-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,14,12,.55);align-items:center;justify-content:center;padding:1.2rem}
+.simple-overlay.open{display:flex}
+.simple-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:480px;padding:1.4rem}
+.simple-box h3{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:.8rem}
+.simple-box textarea{width:100%;min-height:120px;padding:10px 13px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none;resize:vertical}
+.simple-box-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem}
+.simple-err{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none;margin-top:.6rem}
 .offer-text{font-size:14px;color:var(--ink2);line-height:1.65;background:var(--cream2);padding:1rem 1.2rem;border-radius:10px;border-left:3px solid var(--accent3)}
 .collab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
 .collab-chip{padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;border:1.5px solid var(--cream3);color:var(--ink2);background:var(--cream2);text-align:center}
@@ -245,6 +265,14 @@ footer strong{color:rgba(255,255,255,.75)}
           <div class="section-title"><span>🎨</span> Intereses y hobbies</div>
           <div class="hobbies-wrap" id="hobbies-wrap"></div>
         </div>
+
+        <!-- RECOMENDACIONES -->
+        <div class="profile-section" id="section-recommendations" style="display:none">
+          <div class="section-title"><span>💬</span> Recomendaciones</div>
+          <div id="pending-recommendations"></div>
+          <div id="recommendations-list"></div>
+          <button class="btn-contact-outline" id="write-recommendation-btn" style="display:none;margin-top:.6rem" onclick="openRecommendationModal()">Escribir una recomendación</button>
+        </div>
       </div>
 
       <!-- RIGHT: SIDEBAR -->
@@ -283,6 +311,18 @@ footer strong{color:rgba(255,255,255,.75)}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="simple-overlay" id="rec-overlay" onclick="if(event.target===this)closeRecommendationModal()">
+  <div class="simple-box">
+    <h3 id="rec-modal-title">Escribir una recomendación</h3>
+    <div id="rec-err" class="simple-err"></div>
+    <textarea id="rec-body" maxlength="2000" placeholder="Cuenta cómo trabajaste con esta persona y qué destacarías de ella (mínimo 20 caracteres)"></textarea>
+    <div class="simple-box-foot">
+      <button class="btn-contact-outline" onclick="closeRecommendationModal()">Cancelar</button>
+      <button class="btn-contact" id="rec-submit-btn" onclick="submitRecommendation()">Enviar →</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   <div class="footer-top">
@@ -390,6 +430,9 @@ let VIEWER_IS_ADMIN=false;
 let VIEWED_PROFILE_VERIFIED=false;
 let VIEWED_PROFILE_PRO=false;
 let VIEWED_PROFILE_NAME='';
+let IS_CONNECTED=false;
+let CURRENT_PROFILE_SKILLS=[];
+let ENDORSEMENTS=[];
 
 function renderContactCard(state, extra){
   const body=document.getElementById('contact-card-body');
@@ -488,6 +531,134 @@ async function unblockUser(){
   checkConnectionStatus();
 }
 
+/* ── AVALES DE HABILIDADES ── */
+async function loadEndorsements(profileId){
+  try{
+    const {data}=await _sb.from('skill_endorsements').select('*').eq('endorsed_id',profileId);
+    ENDORSEMENTS=data||[];
+    renderSkillsWithEndorsements();
+  }catch(e){}
+}
+
+function renderSkillsWithEndorsements(){
+  const wrap=document.getElementById('skills-wrap');
+  if(!wrap)return;
+  const countBySkill={};
+  const myEndorsedSet=new Set();
+  ENDORSEMENTS.forEach(e=>{
+    countBySkill[e.skill]=(countBySkill[e.skill]||0)+1;
+    if(viewerSession&&e.endorser_id===viewerSession.user.id)myEndorsedSet.add(e.skill);
+  });
+  const canEndorse=IS_CONNECTED&&!isOwnProfile;
+  wrap.innerHTML=CURRENT_PROFILE_SKILLS.map(s=>{
+    const count=countBySkill[s]||0;
+    const mine=myEndorsedSet.has(s);
+    const skillAttr=escapeHtml(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return `<span class="skill">
+      ${escapeHtml(s)}
+      ${count>0?`<span class="endorse-count">${count}</span>`:''}
+      ${canEndorse?`<span class="endorse-btn${mine?' mine':''}" title="${mine?'Quitar aval':'Avalar esta habilidad'}" onclick="toggleEndorse('${skillAttr}')">${mine?'✓':'+'}</span>`:''}
+    </span>`;
+  }).join('');
+}
+
+async function toggleEndorse(skill){
+  if(!viewerSession){showToast('Inicia sesión para avalar');return;}
+  const mine=ENDORSEMENTS.some(e=>e.endorser_id===viewerSession.user.id&&e.skill===skill);
+  if(mine){
+    await _sb.from('skill_endorsements').delete().eq('endorser_id',viewerSession.user.id).eq('endorsed_id',viewedProfileId).eq('skill',skill);
+  } else {
+    const {error}=await _sb.from('skill_endorsements').insert({endorser_id:viewerSession.user.id,endorsed_id:viewedProfileId,skill});
+    if(error){showToast(error.message||'No pudimos avalar esta habilidad');return;}
+  }
+  await loadEndorsements(viewedProfileId);
+}
+
+/* ── RECOMENDACIONES ── */
+let RECOMMENDATIONS_PROFILE_ID=null;
+async function loadRecommendations(profileId){
+  RECOMMENDATIONS_PROFILE_ID=profileId;
+  try{
+    const {data}=await _sb.from('recommendations').select('*').eq('recipient_id',profileId).order('created_at',{ascending:false});
+    const rows=data||[];
+    const approved=rows.filter(r=>r.status==='approved');
+    const pending=isOwnProfile?rows.filter(r=>r.status==='pending'):[];
+    const section=document.getElementById('section-recommendations');
+    if(!approved.length&&!pending.length&&!(IS_CONNECTED&&!isOwnProfile)){
+      section.style.display='none';
+      return;
+    }
+    section.style.display='block';
+
+    const authorIds=[...new Set(rows.map(r=>r.author_id))];
+    let byId={};
+    if(authorIds.length){
+      const {data:authors}=await _sb.from('perfiles_publicos').select('*').in('id',authorIds);
+      (authors||[]).forEach(a=>byId[a.id]=a);
+    }
+
+    document.getElementById('pending-recommendations').innerHTML=pending.map(r=>recCard(r,byId[r.author_id],true)).join('');
+    document.getElementById('recommendations-list').innerHTML=approved.length
+      ? approved.map(r=>recCard(r,byId[r.author_id],false)).join('')
+      : (pending.length?'':'<div style="font-size:12.5px;color:var(--ink3)">Aún no tiene recomendaciones.</div>');
+
+    document.getElementById('write-recommendation-btn').style.display=(IS_CONNECTED&&!isOwnProfile)?'block':'none';
+  }catch(e){}
+}
+
+function recCard(r,author,pending){
+  author=author||{name:'Usuario'};
+  const initials=getInitials(author.name);
+  const color=author.color||'#2d6b4a';
+  return `<div class="rec-card${pending?' rec-pending':''}">
+    <div class="rec-header">
+      <div class="rec-av" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div>
+        <div class="rec-name"><a href="perfil-publico.html?id=${r.author_id}" style="color:inherit">${escapeHtml(author.name||'Usuario')}</a></div>
+        <div class="rec-time">${escapeHtml(author.role||'')}</div>
+      </div>
+    </div>
+    <div class="rec-body">${escapeHtml(r.body)}</div>
+    ${pending?`<div class="rec-actions">
+      <button class="btn-contact" style="width:auto;padding:7px 16px" onclick="respondToRecommendation('${r.id}',true)">Aprobar y mostrar</button>
+      <button class="btn-contact-outline" style="width:auto;padding:7px 16px" onclick="respondToRecommendation('${r.id}',false)">Rechazar</button>
+    </div>`:''}
+  </div>`;
+}
+function renderRecommendationsUI(){
+  if(RECOMMENDATIONS_PROFILE_ID)loadRecommendations(RECOMMENDATIONS_PROFILE_ID);
+}
+
+function openRecommendationModal(){
+  if(!viewerSession){showToast('Inicia sesión para recomendar');return;}
+  document.getElementById('rec-body').value='';
+  document.getElementById('rec-err').style.display='none';
+  document.getElementById('rec-overlay').classList.add('open');
+}
+function closeRecommendationModal(){
+  document.getElementById('rec-overlay').classList.remove('open');
+}
+async function submitRecommendation(){
+  const errEl=document.getElementById('rec-err');
+  const btn=document.getElementById('rec-submit-btn');
+  errEl.style.display='none';
+  const body=document.getElementById('rec-body').value.trim();
+  if(body.length<20){errEl.textContent='Escribe al menos 20 caracteres.';errEl.style.display='block';return;}
+  btn.textContent='Enviando...';btn.disabled=true;
+  const {error}=await _sb.from('recommendations').insert({author_id:viewerSession.user.id,recipient_id:viewedProfileId,body});
+  btn.textContent='Enviar →';btn.disabled=false;
+  if(error){errEl.textContent=error.message||'No pudimos enviar la recomendación';errEl.style.display='block';return;}
+  closeRecommendationModal();
+  showToast('Recomendación enviada — se mostrará cuando la apruebe 🙏');
+}
+
+async function respondToRecommendation(id,approve){
+  const {error}=await _sb.from('recommendations').update({status:approve?'approved':'rejected',responded_at:new Date().toISOString()}).eq('id',id);
+  if(error){showToast('No pudimos procesar la recomendación');return;}
+  showToast(approve?'Recomendación publicada ✓':'Recomendación rechazada');
+  loadRecommendations(RECOMMENDATIONS_PROFILE_ID);
+}
+
 async function checkConnectionStatus(){
   if(isOwnProfile||!viewedProfileId)return;
   if(!viewerSession){renderContactCard('login');return;}
@@ -503,6 +674,9 @@ async function checkConnectionStatus(){
   if(!conn){renderContactCard('none');return;}
   if(conn.status==='accepted'){
     renderContactCard('accepted');
+    IS_CONNECTED=true;
+    renderSkillsWithEndorsements();
+    renderRecommendationsUI();
     const {data:full}=await _sb.from('profiles').select('email').eq('id',viewedProfileId).single();
     const wrap=document.getElementById('connected-email-wrap');
     if(wrap){
@@ -597,9 +771,11 @@ function renderProfile(p, ownProfile){
   }
 
   /* SKILLS */
+  CURRENT_PROFILE_SKILLS=p.skills||[];
   if(p.skills&&p.skills.length){
     document.getElementById('section-skills').style.display='block';
-    document.getElementById('skills-wrap').innerHTML=p.skills.map(s=>`<span class="skill">${escapeHtml(s)}</span>`).join('');
+    renderSkillsWithEndorsements();
+    loadEndorsements(p.id);
   }
 
   /* OFFER */
@@ -638,6 +814,9 @@ function renderProfile(p, ownProfile){
       document.getElementById('hobbies-wrap').innerHTML=hobbiesArr.map(h=>`<span class="hobby">${escapeHtml(h)}</span>`).join('');
     }
   }
+
+  /* RECOMENDACIONES */
+  loadRecommendations(p.id);
 
   /* SUGGESTED */
   document.getElementById('suggested-list').innerHTML=SUGGESTED.map(s=>`
