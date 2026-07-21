@@ -30,8 +30,10 @@
     <a href="#how" data-section="how">Cómo funciona</a>
   </div>
   <div class="nav-right">
-    <a href="login.html" class="nav-login">Iniciar sesión</a>
-    <a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>
+    <span id="nav-auth-desktop" style="display:contents">
+      <a href="login.html" class="nav-login">Iniciar sesión</a>
+      <a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a>
+    </span>
     <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">
       <span></span><span></span><span></span>
     </button>
@@ -44,8 +46,10 @@
   <a href="publicaciones.html">Comunidad</a>
   <a href="#how" onclick="closeMenu()">Cómo funciona</a>
   <a href="#match" onclick="closeMenu()">Matching IA</a>
-  <a href="login.html">Iniciar sesión</a>
-  <a href="crear-perfil.html" style="border:none"><button class="nav-cta">Crear mi perfil</button></a>
+  <span id="nav-auth-mobile" style="display:contents">
+    <a href="login.html">Iniciar sesión</a>
+    <a href="crear-perfil.html" style="border:none"><button class="nav-cta">Crear mi perfil</button></a>
+  </span>
 </div>
 
 <!-- ============ HERO ============ -->

@@ -281,3 +281,33 @@ async function runMatch() {
     window.history.replaceState({}, '', newUrl);
   }
 })();
+
+/* ── NAV SEGUN SESION ──
+   La landing nunca consultaba Supabase, asi que siempre mostraba
+   "Iniciar sesion / Crear mi perfil" aunque el visitante ya tuviera
+   sesion activa (parecia que lo habia desconectado al volver al inicio).
+   Esto revisa la sesion real y, si existe, reemplaza esos botones por el
+   avatar del usuario enlazando a su dashboard. */
+(async function syncNavWithSession() {
+  const desktopAuth = document.getElementById('nav-auth-desktop');
+  const mobileAuth = document.getElementById('nav-auth-mobile');
+  if (!desktopAuth && !mobileAuth) return;
+  try {
+    const SUPA_URL = 'https://vkewxmrutpjmdrxsqdea.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0';
+    const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: p } = await sb.from('profiles').select('name,color,photo').eq('id', session.user.id).single();
+    if (!p) return;
+    const esc = (s) => (s == null ? '' : String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+    const initials = (p.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    const avatar = `<div style="width:34px;height:34px;border-radius:50%;background:${p.color || '#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo ? `<img src="${esc(p.photo)}" style="width:100%;height:100%;object-fit:cover">` : initials}</div>`;
+    if (desktopAuth) {
+      desktopAuth.innerHTML = `<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)">${avatar}<span style="font-size:13.5px;font-weight:600">${esc((p.name || '').split(' ')[0])}</span></a>`;
+    }
+    if (mobileAuth) {
+      mobileAuth.innerHTML = `<a href="dashboard.html" onclick="closeMenu()" style="border:none"><button class="nav-cta">Ir a mi Dashboard</button></a>`;
+    }
+  } catch (e) {}
+})();
