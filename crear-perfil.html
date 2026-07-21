@@ -981,15 +981,19 @@ function goStep(n){
 }
 
 /* ─── PREVIEW ─── */
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function renderPreview(){
   const p=profile;
   const initials=p.initials||(p.name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?');
   const expText=p.exp===0?'Sin experiencia formal':p.exp>=20?'20+ años':`${p.exp} años`;
   const avatarHtml=p.photo
-    ? `<div class="preview-av" style="background:transparent"><img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`
+    ? `<div class="preview-av" style="background:transparent"><img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`
     : `<div class="preview-av" style="background:${p.color}">${initials}</div>`;
   const bannerHtml=p.banner
-    ? `<div class="preview-banner"><img src="${p.banner}"></div>`
+    ? `<div class="preview-banner"><img src="${escapeHtml(p.banner)}"></div>`
     : `<div class="preview-banner"></div>`;
   const statusColors={
     'Busco trabajo':     {bg:'#e8f4fd',border:'#aed6f1',text:'#1a5276',icon:'💼'},
@@ -1015,9 +1019,9 @@ function renderPreview(){
     <div class="preview-header">
       ${avatarHtml}
       <div style="flex:1;padding-top:32px">
-        <p class="preview-name">${p.name}</p>
-        <p class="preview-role">${p.role}</p>
-        <p class="preview-location">📍 ${p.location}</p>
+        <p class="preview-name">${escapeHtml(p.name)}</p>
+        <p class="preview-role">${escapeHtml(p.role)}</p>
+        <p class="preview-location">📍 ${escapeHtml(p.location)}</p>
       </div>
       <div class="preview-badge"><span style="width:7px;height:7px;background:var(--accent3);border-radius:50%;display:inline-block"></span>Beta</div>
     </div>
@@ -1025,36 +1029,36 @@ function renderPreview(){
     ${p.skills.length?`
     <div class="preview-section">
       <p class="preview-section-title">Habilidades</p>
-      <div class="preview-tags">${p.skills.map(s=>`<span class="preview-tag">${s}</span>`).join('')}</div>
+      <div class="preview-tags">${p.skills.map(s=>`<span class="preview-tag">${escapeHtml(s)}</span>`).join('')}</div>
     </div>`:''}
     <div class="preview-section">
       <p class="preview-section-title">Lo que ofrezco</p>
-      <div class="preview-bio">${p.offer}</div>
+      <div class="preview-bio">${escapeHtml(p.offer)}</div>
     </div>
     ${p.collab.length?`
     <div class="preview-section">
       <p class="preview-section-title">Busca</p>
-      <div class="preview-collab-tags">${p.collab.map(c=>`<span class="preview-collab-tag">${c}</span>`).join('')}</div>
+      <div class="preview-collab-tags">${p.collab.map(c=>`<span class="preview-collab-tag">${escapeHtml(c)}</span>`).join('')}</div>
     </div>`:''}
     ${p.availability.length?`
     <div class="preview-section">
       <p class="preview-section-title">Disponibilidad</p>
-      <div class="preview-collab-tags">${p.availability.map(a=>`<span class="preview-collab-tag">${a}</span>`).join('')}</div>
+      <div class="preview-collab-tags">${p.availability.map(a=>`<span class="preview-collab-tag">${escapeHtml(a)}</span>`).join('')}</div>
     </div>`:''}
     ${p.bio?`
     <div class="preview-section">
       <p class="preview-section-title">Sobre mí</p>
-      <p style="font-size:13px;color:var(--ink2);line-height:1.7">${p.bio}</p>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.7">${escapeHtml(p.bio)}</p>
     </div>`:''}
     ${p.hobbies.length?`
     <div class="preview-section">
       <p class="preview-section-title">Hobbies e intereses</p>
-      <div class="preview-tags">${p.hobbies.map(h=>`<span class="preview-tag" style="background:var(--cream2);color:var(--ink2);border-color:var(--cream3)">${h}</span>`).join('')}</div>
+      <div class="preview-tags">${p.hobbies.map(h=>`<span class="preview-tag" style="background:var(--cream2);color:var(--ink2);border-color:var(--cream3)">${escapeHtml(h)}</span>`).join('')}</div>
     </div>`:''}
     <div class="preview-meta">
       <span class="preview-meta-item"><strong>${expText}</strong> de experiencia</span>
-      ${p.link?`<span class="preview-meta-item"><a href="${p.link}" target="_blank" style="color:var(--accent2)">${p.link.replace(/https?:\/\//,'')}</a></span>`:''}
-      ${p.strava?`<span class="preview-meta-item" style="display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="11" height="11" fill="#fc4c02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg><a href="${p.strava}" target="_blank" style="color:#fc4c02">${p.strava.replace(/https?:\/\//,'')}</a></span>`:''}
+      ${p.link?`<span class="preview-meta-item"><a href="${escapeHtml(p.link)}" target="_blank" style="color:var(--accent2)">${escapeHtml(p.link.replace(/https?:\/\//,''))}</a></span>`:''}
+      ${p.strava?`<span class="preview-meta-item" style="display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="11" height="11" fill="#fc4c02"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg><a href="${escapeHtml(p.strava)}" target="_blank" style="color:#fc4c02">${escapeHtml(p.strava.replace(/https?:\/\//,''))}</a></span>`:''}
     </div>
     </div>`;
   saveProfile();

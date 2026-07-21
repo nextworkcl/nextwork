@@ -460,11 +460,15 @@ const _sb2=window.supabase.createClient(
 })();
 
 /* ── COMPOSER REAL ── */
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function activateComposer(session,profile){
   const initials=(profile.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('composer').innerHTML=`
     <div class="composer-top">
-      <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${profile.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${escapeHtml(profile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <textarea id="composer-textarea" class="composer-textarea" placeholder="¿Qué quieres compartir con la comunidad?" maxlength="2000" style="flex:1"></textarea>
     </div>
     <div class="composer-actions" style="justify-content:space-between;align-items:center">
@@ -519,16 +523,16 @@ function renderRealPost(p){
   return `
     <div class="post">
       <div class="post-header">
-        <div class="avatar" style="background:${color};overflow:hidden">${author.photo?`<img src="${author.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+        <div class="avatar" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
         <div class="post-meta">
-          <div class="post-name"><a href="perfil-publico.html?id=${p.author_id}" style="color:inherit">${author.name||'Usuario'}</a></div>
-          <div class="post-role">${author.role||''}</div>
+          <div class="post-name"><a href="perfil-publico.html?id=${p.author_id}" style="color:inherit">${escapeHtml(author.name||'Usuario')}</a></div>
+          <div class="post-role">${escapeHtml(author.role||'')}</div>
           <div class="post-time">${timeAgo(p.created_at)}</div>
         </div>
         ${CURRENT_VIEWER_ID&&!isMine?`<span class="report-link" title="Reportar" onclick="reportPost('${p.id}')">🚩</span>`:''}
         ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
-      <div class="post-body">${p.body}</div>
+      <div class="post-body">${escapeHtml(p.body)}</div>
       <div class="post-actions">
         <button class="action-btn${p._liked?' liked':''}" onclick="toggleRealLike('${p.id}')">
           <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
@@ -570,8 +574,18 @@ async function loadRealPosts(){
   try{
     const {data,error}=await _sb2.from('posts').select('*').order('created_at',{ascending:false}).limit(50);
     if(error||!data)return;
-    const authorIds=[...new Set(data.map(p=>p.author_id))];
-    const postIds=data.map(p=>p.id);
+
+    let blockedIds=new Set();
+    if(CURRENT_VIEWER_ID){
+      try{
+        const {data:blocks}=await _sb2.from('blocked_users').select('blocked_id').eq('blocker_id',CURRENT_VIEWER_ID);
+        (blocks||[]).forEach(b=>blockedIds.add(b.blocked_id));
+      }catch(e){}
+    }
+    const visible=data.filter(p=>!blockedIds.has(p.author_id));
+
+    const authorIds=[...new Set(visible.map(p=>p.author_id))];
+    const postIds=visible.map(p=>p.id);
     const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
     const byId={};(authors||[]).forEach(a=>byId[a.id]=a);
 
@@ -591,7 +605,7 @@ async function loadRealPosts(){
       (comments||[]).forEach(c=>{commentCountByPost[c.post_id]=(commentCountByPost[c.post_id]||0)+1;});
     }catch(e){}
 
-    REAL_POSTS=data.map(p=>({
+    REAL_POSTS=visible.map(p=>({
       ...p,
       _author:byId[p.author_id],
       _likeCount:(likesByPost[p.id]||{}).count||0,
@@ -647,10 +661,10 @@ function commentBubble(c){
   const isMine=CURRENT_VIEWER_ID&&c.author_id===CURRENT_VIEWER_ID;
   return `
     <div class="comment-item">
-      <div class="comment-av" style="background:${color}">${author.photo?`<img src="${author.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="comment-av" style="background:${color}">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <div class="comment-bubble">
-        <div class="comment-author">${author.name||'Usuario'}${isMine?` <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${c.post_id}')">🗑️</span>`:''}</div>
-        <div class="comment-text">${c.body}</div>
+        <div class="comment-author">${escapeHtml(author.name||'Usuario')}${isMine?` <span class="report-link" style="padding:0" title="Editar" onclick="startEditComment('${c.id}','${c.post_id}')">✏️</span> <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${c.post_id}')">🗑️</span>`:''}</div>
+        <div class="comment-text" id="comment-text-${c.id}">${escapeHtml(c.body)}</div>
         <div class="comment-time">${timeAgo(c.created_at)}</div>
       </div>
     </div>`;
@@ -709,6 +723,32 @@ async function deleteComment(commentId,postId){
   await loadComments(post);
 }
 
+function startEditComment(commentId,postId){
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  const comment=post&&post._comments&&post._comments.find(c=>c.id===commentId);
+  const textEl=document.getElementById('comment-text-'+commentId);
+  if(!comment||!textEl)return;
+  textEl.outerHTML=`<div id="comment-text-${commentId}">
+    <textarea id="comment-edit-input-${commentId}" class="comment-input" style="width:100%;border-radius:10px;resize:vertical;min-height:50px" maxlength="500">${escapeHtml(comment.body)}</textarea>
+    <div style="display:flex;gap:.4rem;margin-top:.3rem">
+      <button class="comment-send-btn" onclick="saveEditComment('${commentId}','${postId}')">Guardar</button>
+      <button class="comment-send-btn" style="background:var(--cream3);color:var(--ink2)" onclick="renderRealPostsFiltered()">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+async function saveEditComment(commentId,postId){
+  const input=document.getElementById('comment-edit-input-'+commentId);
+  if(!input)return;
+  const body=input.value.trim();
+  if(body.length<1)return;
+  const {error}=await _sb2.from('comments').update({body}).eq('id',commentId);
+  if(error){showToast(error.message||'No pudimos editar el comentario');return;}
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(post)await loadComments(post);
+  showToast('Comentario editado ✓');
+}
+
 /* MIEMBROS REALES DE LA COMUNIDAD */
 function renderPersonCard(p){
   const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
@@ -717,10 +757,10 @@ function renderPersonCard(p){
   return `
     <div class="person-card" onclick="window.location.href='perfil-publico.html?id=${p.id}'">
       <div class="person-top">
-        <div class="person-av" style="background:${color}">${p.photo?`<img src="${p.photo}" alt="${p.name||''}">`:initials}</div>
-        <div><div class="person-name">${p.name||'Sin nombre'}</div><div class="person-role">${p.role||''}${p.location?' · '+p.location:''}</div></div>
+        <div class="person-av" style="background:${color}">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name||'')}">`:initials}</div>
+        <div><div class="person-name">${escapeHtml(p.name||'Sin nombre')}</div><div class="person-role">${escapeHtml(p.role||'')}${p.location?' · '+escapeHtml(p.location):''}</div></div>
       </div>
-      <div class="person-line">${line}</div>
+      <div class="person-line">${escapeHtml(line)}</div>
     </div>`;
 }
 (async()=>{

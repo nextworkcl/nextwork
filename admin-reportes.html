@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de reportes · Nextwork</title>
+<link rel="icon" type="image/png" href="logo.png?v=2">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;--cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;--accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;--glow:#c8f0d8;--glow2:#e8f7ef;--surface:#ffffff;--r:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--cream2);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.logo-word span{color:var(--accent2)}
+.back-link{font-size:13px;color:var(--ink3)}
+.back-link:hover{color:var(--accent2)}
+
+.wrap{max-width:820px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+.page-title{font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:.3rem}
+.page-sub{font-size:13.5px;color:var(--ink3);margin-bottom:1.8rem}
+
+.gate{text-align:center;padding:5rem 1rem;color:var(--ink3)}
+
+.filter-row{display:flex;gap:.5rem;margin-bottom:1.4rem}
+.filter-chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--cream3);background:var(--surface);font-size:12.5px;color:var(--ink2);cursor:pointer}
+.filter-chip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+.report-card{background:var(--surface);border:1px solid var(--cream3);border-radius:var(--r);padding:1.1rem 1.3rem;margin-bottom:.8rem}
+.report-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;flex-wrap:wrap}
+.report-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--accent2);background:var(--glow2);padding:2px 9px;border-radius:8px}
+.report-status{font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px}
+.status-pending{background:#fef3c7;color:#92400e}
+.status-resolved{background:#dcfce7;color:#166534}
+.status-dismissed{background:var(--cream2);color:var(--ink3)}
+.report-time{font-size:11.5px;color:var(--ink3);margin-left:auto}
+.report-reporter{font-size:12.5px;color:var(--ink3);margin-bottom:.4rem}
+.report-reporter b{color:var(--ink2)}
+.report-content{font-size:13px;color:var(--ink2);background:var(--cream2);border-radius:8px;padding:.6rem .8rem;margin-bottom:.5rem;white-space:pre-line}
+.report-reason{font-size:13.5px;color:var(--ink);margin-bottom:.7rem;white-space:pre-line}
+.report-actions{display:flex;gap:.5rem}
+.report-btn{padding:6px 14px;border-radius:18px;font-size:12.5px;font-weight:500;cursor:pointer;border:1.5px solid var(--cream3);background:var(--surface);color:var(--ink2);font-family:'DM Sans',sans-serif}
+.report-btn:hover{border-color:var(--accent3)}
+.report-btn.primary{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--ink3)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 22px;border-radius:24px;font-size:13.5px;opacity:0;pointer-events:none;transition:all .3s;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <a href="dashboard.html" class="back-link">← Volver al dashboard</a>
+</nav>
+
+<div class="wrap">
+  <div id="gate" class="gate" style="display:none">Cargando…</div>
+
+  <div id="panel" style="display:none">
+    <h1 class="page-title">Panel de reportes</h1>
+    <p class="page-sub">Reportes enviados por la comunidad sobre publicaciones, oportunidades y perfiles.</p>
+
+    <div class="filter-row">
+      <div class="filter-chip active" data-status="pending" onclick="setStatusFilter(this,'pending')">Pendientes</div>
+      <div class="filter-chip" data-status="resolved" onclick="setStatusFilter(this,'resolved')">Resueltos</div>
+      <div class="filter-chip" data-status="dismissed" onclick="setStatusFilter(this,'dismissed')">Descartados</div>
+      <div class="filter-chip" data-status="" onclick="setStatusFilter(this,'')">Todos</div>
+    </div>
+
+    <div id="reports-list"></div>
+    <div class="empty-state" id="empty-state" style="display:none">No hay reportes en esta categoría.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const _sb=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function timeAgo(iso){
+  const diff=(Date.now()-new Date(iso).getTime())/1000;
+  if(diff<60)return'hace un momento';
+  if(diff<3600)return'hace '+Math.floor(diff/60)+'m';
+  if(diff<86400)return'hace '+Math.floor(diff/3600)+'h';
+  return'hace '+Math.floor(diff/86400)+'d';
+}
+
+const TYPE_LABELS={post:'Publicación',opportunity:'Oportunidad',profile:'Perfil'};
+let REPORTS=[];
+let statusFilter='pending';
+
+function setStatusFilter(el,status){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  statusFilter=status;
+  renderReports();
+}
+
+function reportCard(r){
+  const reporter=r._reporter||{};
+  const contentPreview=r._contentPreview||'(contenido no disponible, puede haber sido eliminado)';
+  return `
+    <div class="report-card">
+      <div class="report-top">
+        <span class="report-type">${TYPE_LABELS[r.content_type]||r.content_type}</span>
+        <span class="report-status status-${r.status}">${r.status==='pending'?'Pendiente':r.status==='resolved'?'Resuelto':'Descartado'}</span>
+        <span class="report-time">${timeAgo(r.created_at)}</span>
+      </div>
+      <div class="report-reporter">Reportado por <b>${escapeHtml(reporter.name||'Usuario')}</b></div>
+      <div class="report-content">${escapeHtml(contentPreview)}</div>
+      <div class="report-reason">"${escapeHtml(r.reason)}"</div>
+      <div class="report-actions">
+        ${r.status!=='resolved'?`<button class="report-btn primary" onclick="updateReportStatus('${r.id}','resolved')">Marcar resuelto</button>`:''}
+        ${r.status!=='dismissed'?`<button class="report-btn" onclick="updateReportStatus('${r.id}','dismissed')">Descartar</button>`:''}
+        ${r.content_type==='profile'?`<a href="perfil-publico.html?id=${r.content_id}" target="_blank" class="report-btn">Ver perfil</a>`:''}
+      </div>
+    </div>`;
+}
+
+function renderReports(){
+  const list=document.getElementById('reports-list');
+  const empty=document.getElementById('empty-state');
+  const filtered=statusFilter?REPORTS.filter(r=>r.status===statusFilter):REPORTS;
+  if(!filtered.length){
+    list.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  list.innerHTML=filtered.map(reportCard).join('');
+}
+
+async function updateReportStatus(id,status){
+  const {error}=await _sb.from('reports').update({status}).eq('id',id);
+  if(error){showToast('No pudimos actualizar el reporte');return;}
+  const r=REPORTS.find(x=>x.id===id);
+  if(r)r.status=status;
+  renderReports();
+  showToast(status==='resolved'?'Marcado como resuelto ✓':'Descartado');
+}
+
+async function loadReports(){
+  const {data,error}=await _sb.from('reports').select('*').order('created_at',{ascending:false}).limit(200);
+  if(error||!data){
+    document.getElementById('gate').textContent='No pudimos cargar los reportes.';
+    document.getElementById('gate').style.display='block';
+    return;
+  }
+  REPORTS=data;
+
+  const reporterIds=[...new Set(data.map(r=>r.reporter_id))];
+  const {data:reporters}=await _sb.from('perfiles_publicos').select('*').in('id',reporterIds);
+  const reporterById={};(reporters||[]).forEach(p=>reporterById[p.id]=p);
+
+  const postIds=data.filter(r=>r.content_type==='post').map(r=>r.content_id);
+  const oppIds=data.filter(r=>r.content_type==='opportunity').map(r=>r.content_id);
+  const profileIds=data.filter(r=>r.content_type==='profile').map(r=>r.content_id);
+
+  const [postsRes,oppsRes,profilesRes]=await Promise.all([
+    postIds.length?_sb.from('posts').select('id,body').in('id',postIds):Promise.resolve({data:[]}),
+    oppIds.length?_sb.from('opportunities').select('id,title').in('id',oppIds):Promise.resolve({data:[]}),
+    profileIds.length?_sb.from('perfiles_publicos').select('id,name').in('id',profileIds):Promise.resolve({data:[]})
+  ]);
+  const postById={};(postsRes.data||[]).forEach(p=>postById[p.id]=p.body);
+  const oppById={};(oppsRes.data||[]).forEach(o=>oppById[o.id]=o.title);
+  const profileById={};(profilesRes.data||[]).forEach(p=>profileById[p.id]=p.name);
+
+  REPORTS.forEach(r=>{
+    r._reporter=reporterById[r.reporter_id];
+    if(r.content_type==='post')r._contentPreview=postById[r.content_id];
+    else if(r.content_type==='opportunity')r._contentPreview=oppById[r.content_id];
+    else if(r.content_type==='profile')r._contentPreview=profileById[r.content_id];
+  });
+
+  document.getElementById('gate').style.display='none';
+  document.getElementById('panel').style.display='block';
+  renderReports();
+}
+
+(async()=>{
+  const {data:{session}}=await _sb.auth.getSession();
+  if(!session){
+    window.location.href='login.html';
+    return;
+  }
+  const {data:p}=await _sb.from('profiles').select('is_admin').eq('id',session.user.id).single();
+  if(!p||!p.is_admin){
+    document.getElementById('gate').textContent='No tienes acceso a esta página.';
+    document.getElementById('gate').style.display='block';
+    return;
+  }
+  loadReports();
+})();
+</script>
+</body>
+</html>

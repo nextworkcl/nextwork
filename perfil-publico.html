@@ -356,6 +356,10 @@ const SUGGESTED = [
   {av:'AL',c:'#4a1a5a',name:'Alejandra Luna',role:'UX Designer',pct:85},
 ];
 
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function getInitials(name){
   if(!name) return '?';
   return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -380,6 +384,7 @@ function shareProfile(){
 
 /* ── SOLICITUDES DE CONEXIÓN ── */
 let viewedProfileId=null;
+let IS_BLOCKED_BY_ME=false;
 
 function renderContactCard(state, extra){
   const body=document.getElementById('contact-card-body');
@@ -418,9 +423,18 @@ function renderContactCard(state, extra){
       <h3>¿Quieres conectar?</h3>
       <p>Inicia sesión para enviar una solicitud de conexión.</p>
       <a href="login.html" style="display:block"><button class="btn-contact">Iniciar sesión</button></a>`;
+  } else if(state==='blocked'){
+    body.innerHTML=`
+      <div style="font-size:2rem;margin-bottom:.6rem">🚫</div>
+      <h3>No disponible</h3>
+      <p>No es posible conectar con este perfil.</p>
+      ${extra?`<button class="btn-contact-outline" onclick="unblockUser()">Desbloquear</button>`:''}`;
   }
   if(state!=='login'){
-    body.innerHTML+=`<div style="margin-top:.8rem;text-align:center"><span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="reportProfile()">🚩 Reportar este perfil</span></div>`;
+    body.innerHTML+=`<div style="margin-top:.8rem;text-align:center;display:flex;gap:.8rem;justify-content:center">
+      <span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="reportProfile()">🚩 Reportar</span>
+      ${state!=='blocked'?`<span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="blockUser()">🚫 Bloquear</span>`:''}
+    </div>`;
   }
 }
 
@@ -433,10 +447,32 @@ async function reportProfile(){
   showToast('Reporte enviado. Gracias por avisarnos 🙏');
 }
 
+async function blockUser(){
+  if(!viewerSession){showToast('Inicia sesión para bloquear');return;}
+  if(!confirm('¿Bloquear a este usuario? No podrán enviarse solicitudes de conexión.'))return;
+  const {error}=await _sb.from('blocked_users').insert({blocker_id:viewerSession.user.id,blocked_id:viewedProfileId});
+  if(error){showToast('No pudimos bloquear al usuario');return;}
+  showToast('Usuario bloqueado');
+  IS_BLOCKED_BY_ME=true;
+  renderContactCard('blocked',true);
+}
+
+async function unblockUser(){
+  const {error}=await _sb.from('blocked_users').delete().eq('blocker_id',viewerSession.user.id).eq('blocked_id',viewedProfileId);
+  if(error){showToast('No pudimos desbloquear al usuario');return;}
+  showToast('Usuario desbloqueado');
+  IS_BLOCKED_BY_ME=false;
+  checkConnectionStatus();
+}
+
 async function checkConnectionStatus(){
   if(isOwnProfile||!viewedProfileId)return;
   if(!viewerSession){renderContactCard('login');return;}
   const myId=viewerSession.user.id;
+  const {data:mine}=await _sb.from('blocked_users').select('id').eq('blocker_id',myId).eq('blocked_id',viewedProfileId).maybeSingle();
+  IS_BLOCKED_BY_ME=!!mine;
+  const {data:eitherBlocked}=await _sb.rpc('is_blocked_between',{user_a:myId,user_b:viewedProfileId});
+  if(eitherBlocked){renderContactCard('blocked',IS_BLOCKED_BY_ME);return;}
   const {data}=await _sb.from('connections').select('*')
     .or(`and(from_id.eq.${myId},to_id.eq.${viewedProfileId}),and(from_id.eq.${viewedProfileId},to_id.eq.${myId})`)
     .limit(1);
@@ -448,7 +484,7 @@ async function checkConnectionStatus(){
     const wrap=document.getElementById('connected-email-wrap');
     if(wrap){
       wrap.innerHTML=(full&&full.email)
-        ?`<a href="mailto:${full.email}" style="color:var(--accent2);font-weight:600">${full.email}</a>`
+        ?`<a href="mailto:${escapeHtml(full.email)}" style="color:var(--accent2);font-weight:600">${escapeHtml(full.email)}</a>`
         :'No pudimos cargar el contacto.';
     }
     return;
@@ -493,14 +529,14 @@ function renderProfile(p, ownProfile){
   /* BANNER */
   const banner=document.getElementById('hero-banner');
   if(p.banner){
-    banner.innerHTML=`<img class="hero-banner-img" src="${p.banner}" alt="banner">`;
+    banner.innerHTML=`<img class="hero-banner-img" src="${escapeHtml(p.banner)}" alt="banner">`;
   }
 
   /* AVATAR */
   const av=document.getElementById('hero-avatar');
   av.style.background=color;
   if(p.photo){
-    av.innerHTML=`<img src="${p.photo}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    av.innerHTML=`<img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     av.textContent=initials;
   }
@@ -509,7 +545,7 @@ function renderProfile(p, ownProfile){
   document.getElementById('hero-name').textContent=p.name||'';
   document.getElementById('hero-role').textContent=p.role||'';
   const loc=document.getElementById('hero-loc');
-  if(p.location) loc.innerHTML=`📍 ${p.location}`;
+  if(p.location) loc.innerHTML=`📍 ${escapeHtml(p.location)}`;
 
   /* STATUS BADGES */
   const badges=document.getElementById('status-badges');
@@ -523,9 +559,9 @@ function renderProfile(p, ownProfile){
   /* LINKS */
   const links=document.getElementById('hero-links');
   let linksHTML='';
-  if(p.link) linksHTML+=`<a href="${p.link.startsWith('http')?p.link:'https://'+p.link}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>`;
-  if(p.strava) linksHTML+=`<a href="${p.strava.startsWith('http')?p.strava:'https://'+p.strava}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>Strava</a>`;
-  if(p.email) linksHTML+=`<a href="mailto:${p.email}" class="hero-link"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${p.email}</a>`;
+  if(p.link) linksHTML+=`<a href="${escapeHtml(p.link.startsWith('http')?p.link:'https://'+p.link)}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>`;
+  if(p.strava) linksHTML+=`<a href="${escapeHtml(p.strava.startsWith('http')?p.strava:'https://'+p.strava)}" target="_blank" class="hero-link"><svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>Strava</a>`;
+  if(p.email) linksHTML+=`<a href="mailto:${escapeHtml(p.email)}" class="hero-link"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${escapeHtml(p.email)}</a>`;
   links.innerHTML=linksHTML;
 
   /* BIO */
@@ -537,7 +573,7 @@ function renderProfile(p, ownProfile){
   /* SKILLS */
   if(p.skills&&p.skills.length){
     document.getElementById('section-skills').style.display='block';
-    document.getElementById('skills-wrap').innerHTML=p.skills.map(s=>`<span class="skill">${s}</span>`).join('');
+    document.getElementById('skills-wrap').innerHTML=p.skills.map(s=>`<span class="skill">${escapeHtml(s)}</span>`).join('');
   }
 
   /* OFFER */
@@ -573,7 +609,7 @@ function renderProfile(p, ownProfile){
     const hobbiesArr=Array.isArray(p.hobbies)?p.hobbies:String(p.hobbies).split(',').map(h=>h.trim()).filter(Boolean);
     if(hobbiesArr.length){
       document.getElementById('section-hobbies').style.display='block';
-      document.getElementById('hobbies-wrap').innerHTML=hobbiesArr.map(h=>`<span class="hobby">${h}</span>`).join('');
+      document.getElementById('hobbies-wrap').innerHTML=hobbiesArr.map(h=>`<span class="hobby">${escapeHtml(h)}</span>`).join('');
     }
   }
 
@@ -630,8 +666,8 @@ async function renderNavUser(){
   const badge=count?`<span style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${count>9?'9+':count}</span>`:'';
   navEl.innerHTML=`
     <a href="dashboard.html" style="display:flex;align-items:center;gap:.6rem;font-size:13.5px;font-weight:500;color:var(--ink)">
-      <div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${me.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid var(--accent3);overflow:hidden">${me.photo?`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div></div>
-      ${(me.name||'').split(' ')[0]}
+      <div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${me.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid var(--accent3);overflow:hidden">${me.photo?`<img src="${escapeHtml(me.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div></div>
+      ${escapeHtml((me.name||'').split(' ')[0])}
     </a>`;
 }
 

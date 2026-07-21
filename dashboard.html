@@ -319,6 +319,14 @@ footer strong{color:rgba(255,255,255,.75)}
         <div class="req-grid" id="viewers-grid"></div>
       </div>
 
+      <!-- USUARIOS BLOQUEADOS -->
+      <div id="blocked-wrap" style="display:none">
+        <div class="section-head">
+          <h3>Usuarios bloqueados</h3>
+        </div>
+        <div class="req-grid" id="blocked-grid"></div>
+      </div>
+
       <!-- MIS PUBLICACIONES -->
       <div id="my-posts-wrap" style="display:none">
         <div class="section-head">
@@ -540,6 +548,10 @@ function buildActivity(p){
   return items.slice(0,4);
 }
 
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function getInitials(name){
   if(!name) return '?';
   return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -578,7 +590,8 @@ function renderDashboard(p){
   const initials=getInitials(p.name);
   const color=getColor(p.name);
   document.getElementById('nav-user').innerHTML=`
-    <span class="nav-name">${p.name||'Mi perfil'}</span>
+    <span class="nav-name">${escapeHtml(p.name||'Mi perfil')}</span>
+    ${p.is_admin?`<a href="admin-reportes.html" title="Panel de reportes" style="font-size:18px;text-decoration:none">🛡️</a>`:''}
     <div style="position:relative">
       <button id="notif-bell" onclick="toggleNotifDropdown(event)" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px;line-height:1" title="Notificaciones">
         🔔
@@ -605,7 +618,7 @@ function renderDashboard(p){
   /* INFO */
   document.getElementById('dash-name').textContent=p.name||'—';
   document.getElementById('dash-role').textContent=p.role||'—';
-  document.getElementById('dash-loc').innerHTML=p.location?`📍 ${p.location}`:'';
+  document.getElementById('dash-loc').innerHTML=p.location?`📍 ${escapeHtml(p.location)}`:'';
 
   /* WELCOME */
   const hour=new Date().getHours();
@@ -674,6 +687,7 @@ function renderDashboard(p){
       loadMyContent();
       loadNotifications();
       loadProfileViewers();
+      loadBlockedUsers();
       return;
     }
   }
@@ -795,8 +809,8 @@ async function confirmDeleteAccount(){
 /* ── SOLICITUDES DE CONEXIÓN ── */
 function personChip(p,initials,color){
   return `<div class="match-header">
-    <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
-    <div><div class="match-name"><a href="perfil-publico.html?id=${p.id}" style="color:inherit">${p.name||'Sin nombre'}</a></div><div class="match-role">${p.role||''}</div></div>
+    <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+    <div><div class="match-name"><a href="perfil-publico.html?id=${p.id}" style="color:inherit">${escapeHtml(p.name||'Sin nombre')}</a></div><div class="match-role">${escapeHtml(p.role||'')}</div></div>
   </div>`;
 }
 
@@ -849,7 +863,7 @@ async function loadConnections(){
       const color=p.color||getColor(p.name);
       return `<div class="match-card">
         ${personChip(p,initials,color)}
-        ${p.email?`<a href="mailto:${p.email}" class="conn-email">${p.email}</a>`:''}
+        ${p.email?`<a href="mailto:${escapeHtml(p.email)}" class="conn-email">${escapeHtml(p.email)}</a>`:''}
       </div>`;
     }).join('');
     connWrap.style.display='block';
@@ -890,11 +904,11 @@ async function loadMyContent(){
       list.innerHTML=myPosts.map(p=>`
         <div class="mini-post">
           <div class="mini-post-header">
-            <div class="mini-av" style="background:${color};overflow:hidden">${currentProfile.photo?`<img src="${currentProfile.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
-            <div><div class="mini-name">${currentProfile.name}</div><div class="mini-role">${timeAgo(p.created_at)}</div></div>
+            <div class="mini-av" style="background:${color};overflow:hidden">${currentProfile.photo?`<img src="${escapeHtml(currentProfile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+            <div><div class="mini-name">${escapeHtml(currentProfile.name)}</div><div class="mini-role">${timeAgo(p.created_at)}</div></div>
             <span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:16px" title="Eliminar" onclick="deleteMyPost('${p.id}')">🗑️</span>
           </div>
-          <div class="mini-body">${p.body}</div>
+          <div class="mini-body">${escapeHtml(p.body)}</div>
         </div>`).join('');
       wrap.style.display='block';
     } else {
@@ -911,9 +925,9 @@ async function loadMyContent(){
         <div class="opp-card">
           <div class="opp-icon" style="background:#6366f1">${(TYPE_LABELS[o.type]||'💼').split(' ')[0]}</div>
           <div class="opp-info">
-            <div class="opp-title">${o.title}</div>
-            <div class="opp-company">${TYPE_LABELS[o.type]||o.type}${o.location?' · '+o.location:''}</div>
-            <div class="opp-tags">${(o.skills||[]).slice(0,4).map(t=>`<span class="otag otag-s">${t}</span>`).join('')}</div>
+            <div class="opp-title">${escapeHtml(o.title)}</div>
+            <div class="opp-company">${TYPE_LABELS[o.type]||o.type}${o.location?' · '+escapeHtml(o.location):''}</div>
+            <div class="opp-tags">${(o.skills||[]).slice(0,4).map(t=>`<span class="otag otag-s">${escapeHtml(t)}</span>`).join('')}</div>
           </div>
           <div class="opp-action"><button class="btn-apply" style="background:#fee2e2;color:#dc2626" onclick="deleteMyOpp('${o.id}')">Eliminar</button></div>
         </div>`).join('');
@@ -964,11 +978,42 @@ async function loadProfileViewers(){
   }catch(e){}
 }
 
+/* ── USUARIOS BLOQUEADOS ── */
+async function loadBlockedUsers(){
+  if(!currentUserId)return;
+  try{
+    const {data:blocks}=await _sb.from('blocked_users').select('*').eq('blocker_id',currentUserId).order('created_at',{ascending:false});
+    const wrap=document.getElementById('blocked-wrap');
+    const grid=document.getElementById('blocked-grid');
+    if(!blocks||!blocks.length){wrap.style.display='none';return;}
+    const blockedIds=blocks.map(b=>b.blocked_id);
+    const {data:blockedProfiles}=await _sb.from('perfiles_publicos').select('*').in('id',blockedIds);
+    const byId={};(blockedProfiles||[]).forEach(p=>byId[p.id]=p);
+    grid.innerHTML=blocks.map(b=>{
+      const p=byId[b.blocked_id]||{id:b.blocked_id,name:'Usuario'};
+      const initials=getInitials(p.name);
+      const color=p.color||getColor(p.name);
+      return `<div class="match-card">
+        ${personChip(p,initials,color)}
+        <button class="req-btn-decline" style="width:100%;margin-top:.5rem" onclick="unblockFromDashboard('${b.blocked_id}')">Desbloquear</button>
+      </div>`;
+    }).join('');
+    wrap.style.display='block';
+  }catch(e){}
+}
+
+async function unblockFromDashboard(blockedId){
+  const {error}=await _sb.from('blocked_users').delete().eq('blocker_id',currentUserId).eq('blocked_id',blockedId);
+  if(error){showToast('No pudimos desbloquear al usuario');return;}
+  showToast('Usuario desbloqueado');
+  loadBlockedUsers();
+}
+
 /* ── NOTIFICACIONES REALES ── */
 let NOTIFICATIONS=[];
 
 function notifText(n){
-  const name=(n._actor&&n._actor.name)||'Alguien';
+  const name=escapeHtml((n._actor&&n._actor.name)||'Alguien');
   if(n.type==='connection_request')return `${name} quiere conectar contigo`;
   if(n.type==='connection_accepted')return `${name} aceptó tu solicitud de conexión`;
   if(n.type==='post_like')return `${name} le dio like a tu publicación`;
