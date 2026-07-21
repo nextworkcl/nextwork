@@ -67,6 +67,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 .post-menu{font-size:18px;color:var(--ink3);cursor:pointer;padding:.2rem .4rem;border-radius:6px;transition:background .2s;line-height:1}
 .post-menu:hover{background:var(--cream2)}
 .post-body{font-size:14px;color:var(--ink2);line-height:1.65;white-space:pre-line;margin-bottom:.9rem}
+.post-image-wrap{margin-bottom:.9rem;border-radius:10px;overflow:hidden;border:1px solid var(--cream3)}
+.post-image{width:100%;max-height:420px;object-fit:cover;display:block}
 .post-body.truncated{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .read-more{font-size:13px;color:var(--accent2);cursor:pointer;font-weight:500;margin-bottom:.9rem}
 .read-more:hover{text-decoration:underline}
@@ -117,6 +119,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 
 /* PERSONAS REALES */
 .section-label-row{display:flex;align-items:center;gap:9px;margin-bottom:1rem}
+.feed-sort-select{margin-left:auto;border:1.5px solid var(--cream3);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--ink2);background:var(--surface);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
 .section-label-row h3{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ink)}
 .live-badge{font-size:10px;font-weight:700;color:var(--accent2);background:var(--glow2);padding:2px 9px;border-radius:8px;letter-spacing:.4px;display:inline-flex;align-items:center;gap:4px}
 .live-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent3)}
@@ -219,6 +222,10 @@ footer strong{color:rgba(255,255,255,.75)}
       <div class="section-label-row">
         <h3>Publicaciones de la comunidad</h3>
         <span class="live-badge"><span class="dot"></span>EN VIVO</span>
+        <select id="feed-sort-select" class="feed-sort-select" onchange="feedSort=this.value;renderRealPostsFiltered()">
+          <option value="relevant">Relevantes</option>
+          <option value="recent">Recientes</option>
+        </select>
       </div>
       <div id="real-feed"></div>
     </div>
@@ -465,6 +472,7 @@ function escapeHtml(str){
   if(str==null)return '';
   return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+let composerImage=null;
 function activateComposer(session,profile){
   const initials=(profile.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('composer').innerHTML=`
@@ -472,17 +480,44 @@ function activateComposer(session,profile){
       <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${escapeHtml(profile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <textarea id="composer-textarea" class="composer-textarea" placeholder="¿Qué quieres compartir con la comunidad?" maxlength="2000" style="flex:1"></textarea>
     </div>
+    <div id="composer-image-preview" style="display:none;margin:.6rem 0 0;position:relative;max-width:260px">
+      <img id="composer-image-img" style="width:100%;border-radius:10px;display:block">
+      <span onclick="removeComposerImage()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">×</span>
+    </div>
     <div class="composer-actions" style="justify-content:space-between;align-items:center">
-      <select id="composer-topic" class="composer-topic-select">
-        <option value="todos">General</option>
-        <option value="startups">Startups</option>
-        <option value="hiring">Hiring</option>
-        <option value="aprendizajes">Aprendizajes</option>
-        <option value="milestone">Milestone</option>
-        <option value="pregunta">Pregunta</option>
-      </select>
+      <div style="display:flex;gap:.7rem;align-items:center">
+        <select id="composer-topic" class="composer-topic-select">
+          <option value="todos">General</option>
+          <option value="startups">Startups</option>
+          <option value="hiring">Hiring</option>
+          <option value="aprendizajes">Aprendizajes</option>
+          <option value="milestone">Milestone</option>
+          <option value="pregunta">Pregunta</option>
+        </select>
+        <label style="cursor:pointer;font-size:19px" title="Agregar imagen">
+          📷<input type="file" accept="image/*" style="display:none" onchange="handleComposerImage(event)">
+        </label>
+      </div>
       <button class="composer-publish-btn" id="composer-publish-btn" onclick="publishPost()">Publicar</button>
     </div>`;
+  composerImage=null;
+}
+
+function handleComposerImage(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  if(file.size>5*1024*1024){showToast('La imagen no puede superar 5 MB');return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    composerImage=ev.target.result;
+    document.getElementById('composer-image-img').src=composerImage;
+    document.getElementById('composer-image-preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+function removeComposerImage(){
+  composerImage=null;
+  document.getElementById('composer-image-preview').style.display='none';
 }
 
 async function publishPost(){
@@ -494,10 +529,11 @@ async function publishPost(){
   const btn=document.getElementById('composer-publish-btn');
   if(body.length<5){showToast('Escribe al menos 5 caracteres');return;}
   btn.textContent='Publicando...';btn.disabled=true;
-  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic});
+  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic,image:composerImage});
   btn.textContent='Publicar';btn.disabled=false;
   if(error){showToast(error.message||'No pudimos publicar tu mensaje');return;}
   ta.value='';
+  removeComposerImage();
   showToast('¡Publicado! ✓');
   loadRealPosts();
 }
@@ -534,6 +570,7 @@ function renderRealPost(p){
         ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
       <div class="post-body">${escapeHtml(p.body)}</div>
+      ${p.image?`<div class="post-image-wrap"><img src="${escapeHtml(p.image)}" class="post-image" alt=""></div>`:''}
       <div class="post-actions">
         <button class="action-btn${p._liked?' liked':''}" onclick="toggleRealLike('${p.id}')">
           <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
@@ -561,13 +598,33 @@ function renderCommentsBox(p){
   return list+inputRow;
 }
 
+let feedSort='relevant';
+let MY_CONNECTION_IDS=new Set();
+
+/* Puntaje de relevancia: mezcla recencia (decae a 0 pasadas 48h), engagement
+   (comentarios pesan mas que likes) y afinidad (tu propio contenido o el de
+   tus conexiones aparece primero que el de un desconocido) */
+function computePostScore(p){
+  const ageHours=(Date.now()-new Date(p.created_at).getTime())/3600000;
+  const recencyScore=Math.max(0,48-ageHours);
+  const engagementScore=(p._likeCount||0)*2+(p._commentCount||0)*4;
+  const affinityScore=(MY_CONNECTION_IDS.has(p.author_id)||p.author_id===CURRENT_VIEWER_ID)?15:0;
+  return recencyScore+engagementScore+affinityScore;
+}
+
 function renderRealPostsFiltered(){
   const wrap=document.getElementById('real-posts-wrap');
   const feed=document.getElementById('real-feed');
   if(!wrap||!feed)return;
-  const list=activeTopic==='todos'?REAL_POSTS:REAL_POSTS.filter(p=>p.topic===activeTopic);
+  let list=activeTopic==='todos'?REAL_POSTS:REAL_POSTS.filter(p=>p.topic===activeTopic);
   if(!list.length){wrap.style.display='none';return;}
   wrap.style.display='block';
+  list=[...list];
+  if(feedSort==='relevant'){
+    list.sort((a,b)=>computePostScore(b)-computePostScore(a));
+  } else {
+    list.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  }
   feed.innerHTML=list.map(renderRealPost).join('');
 }
 
@@ -581,6 +638,10 @@ async function loadRealPosts(){
       try{
         const {data:blocks}=await _sb2.from('blocked_users').select('blocked_id').eq('blocker_id',CURRENT_VIEWER_ID);
         (blocks||[]).forEach(b=>blockedIds.add(b.blocked_id));
+      }catch(e){}
+      try{
+        const {data:conns}=await _sb2.from('connections').select('from_id,to_id').eq('status','accepted').or(`from_id.eq.${CURRENT_VIEWER_ID},to_id.eq.${CURRENT_VIEWER_ID}`);
+        MY_CONNECTION_IDS=new Set((conns||[]).map(c=>c.from_id===CURRENT_VIEWER_ID?c.to_id:c.from_id));
       }catch(e){}
     }
     const visible=data.filter(p=>!blockedIds.has(p.author_id));
