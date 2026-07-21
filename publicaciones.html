@@ -95,6 +95,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 .comment-input:focus{outline:none;border-color:var(--accent2)}
 .comment-send-btn{background:var(--accent2);color:#fff;border:none;border-radius:20px;padding:.5rem 1rem;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
 .comment-send-btn:disabled{opacity:.6;cursor:not-allowed}
+.comment-replies{margin-left:2.4rem;margin-top:.3rem}
+.reply-banner{display:flex;align-items:center;gap:.5rem;font-size:12px;color:var(--ink3);background:var(--cream2);border-radius:8px;padding:.35rem .7rem;margin-top:.5rem}
+.reply-banner .x{cursor:pointer;font-weight:700;margin-left:auto}
+.mention-link{color:var(--accent2);font-weight:600;text-decoration:none}
+.mention-link:hover{text-decoration:underline}
+.mention-dropdown{position:absolute;z-index:900;background:var(--surface);border:1px solid var(--cream3);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:230px;overflow-y:auto;min-width:230px;display:none}
+.mention-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;cursor:pointer;font-size:13px}
+.mention-item:hover{background:var(--cream2)}
+.mention-item-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:#fff;overflow:hidden;flex-shrink:0}
 
 /* TRENDING SIDEBAR — hidden on mobile */
 .layout{display:grid;grid-template-columns:1fr 280px;gap:1.5rem;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 5rem}
@@ -472,13 +481,122 @@ function escapeHtml(str){
   if(str==null)return '';
   return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+/* ── MENCIONES (@usuario) ── */
+let MY_CONNECTIONS_LIST=[];
+async function loadMyConnectionsList(){
+  if(!CURRENT_VIEWER_ID||!MY_CONNECTION_IDS.size){MY_CONNECTIONS_LIST=[];return;}
+  try{
+    const {data}=await _sb2.from('perfiles_publicos').select('*').in('id',[...MY_CONNECTION_IDS]);
+    MY_CONNECTIONS_LIST=data||[];
+  }catch(e){MY_CONNECTIONS_LIST=[];}
+}
+
+let MENTION_PROFILES={};
+async function fetchMentionProfiles(ids){
+  const missing=[...new Set((ids||[]).filter(Boolean))].filter(id=>!MENTION_PROFILES[id]);
+  if(!missing.length)return;
+  try{
+    const {data}=await _sb2.from('perfiles_publicos').select('*').in('id',missing);
+    (data||[]).forEach(p=>{MENTION_PROFILES[p.id]=p;});
+  }catch(e){}
+}
+
+function renderMentionedText(body,mentionIds){
+  let escaped=escapeHtml(body);
+  if(!mentionIds||!mentionIds.length)return escaped;
+  const mentionedProfiles=mentionIds.map(id=>MENTION_PROFILES[id]).filter(Boolean);
+  mentionedProfiles.sort((a,b)=>(b.name||'').length-(a.name||'').length);
+  mentionedProfiles.forEach(p=>{
+    const escapedName=escapeHtml(p.name||'');
+    if(!escapedName)return;
+    const pattern=new RegExp('@'+escapedName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');
+    escaped=escaped.replace(pattern,`<a href="perfil-publico.html?id=${p.id}" class="mention-link">@${escapedName}</a>`);
+  });
+  return escaped;
+}
+
+const PENDING_MENTIONS={};
+let mentionDropdownEl=null;
+function onMentionInput(elId){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const pos=el.selectionStart;
+  const text=el.value.slice(0,pos);
+  const match=text.match(/@([a-zA-ZÀ-ÿ0-9 ]{0,30})$/);
+  if(!match||!MY_CONNECTIONS_LIST.length){closeMentionDropdown();return;}
+  const query=match[1].toLowerCase();
+  const matches=MY_CONNECTIONS_LIST.filter(p=>(p.name||'').toLowerCase().includes(query)).slice(0,6);
+  if(!matches.length){closeMentionDropdown();return;}
+  showMentionDropdown(elId,matches,match[0].length);
+}
+function showMentionDropdown(elId,matches,matchLen){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  if(!mentionDropdownEl){
+    mentionDropdownEl=document.createElement('div');
+    mentionDropdownEl.className='mention-dropdown';
+    document.body.appendChild(mentionDropdownEl);
+  }
+  mentionDropdownEl.innerHTML=matches.map(p=>{
+    const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    const color=p.color||'#2d6b4a';
+    const safeName=escapeHtml(p.name||'').replace(/'/g,"\\'");
+    return `<div class="mention-item" onmousedown="event.preventDefault();insertMention('${elId}','${safeName}','${p.id}',${matchLen})">
+      <div class="mention-item-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      ${escapeHtml(p.name)}
+    </div>`;
+  }).join('');
+  const rect=el.getBoundingClientRect();
+  mentionDropdownEl.style.left=(rect.left+window.scrollX)+'px';
+  mentionDropdownEl.style.top=(rect.bottom+window.scrollY+4)+'px';
+  mentionDropdownEl.style.display='block';
+}
+function closeMentionDropdown(){
+  if(mentionDropdownEl)mentionDropdownEl.style.display='none';
+}
+function insertMention(elId,name,id,matchLen){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const pos=el.selectionStart;
+  const before=el.value.slice(0,pos-matchLen);
+  const after=el.value.slice(pos);
+  const insertText='@'+name+' ';
+  el.value=before+insertText+after;
+  const newPos=before.length+insertText.length;
+  el.focus();
+  el.setSelectionRange(newPos,newPos);
+  if(!PENDING_MENTIONS[elId])PENDING_MENTIONS[elId]={};
+  PENDING_MENTIONS[elId][name]=id;
+  closeMentionDropdown();
+}
+function extractMentionIds(elId,text){
+  const map=PENDING_MENTIONS[elId]||{};
+  const ids=[];
+  Object.keys(map).forEach(name=>{
+    if(text.includes('@'+name))ids.push(map[name]);
+  });
+  delete PENDING_MENTIONS[elId];
+  return ids;
+}
+document.addEventListener('input',(e)=>{
+  const id=e.target && e.target.id;
+  if(id==='composer-textarea'||(id&&(id.startsWith('comment-input-')||id.startsWith('reply-input-')))){
+    onMentionInput(id);
+  }
+});
+document.addEventListener('click',(e)=>{
+  if(mentionDropdownEl&&mentionDropdownEl.style.display==='block'&&!mentionDropdownEl.contains(e.target)&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'){
+    closeMentionDropdown();
+  }
+});
 let composerImage=null;
 function activateComposer(session,profile){
   const initials=(profile.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('composer').innerHTML=`
     <div class="composer-top">
       <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${escapeHtml(profile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
-      <textarea id="composer-textarea" class="composer-textarea" placeholder="¿Qué quieres compartir con la comunidad?" maxlength="2000" style="flex:1"></textarea>
+      <textarea id="composer-textarea" class="composer-textarea" placeholder="¿Qué quieres compartir con la comunidad? Usa @ para mencionar a una conexión" maxlength="2000" style="flex:1"></textarea>
     </div>
     <div id="composer-image-preview" style="display:none;margin:.6rem 0 0;position:relative;max-width:260px">
       <img id="composer-image-img" style="width:100%;border-radius:10px;display:block">
@@ -528,8 +646,9 @@ async function publishPost(){
   const topic=document.getElementById('composer-topic').value;
   const btn=document.getElementById('composer-publish-btn');
   if(body.length<5){showToast('Escribe al menos 5 caracteres');return;}
+  const mentions=extractMentionIds('composer-textarea',body);
   btn.textContent='Publicando...';btn.disabled=true;
-  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic,image:composerImage});
+  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic,image:composerImage,mentions});
   btn.textContent='Publicar';btn.disabled=false;
   if(error){showToast(error.message||'No pudimos publicar tu mensaje');return;}
   ta.value='';
@@ -569,7 +688,7 @@ function renderRealPost(p){
         ${CURRENT_VIEWER_ID&&!isMine?`<span class="report-link" title="Reportar" onclick="reportPost('${p.id}')">🚩</span>`:''}
         ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
-      <div class="post-body">${escapeHtml(p.body)}</div>
+      <div class="post-body">${renderMentionedText(p.body,p.mentions)}</div>
       ${p.image?`<div class="post-image-wrap"><img src="${escapeHtml(p.image)}" class="post-image" alt=""></div>`:''}
       <div class="post-actions">
         <button class="action-btn${p._liked?' liked':''}" onclick="toggleRealLike('${p.id}')">
@@ -589,10 +708,11 @@ function renderCommentsBox(p){
   if(!p._comments){
     return '<div style="font-size:12.5px;color:var(--ink3)">Cargando comentarios...</div>';
   }
-  const list=p._comments.map(commentBubble).join('')||'<div style="font-size:12.5px;color:var(--ink3)">Aún no hay comentarios.</div>';
+  const threads=groupCommentsIntoThreads(p._comments);
+  const list=threads.map(t=>commentThread(t,p.id)).join('')||'<div style="font-size:12.5px;color:var(--ink3)">Aún no hay comentarios.</div>';
   const inputRow=CURRENT_VIEWER_ID?`
       <div class="comment-input-row">
-        <input type="text" class="comment-input" id="comment-input-${p.id}" placeholder="Escribe un comentario..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment('${p.id}')">
+        <input type="text" class="comment-input" id="comment-input-${p.id}" placeholder="Escribe un comentario... (usa @ para mencionar)" maxlength="500" onkeydown="if(event.key==='Enter')submitComment('${p.id}')">
         <button class="comment-send-btn" onclick="submitComment('${p.id}')">Enviar</button>
       </div>`:`<div style="font-size:12.5px;color:var(--ink3);margin-top:.4rem"><a href="login.html">Inicia sesión</a> para comentar</div>`;
   return list+inputRow;
@@ -643,8 +763,11 @@ async function loadRealPosts(){
         const {data:conns}=await _sb2.from('connections').select('from_id,to_id').eq('status','accepted').or(`from_id.eq.${CURRENT_VIEWER_ID},to_id.eq.${CURRENT_VIEWER_ID}`);
         MY_CONNECTION_IDS=new Set((conns||[]).map(c=>c.from_id===CURRENT_VIEWER_ID?c.to_id:c.from_id));
       }catch(e){}
+      await loadMyConnectionsList();
     }
     const visible=data.filter(p=>!blockedIds.has(p.author_id));
+
+    await fetchMentionProfiles(visible.flatMap(p=>p.mentions||[]));
 
     const authorIds=[...new Set(visible.map(p=>p.author_id))];
     const postIds=visible.map(p=>p.id);
@@ -716,20 +839,48 @@ async function reportPost(postId){
 }
 
 /* ── COMENTARIOS ── */
-function commentBubble(c){
+function groupCommentsIntoThreads(comments){
+  const roots=comments.filter(c=>!c.parent_id);
+  const repliesByParent={};
+  comments.filter(c=>c.parent_id).forEach(c=>{
+    if(!repliesByParent[c.parent_id])repliesByParent[c.parent_id]=[];
+    repliesByParent[c.parent_id].push(c);
+  });
+  return roots.map(r=>({...r,_replies:repliesByParent[r.id]||[]}));
+}
+
+function commentBubble(c,postId,rootId){
   const author=c._author||{};
   const initials=(author.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const color=author.color||'#2d6b4a';
   const isMine=CURRENT_VIEWER_ID&&c.author_id===CURRENT_VIEWER_ID;
+  const threadRootId=rootId||c.id;
+  const safeName=escapeHtml(author.name||'Usuario').replace(/'/g,"\\'");
   return `
     <div class="comment-item">
       <div class="comment-av" style="background:${color}">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <div class="comment-bubble">
-        <div class="comment-author">${escapeHtml(author.name||'Usuario')}${isMine?` <span class="report-link" style="padding:0" title="Editar" onclick="startEditComment('${c.id}','${c.post_id}')">✏️</span> <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${c.post_id}')">🗑️</span>`:''}</div>
-        <div class="comment-text" id="comment-text-${c.id}">${escapeHtml(c.body)}</div>
-        <div class="comment-time">${timeAgo(c.created_at)}</div>
+        <div class="comment-author">${escapeHtml(author.name||'Usuario')}${isMine?` <span class="report-link" style="padding:0" title="Editar" onclick="startEditComment('${c.id}','${postId}')">✏️</span> <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${postId}')">🗑️</span>`:''}</div>
+        <div class="comment-text" id="comment-text-${c.id}">${renderMentionedText(c.body,c.mentions)}</div>
+        <div class="comment-time">${timeAgo(c.created_at)}${CURRENT_VIEWER_ID?` · <span class="report-link" style="padding:0" onclick="toggleReplyBox('${threadRootId}','${safeName}','${c.author_id}')">Responder</span>`:''}</div>
       </div>
     </div>`;
+}
+
+function commentThread(root,postId){
+  let html=commentBubble(root,postId);
+  if(root._replies.length){
+    html+=`<div class="comment-replies">${root._replies.map(r=>commentBubble(r,postId,root.id)).join('')}</div>`;
+  }
+  if(CURRENT_VIEWER_ID){
+    html+=`<div class="comment-replies" id="reply-box-${root.id}" style="display:none">
+      <div class="comment-input-row">
+        <input type="text" class="comment-input" id="reply-input-${root.id}" placeholder="Responder..." maxlength="500" onkeydown="if(event.key==='Enter')submitReply('${root.id}','${postId}')">
+        <button class="comment-send-btn" onclick="submitReply('${root.id}','${postId}')">Enviar</button>
+      </div>
+    </div>`;
+  }
+  return html;
 }
 
 async function toggleComments(postId){
@@ -754,6 +905,7 @@ async function loadComments(post){
       const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
       (authors||[]).forEach(a=>byId[a.id]=a);
     }
+    await fetchMentionProfiles((data||[]).flatMap(c=>c.mentions||[]));
     post._comments=(data||[]).map(c=>({...c,_author:byId[c.author_id]}));
   }catch(e){
     post._comments=[];
@@ -762,15 +914,52 @@ async function loadComments(post){
 }
 
 async function submitComment(postId){
-  const input=document.getElementById('comment-input-'+postId);
+  const elId='comment-input-'+postId;
+  const input=document.getElementById(elId);
   if(!input)return;
   const body=input.value.trim();
   if(body.length<1)return;
   const post=REAL_POSTS.find(p=>p.id===postId);
   if(!post)return;
+  const mentions=extractMentionIds(elId,body);
   input.disabled=true;
-  const {error}=await _sb2.from('comments').insert({post_id:postId,author_id:CURRENT_VIEWER_ID,body});
+  const {error}=await _sb2.from('comments').insert({post_id:postId,author_id:CURRENT_VIEWER_ID,body,mentions});
   if(error){input.disabled=false;showToast(error.message||'No pudimos publicar tu comentario');return;}
+  post._commentCount=(post._commentCount||0)+1;
+  await loadComments(post);
+}
+
+function toggleReplyBox(rootId,authorName,authorId){
+  const box=document.getElementById('reply-box-'+rootId);
+  if(!box)return;
+  const opening=box.style.display==='none';
+  document.querySelectorAll('[id^="reply-box-"]').forEach(b=>{if(b!==box)b.style.display='none';});
+  box.style.display=opening?'block':'none';
+  if(opening){
+    const elId='reply-input-'+rootId;
+    const input=document.getElementById(elId);
+    if(input){
+      input.value='@'+authorName+' ';
+      if(!PENDING_MENTIONS[elId])PENDING_MENTIONS[elId]={};
+      PENDING_MENTIONS[elId][authorName]=authorId;
+      input.focus();
+      input.setSelectionRange(input.value.length,input.value.length);
+    }
+  }
+}
+
+async function submitReply(rootId,postId){
+  const elId='reply-input-'+rootId;
+  const input=document.getElementById(elId);
+  if(!input)return;
+  const body=input.value.trim();
+  if(body.length<1)return;
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(!post)return;
+  const mentions=extractMentionIds(elId,body);
+  input.disabled=true;
+  const {error}=await _sb2.from('comments').insert({post_id:postId,author_id:CURRENT_VIEWER_ID,body,parent_id:rootId,mentions});
+  if(error){input.disabled=false;showToast(error.message||'No pudimos publicar tu respuesta');return;}
   post._commentCount=(post._commentCount||0)+1;
   await loadComments(post);
 }

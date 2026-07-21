@@ -1244,15 +1244,23 @@ function notifText(n){
   if(n.type==='application_received')return `${name} postuló a tu oportunidad`;
   if(n.type==='application_accepted')return `¡Tu postulación fue aceptada! 🎉`;
   if(n.type==='application_rejected')return `Tu postulación no fue aceptada`;
+  if(n.type==='skill_endorsed')return `${name} avaló una de tus habilidades`;
+  if(n.type==='recommendation_received')return `${name} te escribió una recomendación`;
+  if(n.type==='recommendation_approved')return `${name} aprobó tu recomendación`;
+  if(n.type==='mention')return `${name} te mencionó`;
+  if(n.type==='comment_reply')return `${name} respondió tu comentario`;
   return 'Nueva notificación';
 }
 function notifLink(n){
   if(n.type==='connection_request')return '#requests-wrap';
   if(n.type==='connection_accepted')return `perfil-publico.html?id=${n.actor_id}`;
-  if(n.type==='post_like'||n.type==='post_comment')return 'publicaciones.html';
+  if(n.type==='post_like'||n.type==='post_comment'||n.type==='mention'||n.type==='comment_reply')return 'publicaciones.html';
   if(n.type==='message')return `mensajes.html?with=${n.actor_id}`;
   if(n.type==='application_received')return '#my-opps-wrap';
   if(n.type==='application_accepted'||n.type==='application_rejected')return '#my-apps-wrap';
+  if(n.type==='skill_endorsed')return `perfil-publico.html?id=${currentUserId}`;
+  if(n.type==='recommendation_received')return `perfil-publico.html?id=${currentUserId}`;
+  if(n.type==='recommendation_approved')return `perfil-publico.html?id=${n.actor_id}`;
   return '#';
 }
 
