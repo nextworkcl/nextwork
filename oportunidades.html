@@ -116,6 +116,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop
 .featured .card-btn:hover{opacity:.9;transform:translateY(-1px)}
 .card-btn-outline{width:100%;padding:9px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent3);border-radius:20px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .card-btn-outline:hover{background:var(--glow2)}
+.featured .card-btn-outline{color:var(--glow);border-color:rgba(200,240,216,.4)}
+.featured .card-btn-outline:hover{background:rgba(200,240,216,.12)}
+.featured-tag{font-size:10px;font-weight:700;color:var(--accent);background:var(--glow);padding:2px 9px;border-radius:8px;letter-spacing:.4px}
 .apply-status-badge{width:100%;text-align:center;padding:9px;border-radius:20px;font-size:12.5px;font-weight:600}
 .apply-status-pending{background:#fef3c7;color:#92400e}
 .apply-status-accepted{background:#dcfce7;color:#166534}
@@ -356,6 +359,14 @@ footer strong{color:rgba(255,255,255,.75)}
       </div>
       <div class="pub-group"><label>Ubicación</label><input type="text" id="pub-location" maxlength="60" placeholder="Ej. Santiago, Chile o Remoto"></div>
       <div class="pub-group"><label>Habilidades (separadas por coma)</label><input type="text" id="pub-skills" maxlength="200" placeholder="Ej. React, Ventas B2B, Diseño"></div>
+      <div class="pub-group" id="pub-featured-group" style="display:none">
+        <label style="display:flex;align-items:center;gap:.5rem;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink2);cursor:pointer">
+          <input type="checkbox" id="pub-featured" style="width:auto"> ⭐ Destacar esta oportunidad (Pro)
+        </label>
+      </div>
+      <div class="pub-group" id="pub-featured-locked" style="display:none">
+        <a href="pro.html" style="font-size:12.5px;color:var(--accent2)">⭐ Hazte Pro para destacar tus oportunidades →</a>
+      </div>
     </div>
     <div class="pub-foot">
       <button class="card-btn" id="pub-btn" style="width:auto;padding:10px 24px" onclick="publishOpportunity()">Publicar →</button>
@@ -542,6 +553,7 @@ const _sb2=window.supabase.createClient(
 
 let CURRENT_VIEWER_ID=null;
 let MY_ORGS=[];
+let CURRENT_VIEWER_PRO=false;
 
 function escapeHtml(str){
   if(str==null)return '';
@@ -553,8 +565,9 @@ function escapeHtml(str){
   const {data:{session}}=await _sb2.auth.getSession();
   const el=document.getElementById('nav-auth');
   if(!el||!session)return;
-  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
+  const {data:p}=await _sb2.from('profiles').select('name,color,photo,pro_active').eq('id',session.user.id).single();
   if(!p)return;
+  CURRENT_VIEWER_PRO=!!p.pro_active;
   const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
   const badge=count?`<span style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${count>9?'9+':count}</span>`:'';
@@ -611,6 +624,9 @@ function openPublishModal(){
   } else {
     orgGroup.style.display='none';
   }
+  document.getElementById('pub-featured').checked=false;
+  document.getElementById('pub-featured-group').style.display=CURRENT_VIEWER_PRO?'block':'none';
+  document.getElementById('pub-featured-locked').style.display=CURRENT_VIEWER_PRO?'none':'block';
   document.getElementById('pub-overlay').classList.add('open');
 }
 function closePublishModal(){
@@ -663,13 +679,14 @@ async function publishOpportunity(){
   const location=document.getElementById('pub-location').value.trim();
   const skills=document.getElementById('pub-skills').value.split(',').map(s=>s.trim()).filter(Boolean);
   const organizationId=document.getElementById('pub-org').value||null;
+  const isFeatured=CURRENT_VIEWER_PRO&&document.getElementById('pub-featured').checked;
 
   if(title.length<5){errEl.textContent='El título debe tener al menos 5 caracteres.';errEl.style.display='block';return;}
   if(description.length<10){errEl.textContent='La descripción debe tener al menos 10 caracteres.';errEl.style.display='block';return;}
 
   const btn=document.getElementById('pub-btn');
   btn.textContent='Publicando...';btn.disabled=true;
-  const {error}=await _sb2.from('opportunities').insert({author_id:session.user.id,title,description,type,location,skills,organization_id:organizationId});
+  const {error}=await _sb2.from('opportunities').insert({author_id:session.user.id,title,description,type,location,skills,organization_id:organizationId,is_featured:isFeatured});
   btn.textContent='Publicar →';btn.disabled=false;
 
   if(error){errEl.textContent='No pudimos publicar: '+error.message;errEl.style.display='block';return;}
@@ -707,8 +724,9 @@ function renderRealOpportunity(o){
     actionHtml=`<button class="card-btn" onclick="window.location.href='login.html'">Inicia sesión para postular</button>`;
   }
   return `
-    <div class="opp-card">
+    <div class="opp-card${o.is_featured?' featured':''}">
       <div class="card-top">
+        ${o.is_featured?`<span class="featured-tag">⭐ DESTACADA</span>`:''}
         <span class="type-badge type-${o.type}">${TYPE_LABELS[o.type]||o.type}</span>
         ${o.location?`<span class="card-location">📍 ${escapeHtml(o.location)}</span>`:''}
         ${CURRENT_VIEWER_ID&&!isMine?`<span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:14px" title="Reportar" onclick="reportOpportunity('${o.id}')">🚩</span>`:''}
@@ -753,7 +771,8 @@ async function renderRealOpportunitiesFiltered(){
     pool=REAL_OPPS.filter(o=>rankById[o.id]!==undefined).sort((a,b)=>rankById[a.id]-rankById[b.id]);
   }
 
-  const list=pool.filter(o=>activeFilter==='todos'||o.type===activeFilter);
+  const list=pool.filter(o=>activeFilter==='todos'||o.type===activeFilter)
+    .sort((a,b)=>(b.is_featured?1:0)-(a.is_featured?1:0));
   if(!list.length){wrap.style.display='none';return;}
   wrap.style.display='block';
   grid.innerHTML=list.map(renderRealOpportunity).join('');

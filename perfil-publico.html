@@ -388,6 +388,8 @@ let viewedProfileId=null;
 let IS_BLOCKED_BY_ME=false;
 let VIEWER_IS_ADMIN=false;
 let VIEWED_PROFILE_VERIFIED=false;
+let VIEWED_PROFILE_PRO=false;
+let VIEWED_PROFILE_NAME='';
 
 function renderContactCard(state, extra){
   const body=document.getElementById('contact-card-body');
@@ -443,15 +445,19 @@ function renderContactCard(state, extra){
   }
 }
 
+function renderHeroName(){
+  document.getElementById('hero-name').innerHTML=escapeHtml(VIEWED_PROFILE_NAME)
+    +(VIEWED_PROFILE_VERIFIED?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':'')
+    +(VIEWED_PROFILE_PRO?' <span title="Nextwork Pro" style="font-size:11px;font-weight:700;color:var(--accent);background:var(--glow);padding:2px 9px;border-radius:10px;vertical-align:middle">PRO</span>':'');
+}
+
 async function toggleVerified(){
   const newValue=!VIEWED_PROFILE_VERIFIED;
   const {error}=await _sb.rpc('set_profile_verified',{target_id:viewedProfileId,value:newValue});
   if(error){showToast('No pudimos actualizar la verificación');return;}
   VIEWED_PROFILE_VERIFIED=newValue;
   showToast(newValue?'Perfil verificado ✓':'Verificación quitada');
-  const nameEl=document.getElementById('hero-name');
-  const currentName=nameEl.textContent.replace(/✓\s*$/,'').trim();
-  nameEl.innerHTML=escapeHtml(currentName)+(newValue?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':'');
+  renderHeroName();
   checkConnectionStatus();
 }
 
@@ -560,7 +566,9 @@ function renderProfile(p, ownProfile){
 
   /* NAME / ROLE / LOC */
   VIEWED_PROFILE_VERIFIED=!!p.verified;
-  document.getElementById('hero-name').innerHTML=escapeHtml(p.name||'')+(p.verified?' <span title="Perfil verificado" style="color:var(--accent2)">✓</span>':'');
+  VIEWED_PROFILE_PRO=!!p.pro_active;
+  VIEWED_PROFILE_NAME=p.name||'';
+  renderHeroName();
   document.getElementById('hero-role').textContent=p.role||'';
   const loc=document.getElementById('hero-loc');
   if(p.location) loc.innerHTML=`📍 ${escapeHtml(p.location)}`;

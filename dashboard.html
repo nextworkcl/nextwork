@@ -626,6 +626,9 @@ function renderDashboard(p){
   const color=getColor(p.name);
   document.getElementById('nav-user').innerHTML=`
     <span class="nav-name">${escapeHtml(p.name||'Mi perfil')}</span>
+    ${p.pro_active
+      ?`<span title="Nextwork Pro" style="font-size:11px;font-weight:700;color:var(--accent2);background:var(--glow2);padding:3px 10px;border-radius:12px">PRO</span>`
+      :`<a href="pro.html" style="font-size:11px;font-weight:700;color:var(--accent);background:var(--glow);padding:3px 10px;border-radius:12px;text-decoration:none">⭐ HAZTE PRO</a>`}
     ${p.is_admin?`<a href="admin-reportes.html" title="Panel de reportes" style="font-size:18px;text-decoration:none">🛡️</a><a href="admin-analytics.html" title="Analíticas" style="font-size:18px;text-decoration:none">📊</a>`:''}
     <div style="position:relative">
       <button id="notif-bell" onclick="toggleNotifDropdown(event)" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px;line-height:1" title="Notificaciones">
@@ -710,6 +713,11 @@ function renderDashboard(p){
 }
 
 /* ── INIT ── */
+if(new URLSearchParams(window.location.search).get('pro')==='success'){
+  history.replaceState(null,'',window.location.pathname);
+  setTimeout(()=>showToast('¡Bienvenido a Nextwork Pro! ⭐ (puede tardar unos segundos en activarse)'),400);
+}
+
 (async()=>{
   const {data:{session}}=await _sb.auth.getSession();
   if(session){
