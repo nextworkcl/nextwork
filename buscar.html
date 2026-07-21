@@ -619,9 +619,10 @@ async function loadPeopleYouMayKnow(){
     grid.innerHTML=data.map(p=>{
       const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
       const color=p.color||'#2d6b4a';
+      const REASON_LABELS={skills:'Habilidades en común',university:'Misma universidad',company:'Misma empresa'};
       const mutualLabel=p.reason==='mutual'
         ?`${p.mutual_count} conexión${p.mutual_count===1?'':'es'} en común`
-        :'Habilidades en común';
+        :(REASON_LABELS[p.reason]||'Podrían conocerse');
       return `<div class="pymk-card">
         <a href="perfil-publico.html?id=${p.id}" style="text-decoration:none;color:inherit">
           <div class="pymk-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>

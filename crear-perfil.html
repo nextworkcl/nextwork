@@ -403,6 +403,18 @@ footer strong{color:rgba(255,255,255,.75)}
       <p class="field-err" id="err-role">Define tu rol principal</p>
     </div>
 
+    <div class="form-row">
+      <div class="form-group">
+        <label>Universidad (opcional)</label>
+        <input type="text" id="f-university" placeholder="Ej. Universidad de Chile" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label>Empresa actual (opcional)</label>
+        <input type="text" id="f-company" placeholder="Ej. Rocketbot, o el nombre de tu startup" maxlength="80">
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--ink3);margin:-.6rem 0 1rem">Se usan para sugerirte personas con las que estudiaste o trabajaste, en "Personas que quizás conozcas".</p>
+
     <div class="form-group">
       <label>Años de experiencia</label>
       <input type="range" class="exp-slider" id="f-exp" min="0" max="20" value="3" oninput="updateExp()">
@@ -928,6 +940,8 @@ function validateStep(n){
     profile.link=document.getElementById('f-link').value.trim();
     profile.strava=document.getElementById('f-strava').value.trim();
     profile.bio=document.getElementById('f-bio').value.trim();
+    profile.university=document.getElementById('f-university').value.trim();
+    profile.company=document.getElementById('f-company').value.trim();
     return true;
   }
   if(n===2){
@@ -1200,7 +1214,8 @@ errEl.style.display='block';
     skills:profile.skills,hobbies:profile.hobbies,offer:profile.offer,
     collab:profile.collab,availability:profile.availability,
     vision:profile.vision,photo:profile.photo,banner:profile.banner,
-    status:profile.status,referred_by:referredBy
+    status:profile.status,referred_by:referredBy,
+    university:profile.university,company:profile.company
   });
   if(!insErr)localStorage.removeItem('nw_ref_code');
   if(insErr){
@@ -1245,6 +1260,7 @@ function collectAllFields(){
   profile.name=g('f-name');profile.role=g('f-role');profile.email=g('f-email');
   profile.location=g('f-location');profile.link=g('f-link');profile.strava=g('f-strava');
   profile.bio=g('f-bio');profile.offer=g('f-offer');profile.vision=g('f-vision');
+  profile.university=g('f-university');profile.company=g('f-company');
   profile.exp=parseInt(document.getElementById('f-exp').value)||0;
 }
 
@@ -1253,6 +1269,7 @@ function prefillForm(p){
   set('f-name',p.name);set('f-role',p.role);set('f-email',p.email);
   set('f-location',p.location);set('f-link',p.link);set('f-strava',p.strava);
   set('f-bio',p.bio);set('f-offer',p.offer);set('f-vision',p.vision);
+  set('f-university',p.university);set('f-company',p.company);
   ['bio','offer','vision'].forEach(f=>{const c=document.getElementById('cnt-'+f),el=document.getElementById('f-'+f);if(c&&el)c.textContent=el.value.length;});
   if(document.getElementById('f-email'))document.getElementById('f-email').readOnly=true;
   try{updateInitials();}catch(e){}
@@ -1286,7 +1303,7 @@ async function saveProfileEdits(){
     skills:profile.skills,hobbies:profile.hobbies,offer:profile.offer,
     collab:profile.collab,availability:profile.availability,
     vision:profile.vision,photo:profile.photo,banner:profile.banner,
-    status:profile.status
+    status:profile.status,university:profile.university,company:profile.company
   });
   if(error){errEl.textContent='No pudimos guardar los cambios: '+error.message;errEl.style.display='block';btn.textContent='Guardar cambios →';btn.disabled=false;return;}
   saveProfile();

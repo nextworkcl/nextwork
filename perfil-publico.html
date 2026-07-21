@@ -224,6 +224,7 @@ footer strong{color:rgba(255,255,255,.75)}
             <div class="hero-name" id="hero-name"></div>
             <div class="hero-role" id="hero-role"></div>
             <div class="hero-loc" id="hero-loc"></div>
+            <div class="hero-loc" id="hero-eduwork" style="display:none"></div>
             <div class="status-badges" id="status-badges"></div>
             <div class="hero-links" id="hero-links"></div>
           </div>
@@ -762,6 +763,11 @@ function renderProfile(p, ownProfile){
   document.getElementById('hero-role').textContent=p.role||'';
   const loc=document.getElementById('hero-loc');
   if(p.location) loc.innerHTML=`📍 ${escapeHtml(p.location)}`;
+  const eduwork=document.getElementById('hero-eduwork');
+  const eduworkParts=[];
+  if(p.university) eduworkParts.push(`🎓 ${escapeHtml(p.university)}`);
+  if(p.company) eduworkParts.push(`🏢 ${escapeHtml(p.company)}`);
+  if(eduworkParts.length){eduwork.innerHTML=eduworkParts.join(' &nbsp;·&nbsp; ');eduwork.style.display='flex';}
 
   /* STATUS BADGES */
   const badges=document.getElementById('status-badges');
