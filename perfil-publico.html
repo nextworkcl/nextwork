@@ -423,6 +423,20 @@ function shareProfile(){
   }).catch(()=>showToast('🔗 '+window.location.href));
 }
 
+/* Avisa a send-push para reenviar como push real una notificacion que ya
+   se creo via los triggers de la base de datos. Mejor esfuerzo, nunca
+   bloquea la UI si falla */
+async function notifyPush(recipientId,type,entityId){
+  try{
+    if(!viewerSession)return;
+    fetch('https://vkewxmrutpjmdrxsqdea.supabase.co/functions/v1/send-push',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+viewerSession.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({recipient_id:recipientId,type,entity_id:entityId})
+    }).catch(()=>{});
+  }catch(e){}
+}
+
 /* ── SOLICITUDES DE CONEXIÓN ── */
 let viewedProfileId=null;
 let IS_BLOCKED_BY_ME=false;
@@ -695,6 +709,7 @@ async function sendConnectionRequest(){
   if(!viewerSession){showToast('🔒 Inicia sesión para conectar');return;}
   const {data,error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:viewedProfileId}).select().single();
   if(error){showToast('No pudimos enviar la solicitud');return;}
+  notifyPush(viewedProfileId,'connection_request',data.id);
   showToast('Solicitud enviada ✓');
   renderContactCard('pending_sent',data.id);
 }
@@ -711,6 +726,7 @@ async function respondConnectionRequest(connId, accept){
     .update({status:accept?'accepted':'declined',responded_at:new Date().toISOString()})
     .eq('id',connId);
   if(error){showToast('No pudimos procesar tu respuesta');return;}
+  if(accept)notifyPush(viewedProfileId,'connection_accepted',connId);
   showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
   checkConnectionStatus();
 }

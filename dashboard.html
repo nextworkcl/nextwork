@@ -273,6 +273,15 @@ footer strong{color:rgba(255,255,255,.75)}
         <div class="stat-row"><span>Miembro desde</span><span class="stat-val" id="stat-since">—</span></div>
       </div>
 
+      <div class="stats-card">
+        <h4>Notificaciones</h4>
+        <button id="push-toggle-btn" onclick="togglePushNotifications()" style="width:100%;padding:9px;border-radius:18px;border:1.5px solid var(--accent3);background:transparent;color:var(--accent2);font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:.7rem">🔔 Activar notificaciones push</button>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:12px;color:var(--ink3);cursor:pointer">
+          <input type="checkbox" id="digest-optout-check" onchange="toggleDigestOptOut(this.checked)" style="width:auto">
+          No enviarme el resumen semanal por correo
+        </label>
+      </div>
+
       <div class="quick-links">
         <a href="perfil-publico.html" class="quick-link" style="background:var(--glow2);color:var(--accent2);font-weight:500;margin-bottom:.3rem"><span>👤</span> Ver mi perfil público</a>
         <a href="buscar.html" class="quick-link"><span>🔍</span> Buscar perfiles</a>
@@ -734,6 +743,9 @@ if(new URLSearchParams(window.location.search).get('pro')==='success'){
       loadMyApplications();
       loadReferrals();
       loadMyOrganizations();
+      checkPushSubscriptionState();
+      const digestCheck=document.getElementById('digest-optout-check');
+      if(digestCheck)digestCheck.checked=!!p.email_digest_opt_out;
       return;
     }
   }
@@ -918,11 +930,28 @@ async function loadConnections(){
   }
 }
 
+/* Avisa a send-push para reenviar como push real una notificacion que ya
+   se creo via los triggers de la base de datos. Mejor esfuerzo */
+async function notifyPush(recipientId,type,entityId){
+  try{
+    const {data:{session}}=await _sb.auth.getSession();
+    if(!session)return;
+    fetch('https://vkewxmrutpjmdrxsqdea.supabase.co/functions/v1/send-push',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({recipient_id:recipientId,type,entity_id:entityId})
+    }).catch(()=>{});
+  }catch(e){}
+}
+
 async function respondToRequest(connId, accept){
-  const {error}=await _sb.from('connections')
+  const {data,error}=await _sb.from('connections')
     .update({status:accept?'accepted':'declined',responded_at:new Date().toISOString()})
-    .eq('id',connId);
+    .eq('id',connId)
+    .select()
+    .single();
   if(error){showToast('No pudimos procesar tu respuesta');return;}
+  if(accept&&data)notifyPush(data.from_id,'connection_accepted',connId);
   showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
   loadConnections();
 }
@@ -1203,6 +1232,81 @@ function copyReferralLink(){
   },()=>{
     showToast('No pudimos copiar el link');
   });
+}
+
+/* ── NOTIFICACIONES PUSH ── */
+const VAPID_PUBLIC_KEY='BKNW7kQdvFx7vD99FXar02L-w2wTxc4iF96gdFI3j8qbBsnKtRqm8Cp1LRaK7q8km-cbTcB3NHb5RHlTs8ybB_I';
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const rawData=atob(base64);
+  const outputArray=new Uint8Array(rawData.length);
+  for(let i=0;i<rawData.length;i++)outputArray[i]=rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function checkPushSubscriptionState(){
+  const btn=document.getElementById('push-toggle-btn');
+  if(!btn)return;
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    btn.style.display='none';
+    return;
+  }
+  try{
+    const reg=await navigator.serviceWorker.getRegistration('/sw.js');
+    const sub=reg&&await reg.pushManager.getSubscription();
+    if(sub){
+      btn.textContent='🔔 Notificaciones push activadas ✓';
+      btn.disabled=true;
+    }
+  }catch(e){}
+}
+
+async function togglePushNotifications(){
+  const btn=document.getElementById('push-toggle-btn');
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    showToast('Tu navegador no soporta notificaciones push');
+    return;
+  }
+  if(!currentUserId){showToast('Inicia sesión primero');return;}
+  btn.disabled=true;btn.textContent='Activando...';
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){
+      showToast('No diste permiso para notificaciones');
+      btn.disabled=false;btn.textContent='🔔 Activar notificaciones push';
+      return;
+    }
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const json=sub.toJSON();
+    const {error}=await _sb.from('push_subscriptions').insert({
+      user_id:currentUserId,
+      endpoint:json.endpoint,
+      p256dh:json.keys.p256dh,
+      auth:json.keys.auth
+    });
+    if(error&&!(error.message||'').includes('duplicate')){throw error;}
+    btn.textContent='🔔 Notificaciones push activadas ✓';
+    showToast('Notificaciones push activadas ✓');
+  }catch(e){
+    btn.disabled=false;btn.textContent='🔔 Activar notificaciones push';
+    showToast('No pudimos activar las notificaciones push');
+  }
+}
+
+async function toggleDigestOptOut(checked){
+  if(!currentUserId)return;
+  const {error}=await _sb.from('profiles').update({email_digest_opt_out:checked}).eq('id',currentUserId);
+  if(error){showToast('No pudimos guardar tu preferencia');return;}
+  showToast(checked?'No recibirás el resumen semanal':'Volverás a recibir el resumen semanal');
 }
 
 /* ── MIS ORGANIZACIONES ── */
