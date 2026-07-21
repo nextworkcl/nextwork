@@ -34,6 +34,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 .conv-item:hover{background:var(--cream2)}
 .conv-item.active{background:var(--glow2);border-left-color:var(--accent2)}
 .conv-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden}
+.conv-av-wrap{position:relative;flex-shrink:0}
+.online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:#22c55e;border:2px solid var(--surface);z-index:1}
+.thread-status{font-size:11px;color:var(--accent2);margin-top:1px;min-height:14px}
 .conv-info{flex:1;min-width:0}
 .conv-name-row{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
 .conv-name{font-weight:600;font-size:13.5px}
@@ -212,7 +215,10 @@ function renderConvList(){
     const snippet=last?(last.sender_id===myId?'Tú: ':'')+last.body:'Sin mensajes aún';
     return `
     <div class="conv-item${c.id===activeId?' active':''}" onclick="openConversation('${c.id}')">
-      <div class="conv-av" style="background:${c.color}">${c.photo?`<img src="${escapeHtml(c.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(c.name)}</div>
+      <div class="conv-av-wrap">
+        <div class="conv-av" style="background:${c.color}">${c.photo?`<img src="${escapeHtml(c.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(c.name)}</div>
+        ${ONLINE_IDS.has(c.id)?'<span class="online-dot"></span>':''}
+      </div>
       <div class="conv-info">
         <div class="conv-name-row">
           <span class="conv-name">${escapeHtml(c.name)}</span>
@@ -225,10 +231,11 @@ function renderConvList(){
   }).join('');
 }
 
-function msgBubble(m){
+function msgBubble(m,isLastMine){
   const mine=m.sender_id===myId;
+  const seen=mine&&isLastMine&&m.read;
   return `<div class="msg-bubble ${mine?'mine':'theirs'}">${escapeHtml(m.body)}</div>
-    <div class="msg-time${mine?' mine':''}">${timeShort(m.created_at)}</div>`;
+    <div class="msg-time${mine?' mine':''}">${timeShort(m.created_at)}${seen?' · Visto':''}</div>`;
 }
 
 async function openConversation(id){
@@ -240,18 +247,23 @@ async function openConversation(id){
   document.getElementById('thread-panel').innerHTML=`
     <div class="thread-header">
       <span class="thread-back" onclick="closeThread()">←</span>
-      <div class="conv-av" style="background:${conv.color};width:36px;height:36px;font-size:12px">${conv.photo?`<img src="${escapeHtml(conv.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(conv.name)}</div>
+      <div class="conv-av-wrap">
+        <div class="conv-av" style="background:${conv.color};width:36px;height:36px;font-size:12px">${conv.photo?`<img src="${escapeHtml(conv.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(conv.name)}</div>
+        ${ONLINE_IDS.has(conv.id)?'<span class="online-dot"></span>':''}
+      </div>
       <div>
         <div style="font-weight:600;font-size:14px"><a href="perfil-publico.html?id=${conv.id}">${escapeHtml(conv.name)}</a></div>
         <div style="font-size:12px;color:var(--ink3)">${escapeHtml(conv.role)}</div>
+        <div class="thread-status" id="thread-status"></div>
       </div>
     </div>
     <div class="thread-messages" id="thread-messages"></div>
     <div class="thread-input-row">
-      <textarea class="thread-input" id="thread-input" placeholder="Escribe un mensaje..." rows="1" maxlength="2000" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <textarea class="thread-input" id="thread-input" placeholder="Escribe un mensaje..." rows="1" maxlength="2000" oninput="handleTyping()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
       <button class="thread-send-btn" id="thread-send-btn" onclick="sendMessage()">➤</button>
     </div>`;
   renderThreadMessages();
+  updateThreadStatus();
 
   const unreadIds=conv.messages.filter(m=>m.recipient_id===myId&&!m.read).map(m=>m.id);
   if(unreadIds.length){
@@ -268,8 +280,10 @@ function renderThreadMessages(){
   const conv=CONVERSATIONS.find(c=>c.id===activeId);
   const box=document.getElementById('thread-messages');
   if(!conv||!box)return;
+  let lastMineIdx=-1;
+  conv.messages.forEach((m,i)=>{if(m.sender_id===myId)lastMineIdx=i;});
   box.innerHTML=conv.messages.length
-    ? conv.messages.map(msgBubble).join('')
+    ? conv.messages.map((m,i)=>msgBubble(m,i===lastMineIdx)).join('')
     : `<div style="text-align:center;color:var(--ink3);font-size:13px;margin-top:1rem">Aún no hay mensajes. ¡Escribe el primero!</div>`;
   box.scrollTop=box.scrollHeight;
 }
@@ -324,6 +338,65 @@ function handleIncomingMessage(m){
   renderConvList();
 }
 
+/* ── PRESENCIA (en linea), TYPING Y RECIBOS DE LECTURA ── */
+let ONLINE_IDS=new Set();
+let PRESENCE_CHANNEL=null;
+let TYPING_HIDE_TIMEOUT=null;
+let TYPING_SEND_AT=0;
+
+function updateThreadStatus(){
+  const statusEl=document.getElementById('thread-status');
+  if(!statusEl||!activeId)return;
+  statusEl.textContent=ONLINE_IDS.has(activeId)?'🟢 En línea':'';
+}
+
+function showTypingIndicator(fromId){
+  if(fromId!==activeId)return;
+  const statusEl=document.getElementById('thread-status');
+  if(!statusEl)return;
+  statusEl.textContent='Escribiendo...';
+  clearTimeout(TYPING_HIDE_TIMEOUT);
+  TYPING_HIDE_TIMEOUT=setTimeout(updateThreadStatus,2500);
+}
+
+function handleTyping(){
+  if(!activeId||!PRESENCE_CHANNEL)return;
+  const now=Date.now();
+  if(now-TYPING_SEND_AT<2000)return;
+  TYPING_SEND_AT=now;
+  PRESENCE_CHANNEL.send({type:'broadcast',event:'typing',payload:{from:myId,to:activeId}});
+}
+
+function setupPresenceAndReceipts(){
+  if(PRESENCE_CHANNEL)return;
+  PRESENCE_CHANNEL=_sb.channel('online-users',{config:{presence:{key:myId}}});
+  PRESENCE_CHANNEL
+    .on('presence',{event:'sync'},()=>{
+      const state=PRESENCE_CHANNEL.presenceState();
+      ONLINE_IDS=new Set(Object.keys(state));
+      renderConvList();
+      updateThreadStatus();
+    })
+    .on('broadcast',{event:'typing'},(payload)=>{
+      const {from,to}=payload.payload||{};
+      if(to===myId)showTypingIndicator(from);
+    })
+    .subscribe(async(status)=>{
+      if(status==='SUBSCRIBED')await PRESENCE_CHANNEL.track({online_at:new Date().toISOString()});
+    });
+
+  _sb.channel('read-receipts-'+myId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages',filter:`sender_id=eq.${myId}`},payload=>{
+      if(!payload.new.read)return;
+      const conv=CONVERSATIONS.find(c=>c.id===payload.new.recipient_id);
+      if(!conv)return;
+      const m=conv.messages.find(mm=>mm.id===payload.new.id);
+      if(m)m.read=true;
+      if(activeId===payload.new.recipient_id)renderThreadMessages();
+    })
+    .subscribe();
+}
+
 (async()=>{
   const {data:{session}}=await _sb.auth.getSession();
   if(!session){
@@ -369,6 +442,8 @@ function handleIncomingMessage(m){
       handleIncomingMessage(payload.new);
     })
     .subscribe();
+
+  setupPresenceAndReceipts();
 })();
 </script>
 </body>

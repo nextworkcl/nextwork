@@ -570,13 +570,23 @@ function escapeHtml(str){
   CURRENT_VIEWER_PRO=!!p.pro_active;
   const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
-  const badge=count?`<span style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${count>9?'9+':count}</span>`:'';
+  const badge=`<span id="nav-notif-badge" style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:${count>0?'flex':'none'};align-items:center;justify-content:center">${count>9?'9+':count}</span>`;
   el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div><span style="font-size:13px;font-weight:500;color:#3d3b36">${escapeHtml((p.name||'').split(' ')[0])}</span></a>`;
   CURRENT_VIEWER_ID=session.user.id;
   try{
     const {data:memberships}=await _sb2.from('organization_members').select('organization_id, organizations(id,name)').eq('user_id',session.user.id);
     MY_ORGS=(memberships||[]).map(m=>m.organizations).filter(Boolean);
   }catch(e){}
+  _sb2.channel('notif-badge-'+session.user.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`recipient_id=eq.${session.user.id}`},()=>{
+      const el2=document.getElementById('nav-notif-badge');
+      if(!el2)return;
+      const current=el2.textContent==='9+'?10:(parseInt(el2.textContent)||0);
+      const next=current+1;
+      el2.textContent=next>9?'9+':next;
+      el2.style.display='flex';
+    })
+    .subscribe();
 })();
 
 /* PERSONAS REALES BUSCANDO EQUIPO */
