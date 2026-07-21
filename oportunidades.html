@@ -336,6 +336,12 @@ footer strong{color:rgba(255,255,255,.75)}
     </div>
     <div class="pub-body">
       <div id="pub-err" class="pub-err"></div>
+      <div class="pub-group" id="pub-org-group" style="display:none">
+        <label>Publicar como</label>
+        <select id="pub-org">
+          <option value="">Yo mismo</option>
+        </select>
+      </div>
       <div class="pub-group"><label>Título</label><input type="text" id="pub-title" maxlength="120" placeholder="Ej. Busco CTO para mi startup de logística"></div>
       <div class="pub-group"><label>Descripción</label><textarea id="pub-desc" maxlength="1000" placeholder="Cuenta de qué se trata, en qué etapa está y qué buscas"></textarea></div>
       <div class="pub-group">
@@ -535,6 +541,7 @@ const _sb2=window.supabase.createClient(
 );
 
 let CURRENT_VIEWER_ID=null;
+let MY_ORGS=[];
 
 function escapeHtml(str){
   if(str==null)return '';
@@ -553,6 +560,10 @@ function escapeHtml(str){
   const badge=count?`<span style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${count>9?'9+':count}</span>`:'';
   el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div><span style="font-size:13px;font-weight:500;color:#3d3b36">${escapeHtml((p.name||'').split(' ')[0])}</span></a>`;
   CURRENT_VIEWER_ID=session.user.id;
+  try{
+    const {data:memberships}=await _sb2.from('organization_members').select('organization_id, organizations(id,name)').eq('user_id',session.user.id);
+    MY_ORGS=(memberships||[]).map(m=>m.organizations).filter(Boolean);
+  }catch(e){}
 })();
 
 /* PERSONAS REALES BUSCANDO EQUIPO */
@@ -592,6 +603,14 @@ function renderPersonCard(p){
 /* ── PUBLICAR OPORTUNIDAD ── */
 function openPublishModal(){
   document.getElementById('pub-err').style.display='none';
+  const orgGroup=document.getElementById('pub-org-group');
+  const orgSelect=document.getElementById('pub-org');
+  if(MY_ORGS.length){
+    orgSelect.innerHTML='<option value="">Yo mismo</option>'+MY_ORGS.map(o=>`<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+    orgGroup.style.display='block';
+  } else {
+    orgGroup.style.display='none';
+  }
   document.getElementById('pub-overlay').classList.add('open');
 }
 function closePublishModal(){
@@ -643,13 +662,14 @@ async function publishOpportunity(){
   const type=document.getElementById('pub-type').value;
   const location=document.getElementById('pub-location').value.trim();
   const skills=document.getElementById('pub-skills').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const organizationId=document.getElementById('pub-org').value||null;
 
   if(title.length<5){errEl.textContent='El título debe tener al menos 5 caracteres.';errEl.style.display='block';return;}
   if(description.length<10){errEl.textContent='La descripción debe tener al menos 10 caracteres.';errEl.style.display='block';return;}
 
   const btn=document.getElementById('pub-btn');
   btn.textContent='Publicando...';btn.disabled=true;
-  const {error}=await _sb2.from('opportunities').insert({author_id:session.user.id,title,description,type,location,skills});
+  const {error}=await _sb2.from('opportunities').insert({author_id:session.user.id,title,description,type,location,skills,organization_id:organizationId});
   btn.textContent='Publicar →';btn.disabled=false;
 
   if(error){errEl.textContent='No pudimos publicar: '+error.message;errEl.style.display='block';return;}
@@ -698,7 +718,8 @@ function renderRealOpportunity(o){
       <p class="card-desc">${escapeHtml(o.description)}</p>
       <div class="card-skills">${(o.skills||[]).map(s=>`<span class="skill-pill">${escapeHtml(s)}</span>`).join('')}</div>
       <div class="card-meta">
-        <span>Por <a href="perfil-publico.html?id=${o.author_id}" style="color:var(--accent2);font-weight:500">${escapeHtml(author.name||'Usuario')}</a></span>
+        ${o.organizations?`<span>🏢 <a href="organizacion.html?id=${o.organizations.id}" style="color:var(--accent2);font-weight:500">${escapeHtml(o.organizations.name)}</a> · publicada por ${escapeHtml(author.name||'Usuario')}</span>`
+          :`<span>Por <a href="perfil-publico.html?id=${o.author_id}" style="color:var(--accent2);font-weight:500">${escapeHtml(author.name||'Usuario')}</a></span>`}
       </div>
       <div style="display:flex;flex-direction:column;gap:.4rem">
         ${actionHtml}
@@ -740,7 +761,7 @@ async function renderRealOpportunitiesFiltered(){
 
 async function loadRealOpportunities(){
   try{
-    const {data,error}=await _sb2.from('opportunities').select('*').order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await _sb2.from('opportunities').select('*, organizations(id,name,logo)').order('created_at',{ascending:false}).limit(50);
     if(error||!data)return;
 
     let blockedIds=new Set();

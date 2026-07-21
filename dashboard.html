@@ -344,6 +344,16 @@ footer strong{color:rgba(255,255,255,.75)}
         <div class="req-grid" id="blocked-grid"></div>
       </div>
 
+      <!-- MIS ORGANIZACIONES -->
+      <div style="margin-bottom:1.5rem">
+        <div class="section-head">
+          <h3>Mis organizaciones</h3>
+          <a href="crear-organizacion.html"><button class="req-btn-accept" style="width:auto;padding:6px 16px">+ Crear</button></a>
+        </div>
+        <div class="req-grid" id="orgs-grid"></div>
+        <div id="orgs-empty" style="display:none;font-size:12.5px;color:var(--ink3)">No perteneces a ninguna organización todavía.</div>
+      </div>
+
       <!-- MIS PUBLICACIONES -->
       <div id="my-posts-wrap" style="display:none">
         <div class="section-head">
@@ -715,6 +725,7 @@ function renderDashboard(p){
       loadBlockedUsers();
       loadMyApplications();
       loadReferrals();
+      loadMyOrganizations();
       return;
     }
   }
@@ -1184,6 +1195,32 @@ function copyReferralLink(){
   },()=>{
     showToast('No pudimos copiar el link');
   });
+}
+
+/* ── MIS ORGANIZACIONES ── */
+async function loadMyOrganizations(){
+  if(!currentUserId)return;
+  try{
+    const {data:memberships}=await _sb.from('organization_members').select('*').eq('user_id',currentUserId);
+    const grid=document.getElementById('orgs-grid');
+    const empty=document.getElementById('orgs-empty');
+    if(!memberships||!memberships.length){
+      grid.innerHTML='';
+      empty.style.display='block';
+      return;
+    }
+    empty.style.display='none';
+    const orgIds=memberships.map(m=>m.organization_id);
+    const {data:orgs}=await _sb.from('organizations').select('*').in('id',orgIds);
+    const roleById={};memberships.forEach(m=>roleById[m.organization_id]=m.role);
+    grid.innerHTML=(orgs||[]).map(o=>`
+      <a href="organizacion.html?id=${o.id}" class="match-card" style="display:block">
+        <div class="match-header">
+          <div class="match-av" style="background:#6366f1;overflow:hidden">${o.logo?`<img src="${escapeHtml(o.logo)}" style="width:100%;height:100%;object-fit:cover">`:'🏢'}</div>
+          <div><div class="match-name">${escapeHtml(o.name)}</div><div class="match-role">${roleById[o.id]==='admin'?'Administrador':'Miembro'}</div></div>
+        </div>
+      </a>`).join('');
+  }catch(e){}
 }
 
 /* ── NOTIFICACIONES REALES ── */
