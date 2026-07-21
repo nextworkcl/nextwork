@@ -419,6 +419,18 @@ function renderContactCard(state, extra){
       <p>Inicia sesión para enviar una solicitud de conexión.</p>
       <a href="login.html" style="display:block"><button class="btn-contact">Iniciar sesión</button></a>`;
   }
+  if(state!=='login'){
+    body.innerHTML+=`<div style="margin-top:.8rem;text-align:center"><span style="font-size:12px;color:var(--ink3);cursor:pointer" onclick="reportProfile()">🚩 Reportar este perfil</span></div>`;
+  }
+}
+
+async function reportProfile(){
+  if(!viewerSession){showToast('Inicia sesión para reportar');return;}
+  const reason=prompt('¿Por qué reportas este perfil?');
+  if(!reason||!reason.trim())return;
+  const {error}=await _sb.from('reports').insert({reporter_id:viewerSession.user.id,content_type:'profile',content_id:viewedProfileId,reason:reason.trim()});
+  if(error){showToast('No pudimos enviar el reporte');return;}
+  showToast('Reporte enviado. Gracias por avisarnos 🙏');
 }
 
 async function checkConnectionStatus(){

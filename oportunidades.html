@@ -618,7 +618,8 @@ function renderRealOpportunity(o){
       <div class="card-top">
         <span class="type-badge type-${o.type}">${TYPE_LABELS[o.type]||o.type}</span>
         ${o.location?`<span class="card-location">📍 ${o.location}</span>`:''}
-        ${isMine?`<span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:16px" title="Eliminar" onclick="deleteRealOpportunity('${o.id}')">🗑️</span>`:''}
+        ${CURRENT_VIEWER_ID&&!isMine?`<span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:14px" title="Reportar" onclick="reportOpportunity('${o.id}')">🚩</span>`:''}
+        ${isMine?`<span style="${CURRENT_VIEWER_ID&&!isMine?'':'margin-left:auto;'}cursor:pointer;color:var(--ink3);font-size:16px" title="Eliminar" onclick="deleteRealOpportunity('${o.id}')">🗑️</span>`:''}
       </div>
       <p class="card-title">${o.title}</p>
       <p class="card-desc">${o.description}</p>
@@ -680,6 +681,25 @@ async function deleteRealOpportunity(id){
   renderRealOpportunitiesFiltered();
   const t=document.getElementById('toast');
   t.textContent='Oportunidad eliminada';t.className='toast show success';
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+async function reportOpportunity(id){
+  if(!CURRENT_VIEWER_ID){
+    const t=document.getElementById('toast');
+    t.textContent='Inicia sesión para reportar';t.className='toast show';
+    clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);
+    return;
+  }
+  const reason=prompt('¿Por qué reportas esta oportunidad?');
+  if(!reason||!reason.trim())return;
+  const {error}=await _sb2.from('reports').insert({reporter_id:CURRENT_VIEWER_ID,content_type:'opportunity',content_id:id,reason:reason.trim()});
+  const t=document.getElementById('toast');
+  if(error){
+    t.textContent='No pudimos enviar el reporte';t.className='toast show';
+  } else {
+    t.textContent='Reporte enviado. Gracias por avisarnos 🙏';t.className='toast show success';
+  }
   clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);
 }
 </script>

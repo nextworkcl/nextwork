@@ -79,6 +79,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 .action-btn:hover{background:var(--cream2)}
 .action-btn.liked{color:var(--accent2);font-weight:500}
 .action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.report-link{font-size:12px;color:var(--ink3);cursor:pointer;padding:.2rem .4rem}
+.report-link:hover{color:var(--ink2);text-decoration:underline}
+.comments-box{margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--cream3)}
+.comment-item{display:flex;gap:.6rem;margin-bottom:.7rem}
+.comment-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;overflow:hidden}
+.comment-bubble{background:var(--cream2);border-radius:12px;padding:.5rem .8rem;flex:1}
+.comment-author{font-weight:600;font-size:12.5px}
+.comment-text{font-size:13px;color:var(--ink2);line-height:1.4}
+.comment-time{font-size:11px;color:var(--ink3);margin-top:2px}
+.comment-input-row{display:flex;gap:.5rem;margin-top:.4rem}
+.comment-input{flex:1;padding:.5rem .8rem;border:1px solid var(--cream3);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--surface);color:var(--ink1)}
+.comment-input:focus{outline:none;border-color:var(--accent2)}
+.comment-send-btn{background:var(--accent2);color:#fff;border:none;border-radius:20px;padding:.5rem 1rem;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.comment-send-btn:disabled{opacity:.6;cursor:not-allowed}
 
 /* TRENDING SIDEBAR — hidden on mobile */
 .layout{display:grid;grid-template-columns:1fr 280px;gap:1.5rem;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 5rem}
@@ -477,7 +491,7 @@ async function publishPost(){
   btn.textContent='Publicando...';btn.disabled=true;
   const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic});
   btn.textContent='Publicar';btn.disabled=false;
-  if(error){showToast('No pudimos publicar tu mensaje');return;}
+  if(error){showToast(error.message||'No pudimos publicar tu mensaje');return;}
   ta.value='';
   showToast('¡Publicado! ✓');
   loadRealPosts();
@@ -501,6 +515,7 @@ function renderRealPost(p){
   const color=author.color||'#2d6b4a';
   const isMine=CURRENT_VIEWER_ID&&p.author_id===CURRENT_VIEWER_ID;
   const likeCount=p._likeCount||0;
+  const commentCount=p._commentCount||0;
   return `
     <div class="post">
       <div class="post-header">
@@ -510,6 +525,7 @@ function renderRealPost(p){
           <div class="post-role">${author.role||''}</div>
           <div class="post-time">${timeAgo(p.created_at)}</div>
         </div>
+        ${CURRENT_VIEWER_ID&&!isMine?`<span class="report-link" title="Reportar" onclick="reportPost('${p.id}')">🚩</span>`:''}
         ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
       <div class="post-body">${p.body}</div>
@@ -518,8 +534,26 @@ function renderRealPost(p){
           <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
           ${likeCount>0?likeCount+' ':''}Me gusta
         </button>
+        <button class="action-btn" onclick="toggleComments('${p.id}')">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          ${commentCount>0?commentCount+' ':''}Comentar
+        </button>
       </div>
+      <div class="comments-box" id="comments-${p.id}" style="display:${p._commentsOpen?'block':'none'}">${p._commentsOpen?renderCommentsBox(p):''}</div>
     </div>`;
+}
+
+function renderCommentsBox(p){
+  if(!p._comments){
+    return '<div style="font-size:12.5px;color:var(--ink3)">Cargando comentarios...</div>';
+  }
+  const list=p._comments.map(commentBubble).join('')||'<div style="font-size:12.5px;color:var(--ink3)">Aún no hay comentarios.</div>';
+  const inputRow=CURRENT_VIEWER_ID?`
+      <div class="comment-input-row">
+        <input type="text" class="comment-input" id="comment-input-${p.id}" placeholder="Escribe un comentario..." maxlength="500" onkeydown="if(event.key==='Enter')submitComment('${p.id}')">
+        <button class="comment-send-btn" onclick="submitComment('${p.id}')">Enviar</button>
+      </div>`:`<div style="font-size:12.5px;color:var(--ink3);margin-top:.4rem"><a href="login.html">Inicia sesión</a> para comentar</div>`;
+  return list+inputRow;
 }
 
 function renderRealPostsFiltered(){
@@ -551,11 +585,18 @@ async function loadRealPosts(){
       });
     }catch(e){}
 
+    let commentCountByPost={};
+    try{
+      const {data:comments}=await _sb2.from('comments').select('post_id').in('post_id',postIds);
+      (comments||[]).forEach(c=>{commentCountByPost[c.post_id]=(commentCountByPost[c.post_id]||0)+1;});
+    }catch(e){}
+
     REAL_POSTS=data.map(p=>({
       ...p,
       _author:byId[p.author_id],
       _likeCount:(likesByPost[p.id]||{}).count||0,
-      _liked:(likesByPost[p.id]||{}).mine||false
+      _liked:(likesByPost[p.id]||{}).mine||false,
+      _commentCount:commentCountByPost[p.id]||0
     }));
     renderRealPostsFiltered();
   }catch(e){}
@@ -587,6 +628,85 @@ async function deleteRealPost(postId){
   REAL_POSTS=REAL_POSTS.filter(p=>p.id!==postId);
   renderRealPostsFiltered();
   showToast('Publicación eliminada');
+}
+
+async function reportPost(postId){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para reportar');return;}
+  const reason=prompt('¿Por qué reportas esta publicación?');
+  if(!reason||!reason.trim())return;
+  const {error}=await _sb2.from('reports').insert({reporter_id:CURRENT_VIEWER_ID,content_type:'post',content_id:postId,reason:reason.trim()});
+  if(error){showToast('No pudimos enviar el reporte');return;}
+  showToast('Reporte enviado. Gracias por avisarnos 🙏');
+}
+
+/* ── COMENTARIOS ── */
+function commentBubble(c){
+  const author=c._author||{};
+  const initials=(author.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const color=author.color||'#2d6b4a';
+  const isMine=CURRENT_VIEWER_ID&&c.author_id===CURRENT_VIEWER_ID;
+  return `
+    <div class="comment-item">
+      <div class="comment-av" style="background:${color}">${author.photo?`<img src="${author.photo}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="comment-bubble">
+        <div class="comment-author">${author.name||'Usuario'}${isMine?` <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${c.post_id}')">🗑️</span>`:''}</div>
+        <div class="comment-text">${c.body}</div>
+        <div class="comment-time">${timeAgo(c.created_at)}</div>
+      </div>
+    </div>`;
+}
+
+async function toggleComments(postId){
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(!post)return;
+  post._commentsOpen=!post._commentsOpen;
+  if(post._commentsOpen&&!post._comments){
+    renderRealPostsFiltered();
+    await loadComments(post);
+  } else {
+    renderRealPostsFiltered();
+  }
+}
+
+async function loadComments(post){
+  try{
+    const {data,error}=await _sb2.from('comments').select('*').eq('post_id',post.id).order('created_at',{ascending:true});
+    if(error)throw error;
+    const authorIds=[...new Set((data||[]).map(c=>c.author_id))];
+    let byId={};
+    if(authorIds.length){
+      const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
+      (authors||[]).forEach(a=>byId[a.id]=a);
+    }
+    post._comments=(data||[]).map(c=>({...c,_author:byId[c.author_id]}));
+  }catch(e){
+    post._comments=[];
+  }
+  renderRealPostsFiltered();
+}
+
+async function submitComment(postId){
+  const input=document.getElementById('comment-input-'+postId);
+  if(!input)return;
+  const body=input.value.trim();
+  if(body.length<1)return;
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(!post)return;
+  input.disabled=true;
+  const {error}=await _sb2.from('comments').insert({post_id:postId,author_id:CURRENT_VIEWER_ID,body});
+  if(error){input.disabled=false;showToast(error.message||'No pudimos publicar tu comentario');return;}
+  post._commentCount=(post._commentCount||0)+1;
+  await loadComments(post);
+}
+
+async function deleteComment(commentId,postId){
+  if(!confirm('¿Eliminar este comentario?'))return;
+  const {error}=await _sb2.from('comments').delete().eq('id',commentId);
+  if(error){showToast('No pudimos eliminar el comentario');return;}
+  const post=REAL_POSTS.find(p=>p.id===postId);
+  if(!post)return;
+  post._commentCount=Math.max(0,(post._commentCount||1)-1);
+  await loadComments(post);
 }
 
 /* MIEMBROS REALES DE LA COMUNIDAD */
