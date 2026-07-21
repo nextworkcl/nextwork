@@ -344,6 +344,14 @@ footer strong{color:rgba(255,255,255,.75)}
         <div id="my-opps-list"></div>
       </div>
 
+      <!-- MIS POSTULACIONES -->
+      <div id="my-apps-wrap" style="display:none">
+        <div class="section-head">
+          <h3>Mis postulaciones</h3>
+        </div>
+        <div id="my-apps-list"></div>
+      </div>
+
       <!-- MATCHES -->
       <div class="section-head">
         <h3>Tus matches</h3>
@@ -689,6 +697,7 @@ function renderDashboard(p){
       loadNotifications();
       loadProfileViewers();
       loadBlockedUsers();
+      loadMyApplications();
       return;
     }
   }
@@ -891,6 +900,7 @@ function timeAgo(iso){
   return'hace '+Math.floor(diff/86400)+'d';
 }
 const TYPE_LABELS={startup:'🚀 Startup',freelance:'⚡ Freelance',idea:'💡 Idea',collab:'🤝 Colaboración',equity:'📈 Equity'};
+let MY_OPPS=[];
 
 async function loadMyContent(){
   if(!currentUserId)return;
@@ -919,11 +929,26 @@ async function loadMyContent(){
 
   try{
     const {data:myOpps}=await _sb.from('opportunities').select('*').eq('author_id',currentUserId).order('created_at',{ascending:false});
-    const wrap=document.getElementById('my-opps-wrap');
-    const list=document.getElementById('my-opps-list');
-    if(myOpps&&myOpps.length){
-      list.innerHTML=myOpps.map(o=>`
-        <div class="opp-card">
+    const oppIds=(myOpps||[]).map(o=>o.id);
+    let countByOpp={};
+    if(oppIds.length){
+      try{
+        const {data:apps}=await _sb.from('applications').select('opportunity_id').in('opportunity_id',oppIds);
+        (apps||[]).forEach(a=>{countByOpp[a.opportunity_id]=(countByOpp[a.opportunity_id]||0)+1;});
+      }catch(e){}
+    }
+    MY_OPPS=(myOpps||[]).map(o=>({...o,_applicantCount:countByOpp[o.id]||0,_applicantsOpen:false,_applicants:null}));
+    renderMyOpps();
+  }catch(e){}
+}
+
+function renderMyOpps(){
+  const wrap=document.getElementById('my-opps-wrap');
+  const list=document.getElementById('my-opps-list');
+  if(MY_OPPS.length){
+    list.innerHTML=MY_OPPS.map(o=>`
+      <div class="opp-card" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;gap:1rem">
           <div class="opp-icon" style="background:#6366f1">${(TYPE_LABELS[o.type]||'💼').split(' ')[0]}</div>
           <div class="opp-info">
             <div class="opp-title">${escapeHtml(o.title)}</div>
@@ -931,11 +956,104 @@ async function loadMyContent(){
             <div class="opp-tags">${(o.skills||[]).slice(0,4).map(t=>`<span class="otag otag-s">${escapeHtml(t)}</span>`).join('')}</div>
           </div>
           <div class="opp-action"><button class="btn-apply" style="background:#fee2e2;color:#dc2626" onclick="deleteMyOpp('${o.id}')">Eliminar</button></div>
-        </div>`).join('');
-      wrap.style.display='block';
-    } else {
-      wrap.style.display='none';
+        </div>
+        <button class="req-btn-accept" style="margin-top:.7rem" onclick="toggleApplicants('${o.id}')">👥 ${o._applicantCount} postulante${o._applicantCount===1?'':'s'} ${o._applicantsOpen?'▲':'▼'}</button>
+        <div id="applicants-${o.id}" style="margin-top:.5rem">${o._applicantsOpen?renderApplicantsBox(o):''}</div>
+      </div>`).join('');
+    wrap.style.display='block';
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+function renderApplicantsBox(o){
+  if(!o._applicants){
+    return '<div style="font-size:12.5px;color:var(--ink3)">Cargando postulantes...</div>';
+  }
+  if(!o._applicants.length){
+    return '<div style="font-size:12.5px;color:var(--ink3)">Aún no hay postulantes.</div>';
+  }
+  return o._applicants.map(a=>{
+    const p=a._applicant||{id:a.applicant_id,name:'Usuario'};
+    const initials=getInitials(p.name);
+    const color=p.color||getColor(p.name);
+    const statusBadge=a.status==='pending'?'':
+      `<span style="display:inline-block;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;margin-top:.5rem;background:${a.status==='accepted'?'#dcfce7':'var(--cream2)'};color:${a.status==='accepted'?'#166534':'var(--ink3)'}">${a.status==='accepted'?'✓ Aceptado':'No aceptado'}</span>`;
+    return `<div class="match-card" style="margin-bottom:.5rem">
+      ${personChip(p,initials,color)}
+      ${a.message?`<div style="font-size:12.5px;color:var(--ink2);margin-top:.4rem;white-space:pre-line">${escapeHtml(a.message)}</div>`:''}
+      ${a.status==='pending'?`
+        <div class="req-actions">
+          <button class="req-btn-accept" onclick="respondToApplication('${a.id}','${o.id}',true)">Aceptar</button>
+          <button class="req-btn-decline" onclick="respondToApplication('${a.id}','${o.id}',false)">Rechazar</button>
+        </div>`:statusBadge}
+    </div>`;
+  }).join('');
+}
+
+async function toggleApplicants(oppId){
+  const o=MY_OPPS.find(x=>x.id===oppId);
+  if(!o)return;
+  o._applicantsOpen=!o._applicantsOpen;
+  if(o._applicantsOpen&&!o._applicants){
+    renderMyOpps();
+    await loadApplicantsFor(o);
+  } else {
+    renderMyOpps();
+  }
+}
+
+async function loadApplicantsFor(o){
+  try{
+    const {data}=await _sb.from('applications').select('*').eq('opportunity_id',o.id).order('created_at',{ascending:false});
+    const applicantIds=[...new Set((data||[]).map(a=>a.applicant_id))];
+    let byId={};
+    if(applicantIds.length){
+      const {data:profiles}=await _sb.from('perfiles_publicos').select('*').in('id',applicantIds);
+      (profiles||[]).forEach(p=>byId[p.id]=p);
     }
+    o._applicants=(data||[]).map(a=>({...a,_applicant:byId[a.applicant_id]}));
+  }catch(e){
+    o._applicants=[];
+  }
+  renderMyOpps();
+}
+
+async function respondToApplication(appId,oppId,accept){
+  const {error}=await _sb.from('applications')
+    .update({status:accept?'accepted':'rejected',responded_at:new Date().toISOString()})
+    .eq('id',appId);
+  if(error){showToast('No pudimos procesar la postulación');return;}
+  showToast(accept?'Postulación aceptada ✓':'Postulación rechazada');
+  const o=MY_OPPS.find(x=>x.id===oppId);
+  if(o)await loadApplicantsFor(o);
+}
+
+async function loadMyApplications(){
+  if(!currentUserId)return;
+  try{
+    const {data:apps}=await _sb.from('applications').select('*').eq('applicant_id',currentUserId).order('created_at',{ascending:false});
+    const wrap=document.getElementById('my-apps-wrap');
+    const list=document.getElementById('my-apps-list');
+    if(!apps||!apps.length){wrap.style.display='none';return;}
+    const oppIds=[...new Set(apps.map(a=>a.opportunity_id))];
+    const {data:opps}=await _sb.from('opportunities').select('id,title,type').in('id',oppIds);
+    const oppById={};(opps||[]).forEach(o=>oppById[o.id]=o);
+    list.innerHTML=apps.map(a=>{
+      const o=oppById[a.opportunity_id]||{title:'(oportunidad eliminada)',type:null};
+      const statusLabel=a.status==='pending'?'⏳ Pendiente':a.status==='accepted'?'✓ Aceptada':'No aceptada';
+      const statusColor=a.status==='pending'?'#92400e':a.status==='accepted'?'#166534':'var(--ink3)';
+      const statusBg=a.status==='pending'?'#fef3c7':a.status==='accepted'?'#dcfce7':'var(--cream2)';
+      return `<div class="opp-card">
+        <div class="opp-icon" style="background:#6366f1">${(TYPE_LABELS[o.type]||'💼').split(' ')[0]}</div>
+        <div class="opp-info">
+          <div class="opp-title">${escapeHtml(o.title)}</div>
+          <div class="opp-company">${timeAgo(a.created_at)}</div>
+        </div>
+        <div class="opp-action"><span style="display:inline-block;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;background:${statusBg};color:${statusColor}">${statusLabel}</span></div>
+      </div>`;
+    }).join('');
+    wrap.style.display='block';
   }catch(e){}
 }
 
@@ -1020,6 +1138,9 @@ function notifText(n){
   if(n.type==='post_like')return `${name} le dio like a tu publicación`;
   if(n.type==='post_comment')return `${name} comentó tu publicación`;
   if(n.type==='message')return `${name} te envió un mensaje`;
+  if(n.type==='application_received')return `${name} postuló a tu oportunidad`;
+  if(n.type==='application_accepted')return `¡Tu postulación fue aceptada! 🎉`;
+  if(n.type==='application_rejected')return `Tu postulación no fue aceptada`;
   return 'Nueva notificación';
 }
 function notifLink(n){
@@ -1027,6 +1148,8 @@ function notifLink(n){
   if(n.type==='connection_accepted')return `perfil-publico.html?id=${n.actor_id}`;
   if(n.type==='post_like'||n.type==='post_comment')return 'publicaciones.html';
   if(n.type==='message')return `mensajes.html?with=${n.actor_id}`;
+  if(n.type==='application_received')return '#my-opps-wrap';
+  if(n.type==='application_accepted'||n.type==='application_rejected')return '#my-apps-wrap';
   return '#';
 }
 

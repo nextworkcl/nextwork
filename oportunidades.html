@@ -114,6 +114,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop
 .card-btn:hover{background:var(--accent2);transform:translateY(-1px)}
 .featured .card-btn{background:var(--glow);color:var(--accent)}
 .featured .card-btn:hover{opacity:.9;transform:translateY(-1px)}
+.card-btn-outline{width:100%;padding:9px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent3);border-radius:20px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.card-btn-outline:hover{background:var(--glow2)}
+.apply-status-badge{width:100%;text-align:center;padding:9px;border-radius:20px;font-size:12.5px;font-weight:600}
+.apply-status-pending{background:#fef3c7;color:#92400e}
+.apply-status-accepted{background:#dcfce7;color:#166534}
+.apply-status-rejected{background:var(--cream2);color:var(--ink3)}
 
 /* REAL PEOPLE (perfiles reales) */
 .section-label-row{display:flex;align-items:center;gap:9px;max-width:1200px;margin:2rem auto 1rem;padding:0 2rem}
@@ -351,6 +357,22 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 </div>
 
+<div class="pub-overlay" id="apply-overlay" onclick="if(event.target===this)closeApplyModal()">
+  <div class="pub-box">
+    <div class="pub-head">
+      <h3 id="apply-title">Postular</h3>
+      <button class="pub-close" onclick="closeApplyModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="pub-body">
+      <div id="apply-err" class="pub-err"></div>
+      <div class="pub-group"><label>Mensaje para quien publicó (opcional)</label><textarea id="apply-message" maxlength="1000" placeholder="Cuenta brevemente por qué te interesa y qué puedes aportar"></textarea></div>
+    </div>
+    <div class="pub-foot">
+      <button class="card-btn" id="apply-btn" style="width:auto;padding:10px 24px" onclick="submitApplication()">Enviar postulación →</button>
+    </div>
+  </div>
+</div>
+
 <footer>
   <div class="footer-top">
     <a href="index.html" class="footer-brand">
@@ -575,6 +597,38 @@ function openPublishModal(){
 function closePublishModal(){
   document.getElementById('pub-overlay').classList.remove('open');
 }
+
+let applyingToOppId=null;
+function openApplyModal(oppId,title){
+  if(!CURRENT_VIEWER_ID){
+    window.location.href='login.html';
+    return;
+  }
+  applyingToOppId=oppId;
+  document.getElementById('apply-title').textContent='Postular a: '+title;
+  document.getElementById('apply-message').value='';
+  document.getElementById('apply-err').style.display='none';
+  document.getElementById('apply-overlay').classList.add('open');
+}
+function closeApplyModal(){
+  document.getElementById('apply-overlay').classList.remove('open');
+}
+async function submitApplication(){
+  const errEl=document.getElementById('apply-err');
+  const btn=document.getElementById('apply-btn');
+  errEl.style.display='none';
+  const message=document.getElementById('apply-message').value.trim();
+  btn.textContent='Enviando...';btn.disabled=true;
+  const {data,error}=await _sb2.from('applications').insert({opportunity_id:applyingToOppId,applicant_id:CURRENT_VIEWER_ID,message:message||null}).select().single();
+  btn.textContent='Enviar postulación →';btn.disabled=false;
+  if(error){errEl.textContent=error.message||'No pudimos enviar tu postulación';errEl.style.display='block';return;}
+  MY_APPLICATIONS[applyingToOppId]=data;
+  closeApplyModal();
+  renderRealOpportunitiesFiltered();
+  const t=document.getElementById('toast');
+  t.textContent='¡Postulación enviada! ✓';t.className='toast show success';
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3500);
+}
 async function publishOpportunity(){
   const errEl=document.getElementById('pub-err');
   errEl.style.display='none';
@@ -614,11 +668,24 @@ async function publishOpportunity(){
 }
 
 const TYPE_LABELS={startup:'🚀 Startup',freelance:'⚡ Freelance',idea:'💡 Idea',collab:'🤝 Colaboración',equity:'📈 Equity'};
+const APPLY_STATUS_LABELS={pending:'⏳ Postulación enviada',accepted:'✓ Postulación aceptada',rejected:'Postulación no aceptada'};
 let REAL_OPPS=[];
+let MY_APPLICATIONS={}; /* opportunity_id -> application row */
 
 function renderRealOpportunity(o){
   const author=o._author||{};
   const isMine=CURRENT_VIEWER_ID&&o.author_id===CURRENT_VIEWER_ID;
+  const myApp=MY_APPLICATIONS[o.id];
+  let actionHtml;
+  if(isMine){
+    actionHtml=`<a href="dashboard.html#my-opps-wrap" class="card-btn-outline" style="display:block;text-align:center;text-decoration:none">👥 ${o._applicantCount||0} postulante${o._applicantCount===1?'':'s'}</a>`;
+  } else if(myApp){
+    actionHtml=`<div class="apply-status-badge apply-status-${myApp.status}">${APPLY_STATUS_LABELS[myApp.status]}</div>`;
+  } else if(CURRENT_VIEWER_ID){
+    actionHtml=`<button class="card-btn" onclick="openApplyModal('${o.id}','${escapeHtml(o.title).replace(/'/g,"\\'")}')">Postular →</button>`;
+  } else {
+    actionHtml=`<button class="card-btn" onclick="window.location.href='login.html'">Inicia sesión para postular</button>`;
+  }
   return `
     <div class="opp-card">
       <div class="card-top">
@@ -633,7 +700,10 @@ function renderRealOpportunity(o){
       <div class="card-meta">
         <span>Por <a href="perfil-publico.html?id=${o.author_id}" style="color:var(--accent2);font-weight:500">${escapeHtml(author.name||'Usuario')}</a></span>
       </div>
-      <button class="card-btn" onclick="window.location.href='perfil-publico.html?id=${o.author_id}'">Ver perfil y conectar →</button>
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        ${actionHtml}
+        ${!isMine?`<a href="perfil-publico.html?id=${o.author_id}" class="card-btn-outline" style="display:block;text-align:center;text-decoration:none">Ver perfil</a>`:''}
+      </div>
     </div>`;
 }
 
@@ -678,7 +748,24 @@ async function loadRealOpportunities(){
     const authorIds=[...new Set(visible.map(o=>o.author_id))];
     const {data:authors}=await _sb2.from('perfiles_publicos').select('*').in('id',authorIds);
     const byId={};(authors||[]).forEach(a=>byId[a.id]=a);
-    REAL_OPPS=visible.map(o=>({...o,_author:byId[o.author_id]}));
+
+    let applicantCounts={};
+    if(CURRENT_VIEWER_ID){
+      const myOppIds=visible.filter(o=>o.author_id===CURRENT_VIEWER_ID).map(o=>o.id);
+      if(myOppIds.length){
+        try{
+          const {data:apps}=await _sb2.from('applications').select('opportunity_id').in('opportunity_id',myOppIds);
+          (apps||[]).forEach(a=>{applicantCounts[a.opportunity_id]=(applicantCounts[a.opportunity_id]||0)+1;});
+        }catch(e){}
+      }
+      try{
+        const {data:myApps}=await _sb2.from('applications').select('*').eq('applicant_id',CURRENT_VIEWER_ID);
+        MY_APPLICATIONS={};
+        (myApps||[]).forEach(a=>{MY_APPLICATIONS[a.opportunity_id]=a;});
+      }catch(e){}
+    }
+
+    REAL_OPPS=visible.map(o=>({...o,_author:byId[o.author_id],_applicantCount:applicantCounts[o.id]||0}));
     renderRealOpportunitiesFiltered();
   }catch(e){}
 }
