@@ -452,7 +452,9 @@ function applyFilters(){
    NextWork", "Santiago, Chile"), no un enum fijo como los datos de ejemplo.
    Por eso el filtro de Rol/Ciudad matchea por palabras clave (sinonimos en
    español e ingles) en vez de igualdad exacta. El filtro "Busca colaborar en"
-   SI se deja fuera: no existe un campo equivalente en el perfil real todavia */
+   SI se deja fuera: no existe un campo equivalente en el perfil real todavia.
+   La busqueda de texto libre usa el RPC search_profiles (Postgres full-text
+   search + trigram para tolerar errores de tipeo), no un simple .includes() */
 const REAL_ROLE_KEYWORDS={
   'Fundador':['fundador','founder','ceo','cofounder','co-founder'],
   'Desarrollador':['desarrollador','developer','engineer','dev ','ingenier','programador','software'],
@@ -470,23 +472,30 @@ function realKeywordsFor(map,value){
   return map[value]||[value.toLowerCase()];
 }
 
-function renderRealFiltered(){
+let searchReqId=0;
+async function renderRealFiltered(){
   const wrap=document.getElementById('real-profiles-wrap');
   const grid=document.getElementById('real-profiles-grid');
   if(!wrap||!grid||!REAL_PROFILES.length)return;
-  const q=query.toLowerCase();
+  const q=(query||'').trim();
   const checkedRoles=[...document.querySelectorAll('.filter-card:nth-child(1) input:checked')].map(c=>c.value);
   if(activeChipRole&&!checkedRoles.includes(activeChipRole))checkedRoles.push(activeChipRole);
   const checkedCities=[...document.querySelectorAll('.filter-card:nth-child(2) input:checked')].map(c=>c.value);
+  const reqId=++searchReqId;
 
-  const filtered=REAL_PROFILES.filter(p=>{
-    const skills=Array.isArray(p.skills)?p.skills.join(' '):'';
-    const matchQ=!q||(p.name||'').toLowerCase().includes(q)
-      ||(p.role||'').toLowerCase().includes(q)
-      ||(p.bio||'').toLowerCase().includes(q)
-      ||(p.location||'').toLowerCase().includes(q)
-      ||skills.toLowerCase().includes(q);
+  let pool=REAL_PROFILES;
+  if(q){
+    let data=null,error=null;
+    try{
+      ({data,error}=await _sb2.rpc('search_profiles',{query:q}));
+    }catch(e){error=e;}
+    if(reqId!==searchReqId)return; /* una busqueda mas nueva ya esta en curso */
+    if(error||!data){wrap.style.display='none';return;}
+    const rankById={};data.forEach((r,i)=>{rankById[r.id]=i;});
+    pool=REAL_PROFILES.filter(p=>rankById[p.id]!==undefined).sort((a,b)=>rankById[a.id]-rankById[b.id]);
+  }
 
+  const filtered=pool.filter(p=>{
     const role=(p.role||'').toLowerCase();
     const matchRole=!checkedRoles.length||checkedRoles.some(r=>
       realKeywordsFor(REAL_ROLE_KEYWORDS,r).some(k=>role.includes(k)));
@@ -495,7 +504,7 @@ function renderRealFiltered(){
     const matchCity=!checkedCities.length||checkedCities.some(c=>
       realKeywordsFor(REAL_CITY_KEYWORDS,c).some(k=>loc.includes(k)));
 
-    return matchQ&&matchRole&&matchCity;
+    return matchRole&&matchCity;
   });
   if(!filtered.length){
     wrap.style.display='none';
