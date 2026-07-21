@@ -144,6 +144,32 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.94);backdrop-
 .person-role{font-size:11.5px;color:var(--ink3)}
 .person-line{font-size:12.5px;color:var(--ink2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
+/* GRUPO */
+.group-back{font-size:12.5px;color:var(--accent2);margin-bottom:.8rem;display:inline-block}
+.group-banner{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.4rem 1.6rem;margin-bottom:1.2rem}
+.group-banner-top{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem}
+.group-banner-av{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff;flex-shrink:0}
+.group-banner-name{font-family:'DM Serif Display',serif;font-size:1.4rem;line-height:1.2}
+.group-banner-badges{display:flex;gap:6px;margin-top:5px}
+.cat-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;padding:2px 8px;border-radius:6px;background:var(--glow2);color:var(--accent2);border:1px solid rgba(45,107,74,.18)}
+.priv-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--cream2);color:var(--ink3)}
+.group-banner-desc{font-size:13.5px;color:var(--ink2);line-height:1.6;margin-bottom:.8rem}
+.group-banner-meta{font-size:12px;color:var(--ink3);margin-bottom:1rem}
+.group-banner-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.group-action-btn{background:var(--accent);color:var(--glow);border:none;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.group-action-btn:hover{background:var(--accent2)}
+.group-action-btn.outline{background:transparent;color:var(--accent2);border:1.5px solid var(--accent3)}
+.group-action-btn.outline:hover{background:var(--glow2)}
+.group-action-btn:disabled{opacity:.6;cursor:default}
+.admin-panel{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--cream3)}
+.admin-panel h4{font-size:13px;font-weight:600;margin-bottom:.6rem;color:var(--ink)}
+.admin-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--cream3);font-size:13px}
+.admin-row:last-child{border-bottom:none}
+.admin-row-name{flex:1}
+.admin-row-btn{font-size:11.5px;padding:4px 10px;border-radius:14px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.admin-row-btn.approve{background:var(--accent2);color:#fff}
+.admin-row-btn.reject{background:var(--cream2);color:var(--ink2)}
+
 footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
 .footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
 .footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-.4px;color:rgba(255,255,255,.85);align-self:start}
@@ -177,6 +203,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <a href="buscar.html">Explorar perfiles</a>
       <a href="oportunidades.html">Oportunidades</a>
       <a href="publicaciones.html" class="active">Comunidad</a>
+      <a href="grupos.html">Grupos</a>
       <a href="mensajes.html">Mensajes</a>
     </div>
     <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
@@ -188,6 +215,8 @@ footer strong{color:rgba(255,255,255,.75)}
   <h1>Publicaciones</h1>
   <p>Lo que está construyendo, aprendiendo y preguntando la comunidad.</p>
 </div>
+
+<div id="group-wrap" style="display:none;max-width:680px;margin:1.5rem auto 0;padding:0 1.5rem"></div>
 
 <div class="layout">
   <!-- FEED -->
@@ -229,7 +258,7 @@ footer strong{color:rgba(255,255,255,.75)}
     <!-- PUBLICACIONES REALES -->
     <div id="real-posts-wrap" style="display:none">
       <div class="section-label-row">
-        <h3>Publicaciones de la comunidad</h3>
+        <h3 id="feed-section-title">Publicaciones de la comunidad</h3>
         <span class="live-badge"><span class="dot"></span>EN VIVO</span>
         <select id="feed-sort-select" class="feed-sort-select" onchange="feedSort=this.value;renderRealPostsFiltered()">
           <option value="relevant">Relevantes</option>
@@ -242,7 +271,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <div id="real-feed"></div>
     </div>
 
-    <div class="section-label-row">
+    <div class="section-label-row" id="example-posts-label">
       <h3>Publicaciones de ejemplo</h3>
       <span class="preview-badge">VISTA PREVIA</span>
     </div>
@@ -251,7 +280,7 @@ footer strong{color:rgba(255,255,255,.75)}
   </div>
 
   <!-- SIDEBAR -->
-  <div>
+  <div id="sidebar-col">
     <div class="trending-box">
       <h3>Trending en Nextwork</h3>
       <div class="trend-item">
@@ -468,9 +497,9 @@ const _sb2=window.supabase.createClient(
 (async()=>{
   const {data:{session}}=await _sb2.auth.getSession();
   const el=document.getElementById('nav-auth');
-  if(!el||!session)return;
+  if(!el||!session){initGroupMode();return;}
   const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
-  if(!p)return;
+  if(!p){initGroupMode();return;}
   const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
   const badge=`<span id="nav-notif-badge" style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:${count>0?'flex':'none'};align-items:center;justify-content:center">${count>9?'9+':count}</span>`;
@@ -487,6 +516,7 @@ const _sb2=window.supabase.createClient(
       el2.style.display='flex';
     })
     .subscribe();
+  initGroupMode();
 })();
 
 /* ── COMPOSER REAL ── */
@@ -661,7 +691,7 @@ async function publishPost(){
   if(body.length<5){showToast('Escribe al menos 5 caracteres');return;}
   const mentions=extractMentionIds('composer-textarea',body);
   btn.textContent='Publicando...';btn.disabled=true;
-  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic,image:composerImage,mentions});
+  const {error}=await _sb2.from('posts').insert({author_id:session.user.id,body,topic,image:composerImage,mentions,group_id:GROUP_ID||null});
   btn.textContent='Publicar';btn.disabled=false;
   if(error){showToast(error.message||'No pudimos publicar tu mensaje');return;}
   ta.value='';
@@ -673,6 +703,186 @@ async function publishPost(){
 /* ── PUBLICACIONES REALES ── */
 let REAL_POSTS=[];
 let CURRENT_VIEWER_ID=null;
+const GROUP_ID=new URLSearchParams(window.location.search).get('group');
+let CURRENT_GROUP=null;
+let CURRENT_GROUP_MEMBERSHIP=null;
+const CAT_LABEL={general:'General',startups:'🚀 Startups',tecnologia:'💻 Tecnología',diseno:'🎨 Diseño',inversion:'📈 Inversión',marketing:'📣 Marketing',producto:'🧩 Producto',ventas:'🤝 Ventas'};
+
+function groupInitials(name){
+  return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+async function initGroupMode(){
+  if(!GROUP_ID)return;
+  const rp=document.getElementById('real-people-wrap');if(rp)rp.style.display='none';
+  const ex=document.getElementById('example-posts-label');if(ex)ex.style.display='none';
+  const feed=document.getElementById('feed');if(feed)feed.style.display='none';
+  const sb=document.getElementById('sidebar-col');if(sb)sb.style.display='none';
+  const layout=document.querySelector('.layout');if(layout)layout.style.gridTemplateColumns='1fr';
+  const title=document.getElementById('feed-section-title');
+  const gw=document.getElementById('group-wrap');
+  if(gw)gw.style.display='block';
+
+  const {data:g,error}=await _sb2.from('groups').select('*').eq('id',GROUP_ID).single();
+  if(error||!g){
+    if(gw)gw.innerHTML='<div class="group-banner">Este grupo no existe o fue eliminado. <a href="grupos.html" style="color:var(--accent2)">Ver todos los grupos →</a></div>';
+    const composer=document.getElementById('composer');if(composer)composer.style.display='none';
+    return;
+  }
+  CURRENT_GROUP=g;
+  if(title)title.textContent=g.name;
+
+  if(CURRENT_VIEWER_ID){
+    const {data:m}=await _sb2.from('group_members').select('role,status').eq('group_id',GROUP_ID).eq('user_id',CURRENT_VIEWER_ID).maybeSingle();
+    CURRENT_GROUP_MEMBERSHIP=m||null;
+  }
+  renderGroupBanner();
+  loadRealPosts();
+}
+
+function renderGroupBanner(){
+  const g=CURRENT_GROUP;
+  const gw=document.getElementById('group-wrap');
+  if(!g||!gw)return;
+  const m=CURRENT_GROUP_MEMBERSHIP;
+  const isApproved=!!(m&&m.status==='approved');
+  const isAdmin=isApproved&&m.role==='admin';
+  const isPending=!!(m&&m.status==='pending');
+
+  let actionHtml;
+  if(!CURRENT_VIEWER_ID){
+    actionHtml=`<a href="login.html"><button class="group-action-btn">Inicia sesión para unirte</button></a>`;
+  } else if(isApproved){
+    actionHtml=`<button class="group-action-btn outline" onclick="leaveGroup()">Salir del grupo</button>`;
+  } else if(isPending){
+    actionHtml=`<button class="group-action-btn" disabled>Solicitud enviada — pendiente de aprobación</button>`;
+  } else {
+    actionHtml=`<button class="group-action-btn" onclick="joinGroupFromFeed()">${g.is_private?'Solicitar unirse':'Unirse'}</button>`;
+  }
+
+  const composer=document.getElementById('composer');
+  if(composer)composer.style.display=isApproved?'flex':'none';
+
+  gw.innerHTML=`
+    <a class="group-back" href="grupos.html">← Todos los grupos</a>
+    <div class="group-banner">
+      <div class="group-banner-top">
+        <div class="group-banner-av" style="background:${g.color||'#2d6b4a'}">${groupInitials(g.name)}</div>
+        <div>
+          <div class="group-banner-name">${escapeHtml(g.name)}</div>
+          <div class="group-banner-badges">
+            <span class="cat-badge">${CAT_LABEL[g.category]||g.category}</span>
+            <span class="priv-badge">${g.is_private?'🔒 Privado':'🌐 Público'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="group-banner-desc">${escapeHtml(g.description)||'Sin descripción todavía.'}</div>
+      <div class="group-banner-meta">${g.member_count} miembro${g.member_count!==1?'s':''}</div>
+      <div class="group-banner-actions">
+        ${actionHtml}
+        ${isAdmin?`<button class="group-action-btn outline" onclick="toggleAdminPanel()">⚙️ Administrar</button>`:''}
+      </div>
+      <div id="group-admin-panel" style="display:none"></div>
+    </div>
+    ${!isApproved?`<div class="composer-locked" style="margin-bottom:1.2rem">${g.is_private?'Este es un grupo privado. Únete para ver y publicar en su feed.':'Únete a este grupo para poder publicar en su feed.'}</div>`:''}`;
+}
+
+async function joinGroupFromFeed(){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para unirte');return;}
+  const {error}=await _sb2.from('group_members').insert({group_id:GROUP_ID,user_id:CURRENT_VIEWER_ID});
+  if(error){showToast(error.message||'No pudimos procesar tu solicitud');return;}
+  CURRENT_GROUP_MEMBERSHIP={role:'member',status:CURRENT_GROUP.is_private?'pending':'approved'};
+  if(!CURRENT_GROUP.is_private){
+    CURRENT_GROUP.member_count=(CURRENT_GROUP.member_count||0)+1;
+    loadRealPosts();
+  }
+  showToast(CURRENT_GROUP.is_private?'Solicitud enviada ✓':'¡Te uniste al grupo! ✓');
+  renderGroupBanner();
+}
+
+async function leaveGroup(){
+  if(!confirm('¿Salir de este grupo?'))return;
+  const {error}=await _sb2.from('group_members').delete().eq('group_id',GROUP_ID).eq('user_id',CURRENT_VIEWER_ID);
+  if(error){showToast(error.message||'No pudimos procesar tu salida');return;}
+  CURRENT_GROUP_MEMBERSHIP=null;
+  CURRENT_GROUP.member_count=Math.max(0,(CURRENT_GROUP.member_count||1)-1);
+  showToast('Saliste del grupo');
+  renderGroupBanner();
+  loadRealPosts();
+}
+
+function toggleAdminPanel(){
+  const panel=document.getElementById('group-admin-panel');
+  if(!panel)return;
+  if(panel.style.display==='block'){panel.style.display='none';return;}
+  panel.style.display='block';
+  loadGroupAdminData();
+}
+
+async function loadGroupAdminData(){
+  const panel=document.getElementById('group-admin-panel');
+  if(!panel)return;
+  panel.innerHTML='<div class="admin-panel"><h4>Cargando...</h4></div>';
+  const {data:members}=await _sb2.from('group_members').select('user_id,role,status').eq('group_id',GROUP_ID);
+  const ids=[...new Set((members||[]).map(m=>m.user_id))];
+  let byId={};
+  if(ids.length){
+    const {data:profs}=await _sb2.from('perfiles_publicos').select('*').in('id',ids);
+    (profs||[]).forEach(p=>byId[p.id]=p);
+  }
+  const pending=(members||[]).filter(m=>m.status==='pending');
+  const approved=(members||[]).filter(m=>m.status==='approved');
+
+  const pendingHtml=pending.length?pending.map(m=>{
+    const p=byId[m.user_id]||{};
+    return `<div class="admin-row"><span class="admin-row-name">${escapeHtml(p.name||'Usuario')}</span>
+      <button class="admin-row-btn approve" onclick="approveGroupMember('${m.user_id}')">Aprobar</button>
+      <button class="admin-row-btn reject" onclick="rejectGroupMember('${m.user_id}')">Rechazar</button></div>`;
+  }).join(''):'<div style="font-size:12.5px;color:var(--ink3)">No hay solicitudes pendientes.</div>';
+
+  const membersHtml=approved.map(m=>{
+    const p=byId[m.user_id]||{};
+    const isSelf=m.user_id===CURRENT_VIEWER_ID;
+    return `<div class="admin-row"><span class="admin-row-name">${escapeHtml(p.name||'Usuario')}${m.role==='admin'?' · Admin':''}</span>
+      ${isSelf?'':`<button class="admin-row-btn reject" onclick="kickGroupMember('${m.user_id}')">Expulsar</button>`}</div>`;
+  }).join('')||'<div style="font-size:12.5px;color:var(--ink3)">Sin miembros.</div>';
+
+  panel.innerHTML=`<div class="admin-panel">
+    <h4>Solicitudes pendientes (${pending.length})</h4>
+    ${pendingHtml}
+    <h4 style="margin-top:1rem">Miembros (${approved.length})</h4>
+    ${membersHtml}
+  </div>`;
+}
+
+async function approveGroupMember(userId){
+  const {error}=await _sb2.from('group_members').update({status:'approved'}).eq('group_id',GROUP_ID).eq('user_id',userId);
+  if(error){showToast(error.message||'No pudimos aprobar la solicitud');return;}
+  CURRENT_GROUP.member_count=(CURRENT_GROUP.member_count||0)+1;
+  showToast('Solicitud aprobada ✓');
+  renderGroupBanner();
+  document.getElementById('group-admin-panel').style.display='block';
+  loadGroupAdminData();
+}
+
+async function rejectGroupMember(userId){
+  const {error}=await _sb2.from('group_members').delete().eq('group_id',GROUP_ID).eq('user_id',userId);
+  if(error){showToast(error.message||'No pudimos rechazar la solicitud');return;}
+  showToast('Solicitud rechazada');
+  document.getElementById('group-admin-panel').style.display='block';
+  loadGroupAdminData();
+}
+
+async function kickGroupMember(userId){
+  if(!confirm('¿Expulsar a este miembro del grupo?'))return;
+  const {error}=await _sb2.from('group_members').delete().eq('group_id',GROUP_ID).eq('user_id',userId);
+  if(error){showToast(error.message||'No pudimos expulsar a este miembro');return;}
+  CURRENT_GROUP.member_count=Math.max(0,(CURRENT_GROUP.member_count||1)-1);
+  showToast('Miembro expulsado');
+  renderGroupBanner();
+  document.getElementById('group-admin-panel').style.display='block';
+  loadGroupAdminData();
+}
 
 function timeAgo(iso){
   const diff=(Date.now()-new Date(iso).getTime())/1000;
@@ -763,7 +973,9 @@ function renderRealPostsFiltered(){
 
 async function loadRealPosts(){
   try{
-    const {data,error}=await _sb2.from('posts').select('*').order('created_at',{ascending:false}).limit(50);
+    let query=_sb2.from('posts').select('*').order('created_at',{ascending:false}).limit(50);
+    query=GROUP_ID?query.eq('group_id',GROUP_ID):query.is('group_id',null);
+    const {data,error}=await query;
     if(error||!data)return;
 
     let blockedIds=new Set();
@@ -822,6 +1034,7 @@ function subscribeToNewPosts(){
   POSTS_CHANNEL=_sb2.channel('posts-feed')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},(payload)=>{
       if(CURRENT_VIEWER_ID&&payload.new.author_id===CURRENT_VIEWER_ID)return;
+      if((payload.new.group_id||null)!==(GROUP_ID||null))return;
       NEW_POSTS_COUNT++;
       const banner=document.getElementById('new-posts-banner');
       const countEl=document.getElementById('new-posts-count');

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comunidades · Nextwork</title>
+<link rel="icon" type="image/png" href="logo.png?v=2">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;
+  --cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;
+  --accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;
+  --glow:#c8f0d8;--glow2:#e8f7ef;
+  --surface:#ffffff;--r:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark img,.footer-brand-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-links a.active{color:var(--accent2);font-weight:500}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.nav-cta:hover{background:var(--accent2)}
+
+.page-hero{background:var(--accent);padding:3.5rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 65% 40%,rgba(77,158,114,.18) 0%,transparent 60%);pointer-events:none}
+.page-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3rem);color:var(--glow);line-height:1.12;letter-spacing:-.8px;margin-bottom:.7rem}
+.page-hero p{color:rgba(200,240,216,.7);font-size:15px;max-width:460px;margin:0 auto 1.8rem;font-weight:300;line-height:1.7}
+.hero-stats{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap}
+.hstat{text-align:center;color:var(--glow)}
+.hstat-n{font-family:'DM Serif Display',serif;font-size:1.6rem;display:block;line-height:1.2}
+.hstat-l{font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.8px}
+
+.toolbar{background:var(--surface);border-bottom:1px solid var(--cream3);padding:.9rem 2rem;position:sticky;top:62px;z-index:90}
+.toolbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:200px;max-width:320px}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2;pointer-events:none}
+.search-wrap input{width:100%;padding:9px 12px 9px 36px;border-radius:22px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--accent3)}
+.filter-chips{display:flex;gap:7px;flex-wrap:wrap}
+.fchip{padding:6px 14px;border-radius:22px;border:1.5px solid var(--cream3);font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--ink2);transition:all .2s;user-select:none;white-space:nowrap}
+.fchip:hover{border-color:var(--accent3);color:var(--accent2)}
+.fchip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.toolbar-cta{margin-left:auto;background:var(--accent);color:var(--glow);border:none;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;white-space:nowrap}
+.toolbar-cta:hover{background:var(--accent2)}
+
+.main{max-width:1200px;margin:0 auto;padding:2rem 2rem 5rem}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.3rem}
+.group-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.5rem;transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column}
+.group-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(26,58,42,.08);border-color:var(--accent3)}
+.group-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.9rem}
+.group-av{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0;overflow:hidden}
+.group-name{font-family:'DM Serif Display',serif;font-size:1.05rem;letter-spacing:-.2px;line-height:1.25}
+.group-badges{display:flex;gap:5px;margin-top:3px}
+.cat-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;padding:2px 8px;border-radius:6px;background:var(--glow2);color:var(--accent2);border:1px solid rgba(45,107,74,.18)}
+.priv-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--cream2);color:var(--ink3)}
+.group-desc{font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:1rem;flex:1;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.group-meta{font-size:11.5px;color:var(--ink3);margin-bottom:1rem}
+.group-btn{width:100%;padding:10px;background:var(--accent);color:var(--glow);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:auto}
+.group-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.group-btn:disabled{opacity:.6;cursor:default;transform:none}
+.group-btn-outline{width:100%;padding:9px;background:transparent;color:var(--accent2);border:1.5px solid var(--accent3);border-radius:20px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:auto}
+.group-btn-outline:hover{background:var(--glow2)}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.empty-state h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ink2);margin-bottom:.5rem}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:12px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--accent2)}
+
+.pub-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,14,12,.55);align-items:center;justify-content:center;padding:1.2rem}
+.pub-overlay.open{display:flex}
+.pub-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.pub-head{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;border-bottom:1px solid var(--cream3)}
+.pub-head h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.pub-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--cream2);color:var(--ink2);font-size:17px;cursor:pointer}
+.pub-body{padding:1.2rem 1.4rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.pub-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.pub-group input,.pub-group textarea,.pub-group select{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none}
+.pub-group textarea{resize:vertical;min-height:70px}
+.pub-foot{padding:1rem 1.4rem;border-top:1px solid var(--cream3);display:flex;justify-content:flex-end}
+.pub-err{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none}
+
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+
+@media(max-width:640px){nav{padding:0 1.2rem}.toolbar{padding:.8rem 1rem}.main{padding:1.5rem 1rem 4rem}.page-hero{padding:2.5rem 1rem 2rem}}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="buscar.html">Explorar perfiles</a>
+    <a href="oportunidades.html">Oportunidades</a>
+    <a href="publicaciones.html">Comunidad</a>
+    <a href="grupos.html" class="active">Grupos</a>
+    <a href="mensajes.html">Mensajes</a>
+  </div>
+  <div class="nav-right">
+    <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Comunidades<br><em style="font-style:italic;color:rgba(200,240,216,.7)">para tu gente</em></h1>
+  <p>Grupos por industria e interés donde conectas, publicas y aprendes con quienes construyen lo mismo que tú.</p>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="stat-groups">0</span><span class="hstat-l">Grupos activos</span></div>
+    <div class="hstat"><span class="hstat-n" id="stat-members">0</span><span class="hstat-l">Miembros totales</span></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Buscar grupos…" oninput="renderGroupsFiltered()">
+    </div>
+    <div class="filter-chips" id="filter-chips">
+      <span class="fchip active" data-cat="todos" onclick="setCatFilter(this)">Todos</span>
+      <span class="fchip" data-cat="general">General</span>
+      <span class="fchip" data-cat="startups">🚀 Startups</span>
+      <span class="fchip" data-cat="tecnologia">💻 Tecnología</span>
+      <span class="fchip" data-cat="diseno">🎨 Diseño</span>
+      <span class="fchip" data-cat="inversion">📈 Inversión</span>
+      <span class="fchip" data-cat="marketing">📣 Marketing</span>
+      <span class="fchip" data-cat="producto">🧩 Producto</span>
+      <span class="fchip" data-cat="ventas">🤝 Ventas</span>
+    </div>
+    <button class="toolbar-cta" onclick="openCreateGroupModal()">+ Crear grupo</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="cards-grid" id="groups-grid">
+    <div class="empty-state"><h3>Cargando comunidades…</h3></div>
+  </div>
+</div>
+
+<!-- MODAL CREAR GRUPO -->
+<div class="pub-overlay" id="create-overlay" onclick="if(event.target===this)closeCreateGroupModal()">
+  <div class="pub-box">
+    <div class="pub-head">
+      <h3>Crear grupo</h3>
+      <button class="pub-close" onclick="closeCreateGroupModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="pub-body">
+      <div id="create-err" class="pub-err"></div>
+      <div class="pub-group"><label>Nombre</label><input type="text" id="cg-name" maxlength="80" placeholder="Ej. Fundadoras Fintech Chile"></div>
+      <div class="pub-group"><label>Descripción</label><textarea id="cg-desc" maxlength="500" placeholder="¿De qué se trata este grupo y a quién le sirve?"></textarea></div>
+      <div class="pub-group">
+        <label>Categoría</label>
+        <select id="cg-category">
+          <option value="general">General</option>
+          <option value="startups">🚀 Startups</option>
+          <option value="tecnologia">💻 Tecnología</option>
+          <option value="diseno">🎨 Diseño</option>
+          <option value="inversion">📈 Inversión</option>
+          <option value="marketing">📣 Marketing</option>
+          <option value="producto">🧩 Producto</option>
+          <option value="ventas">🤝 Ventas</option>
+        </select>
+      </div>
+      <div class="pub-group">
+        <label style="display:flex;align-items:center;gap:.5rem;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink2);cursor:pointer">
+          <input type="checkbox" id="cg-private" style="width:auto"> 🔒 Grupo privado (los nuevos miembros requieren aprobación)
+        </label>
+      </div>
+    </div>
+    <div class="pub-foot">
+      <button class="group-btn" id="cg-btn" style="width:auto;padding:10px 24px" onclick="submitCreateGroup()">Crear grupo →</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col">
+      <h4>General</h4>
+      <ul>
+        <li><a href="crear-perfil.html">Registrarse</a></li>
+        <li><a href="login.html">Iniciar sesión</a></li>
+        <li><a href="index.html#faq">Centro de ayuda</a></li>
+        <li><a href="index.html#how">Acerca de</a></li>
+        <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="desarrolladores.html">Desarrolladores</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar por Nextwork</h4>
+      <ul>
+        <li><a href="index.html#how">Cómo funciona</a></li>
+        <li><a href="index.html#match">Matching IA</a></li>
+        <li><a href="oportunidades.html">Oportunidades</a></li>
+        <li><a href="buscar.html">Buscar perfiles</a></li>
+        <li><a href="dashboard.html">Mi Dashboard</a></li>
+        <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Descubrir</h4>
+      <ul>
+        <li><a href="top-startups.html">Top Startups</a></li>
+        <li><a href="top-universidades.html">Top Universidades</a></li>
+        <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+        <li><a href="grupos.html">Comunidades</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+<script>
+const _sb2=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg,ok){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(ok?' success':'');
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+function getColor(seed){
+  const colors=['#1a3a2a','#1e4a8a','#4a1a5a','#6b3a1a','#1a4a4a','#2d6b4a','#3a2a1a','#6366f1'];
+  let h=0; for(const c of (seed||'')) h=(h*31+c.charCodeAt(0))%colors.length;
+  return colors[h];
+}
+const CAT_LABEL={general:'General',startups:'🚀 Startups',tecnologia:'💻 Tecnología',diseno:'🎨 Diseño',inversion:'📈 Inversión',marketing:'📣 Marketing',producto:'🧩 Producto',ventas:'🤝 Ventas'};
+
+let CURRENT_VIEWER_ID=null;
+let GROUPS=[];
+let MY_MEMBERSHIPS={}; /* group_id -> {role,status} */
+let activeCat='todos';
+
+function groupInitials(name){
+  return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function groupActionHtml(g){
+  if(!CURRENT_VIEWER_ID){
+    return `<a href="login.html"><button class="group-btn-outline">Inicia sesión para unirte</button></a>`;
+  }
+  const m=MY_MEMBERSHIPS[g.id];
+  if(m&&m.status==='approved'){
+    return `<a href="publicaciones.html?group=${g.id}"><button class="group-btn">Ver grupo →</button></a>`;
+  }
+  if(m&&m.status==='pending'){
+    return `<button class="group-btn" disabled>Solicitud enviada</button>`;
+  }
+  return `<button class="group-btn-outline" onclick="joinGroup('${g.id}')">${g.is_private?'Solicitar unirse':'Unirse'}</button>`;
+}
+
+function groupCard(g){
+  return `
+    <div class="group-card">
+      <div class="group-top">
+        <div class="group-av" style="background:${g.color||getColor(g.name)}">${groupInitials(g.name)}</div>
+        <div>
+          <div class="group-name">${escapeHtml(g.name)}</div>
+          <div class="group-badges">
+            <span class="cat-badge">${CAT_LABEL[g.category]||g.category}</span>
+            <span class="priv-badge">${g.is_private?'🔒 Privado':'🌐 Público'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="group-desc">${escapeHtml(g.description)||'Sin descripción todavía.'}</div>
+      <div class="group-meta">${g.member_count} miembro${g.member_count!==1?'s':''}</div>
+      ${groupActionHtml(g)}
+    </div>`;
+}
+
+function renderGroupsFiltered(){
+  const grid=document.getElementById('groups-grid');
+  const q=(document.getElementById('search-input').value||'').trim().toLowerCase();
+  let list=GROUPS;
+  if(activeCat!=='todos')list=list.filter(g=>g.category===activeCat);
+  if(q)list=list.filter(g=>g.name.toLowerCase().includes(q)||(g.description||'').toLowerCase().includes(q));
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><h3>Sin resultados</h3><p>Prueba con otra búsqueda o categoría, o crea el primer grupo.</p></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(groupCard).join('');
+}
+
+function setCatFilter(el){
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeCat=el.dataset.cat;
+  renderGroupsFiltered();
+}
+document.querySelectorAll('.fchip[data-cat]').forEach(el=>{
+  if(el.dataset.cat!=='todos')el.onclick=()=>setCatFilter(el);
+});
+
+async function loadGroups(){
+  try{
+    const {data,error}=await _sb2.from('groups').select('*').order('member_count',{ascending:false}).limit(100);
+    if(error||!data)return;
+    GROUPS=data;
+    document.getElementById('stat-groups').textContent=GROUPS.length;
+    document.getElementById('stat-members').textContent=GROUPS.reduce((s,g)=>s+(g.member_count||0),0);
+
+    if(CURRENT_VIEWER_ID){
+      const {data:mine}=await _sb2.from('group_members').select('group_id,role,status').eq('user_id',CURRENT_VIEWER_ID);
+      MY_MEMBERSHIPS={};
+      (mine||[]).forEach(m=>{MY_MEMBERSHIPS[m.group_id]={role:m.role,status:m.status};});
+    }
+    renderGroupsFiltered();
+  }catch(e){
+    document.getElementById('groups-grid').innerHTML=`<div class="empty-state"><h3>No pudimos cargar los grupos</h3></div>`;
+  }
+}
+
+async function joinGroup(groupId){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para unirte');return;}
+  const {error}=await _sb2.from('group_members').insert({group_id:groupId,user_id:CURRENT_VIEWER_ID});
+  if(error){showToast(error.message||'No pudimos procesar tu solicitud');return;}
+  const g=GROUPS.find(x=>x.id===groupId);
+  MY_MEMBERSHIPS[groupId]={role:'member',status:g&&g.is_private?'pending':'approved'};
+  if(g&&!g.is_private)g.member_count=(g.member_count||0)+1;
+  showToast(g&&g.is_private?'Solicitud enviada ✓':'¡Te uniste al grupo! ✓',true);
+  renderGroupsFiltered();
+}
+
+function openCreateGroupModal(){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para crear un grupo');return;}
+  document.getElementById('create-err').style.display='none';
+  document.getElementById('cg-name').value='';
+  document.getElementById('cg-desc').value='';
+  document.getElementById('cg-category').value='general';
+  document.getElementById('cg-private').checked=false;
+  document.getElementById('create-overlay').classList.add('open');
+}
+function closeCreateGroupModal(){
+  document.getElementById('create-overlay').classList.remove('open');
+}
+
+async function submitCreateGroup(){
+  const name=document.getElementById('cg-name').value.trim();
+  const description=document.getElementById('cg-desc').value.trim();
+  const category=document.getElementById('cg-category').value;
+  const is_private=document.getElementById('cg-private').checked;
+  const err=document.getElementById('create-err');
+  const btn=document.getElementById('cg-btn');
+  if(name.length<3){err.textContent='El nombre debe tener al menos 3 caracteres.';err.style.display='block';return;}
+  err.style.display='none';
+  btn.disabled=true;btn.textContent='Creando...';
+  const {data,error}=await _sb2.from('groups').insert({name,description,category,is_private,creator_id:CURRENT_VIEWER_ID,color:getColor(name)}).select().single();
+  btn.disabled=false;btn.textContent='Crear grupo →';
+  if(error){err.textContent=error.message||'No pudimos crear el grupo.';err.style.display='block';return;}
+  window.location.href='publicaciones.html?group='+data.id;
+}
+
+(async()=>{
+  const {data:{session}}=await _sb2.auth.getSession();
+  const el=document.getElementById('nav-auth');
+  if(!el||!session){loadGroups();return;}
+  CURRENT_VIEWER_ID=session.user.id;
+  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
+  if(!p){loadGroups();return;}
+  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
+  const badge=`<span id="nav-notif-badge" style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:${count>0?'flex':'none'};align-items:center;justify-content:center">${count>9?'9+':count}</span>`;
+  el.innerHTML=`<a href="dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none"><div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div><span style="font-size:13px;font-weight:500;color:#3d3b36">${escapeHtml((p.name||'').split(' ')[0])}</span></a>`;
+  loadGroups();
+  _sb2.channel('notif-badge-'+session.user.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`recipient_id=eq.${session.user.id}`},()=>{
+      const el2=document.getElementById('nav-notif-badge');
+      if(!el2)return;
+      const cur=el2.textContent==='9+'?10:(parseInt(el2.textContent)||0);
+      const nxt=cur+1;
+      el2.textContent=nxt>9?'9+':nxt;
+      el2.style.display='flex';
+    })
+    .subscribe();
+})();
+</script>
+</body>
+</html>

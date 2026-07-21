@@ -223,6 +223,7 @@ footer strong{color:rgba(255,255,255,.75)}
       <a href="buscar.html">Explorar perfiles</a>
       <a href="oportunidades.html">Oportunidades</a>
       <a href="publicaciones.html">Comunidad</a>
+      <a href="grupos.html">Grupos</a>
       <a href="mensajes.html">Mensajes</a>
     </div>
     <div id="nav-user" style="display:flex;align-items:center;gap:.6rem"></div>
@@ -361,6 +362,16 @@ footer strong{color:rgba(255,255,255,.75)}
         </div>
         <div class="req-grid" id="orgs-grid"></div>
         <div id="orgs-empty" style="display:none;font-size:12.5px;color:var(--ink3)">No perteneces a ninguna organización todavía.</div>
+      </div>
+
+      <!-- MIS GRUPOS -->
+      <div style="margin-bottom:1.5rem">
+        <div class="section-head">
+          <h3>Mis grupos</h3>
+          <a href="grupos.html"><button class="req-btn-accept" style="width:auto;padding:6px 16px">+ Explorar</button></a>
+        </div>
+        <div class="req-grid" id="groups-grid"></div>
+        <div id="groups-empty" style="display:none;font-size:12.5px;color:var(--ink3)">No perteneces a ningún grupo todavía.</div>
       </div>
 
       <!-- MIS PUBLICACIONES -->
@@ -743,6 +754,7 @@ if(new URLSearchParams(window.location.search).get('pro')==='success'){
       loadMyApplications();
       loadReferrals();
       loadMyOrganizations();
+      loadMyGroups();
       checkPushSubscriptionState();
       const digestCheck=document.getElementById('digest-optout-check');
       if(digestCheck)digestCheck.checked=!!p.email_digest_opt_out;
@@ -1335,6 +1347,36 @@ async function loadMyOrganizations(){
   }catch(e){}
 }
 
+/* ── MIS GRUPOS ── */
+async function loadMyGroups(){
+  if(!currentUserId)return;
+  try{
+    const {data:memberships}=await _sb.from('group_members').select('*').eq('user_id',currentUserId);
+    const grid=document.getElementById('groups-grid');
+    const empty=document.getElementById('groups-empty');
+    if(!memberships||!memberships.length){
+      grid.innerHTML='';
+      empty.style.display='block';
+      return;
+    }
+    empty.style.display='none';
+    const groupIds=memberships.map(m=>m.group_id);
+    const {data:groups}=await _sb.from('groups').select('*').in('id',groupIds);
+    const statusById={};memberships.forEach(m=>statusById[m.group_id]={role:m.role,status:m.status});
+    grid.innerHTML=(groups||[]).map(g=>{
+      const st=statusById[g.id]||{};
+      const label=st.status==='pending'?'Pendiente de aprobación':(st.role==='admin'?'Administrador':'Miembro');
+      return `
+      <a href="publicaciones.html?group=${g.id}" class="match-card" style="display:block">
+        <div class="match-header">
+          <div class="match-av" style="background:${g.color||'#2d6b4a'};overflow:hidden">${(g.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div><div class="match-name">${escapeHtml(g.name)}</div><div class="match-role">${label}</div></div>
+        </div>
+      </a>`;
+    }).join('');
+  }catch(e){}
+}
+
 /* ── NOTIFICACIONES REALES ── */
 let NOTIFICATIONS=[];
 
@@ -1353,6 +1395,8 @@ function notifText(n){
   if(n.type==='recommendation_approved')return `${name} aprobó tu recomendación`;
   if(n.type==='mention')return `${name} te mencionó`;
   if(n.type==='comment_reply')return `${name} respondió tu comentario`;
+  if(n.type==='group_join_request')return `${name} solicitó unirse a tu grupo`;
+  if(n.type==='group_join_approved')return `Tu solicitud para unirte al grupo fue aprobada ✓`;
   return 'Nueva notificación';
 }
 function notifLink(n){
@@ -1365,6 +1409,7 @@ function notifLink(n){
   if(n.type==='skill_endorsed')return `perfil-publico.html?id=${currentUserId}`;
   if(n.type==='recommendation_received')return `perfil-publico.html?id=${currentUserId}`;
   if(n.type==='recommendation_approved')return `perfil-publico.html?id=${n.actor_id}`;
+  if(n.type==='group_join_request'||n.type==='group_join_approved')return `publicaciones.html?group=${n.entity_id}`;
   return '#';
 }
 
