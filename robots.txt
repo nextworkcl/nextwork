@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /mensajes.html
+Disallow: /admin-reportes.html
+Disallow: /admin-analytics.html
+Disallow: /crear-organizacion.html
+Disallow: /login.html
+Disallow: /reset-password.html
+
+Sitemap: https://nextwork-55o.pages.dev/sitemap.xml
