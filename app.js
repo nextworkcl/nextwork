@@ -254,9 +254,7 @@ async function runMatch() {
   const el = document.getElementById('proof-txt');
   if (!el) return;
   try {
-    const SUPA_URL = 'https://vkewxmrutpjmdrxsqdea.supabase.co';
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0';
-    const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    const sb = nwCreateClient();
     const { data, error } = await sb.from('perfiles_publicos').select('name');
     if (error || !data) { el.textContent = 'Sé de los primeros en construir en Nextwork'; return; }
     const count = data.filter(p => p.name && p.name.trim().length > 1).length;
@@ -293,27 +291,25 @@ async function runMatch() {
   const mobileAuth = document.getElementById('nav-auth-mobile');
   if (!desktopAuth && !mobileAuth) return;
   try {
-    const SUPA_URL = 'https://vkewxmrutpjmdrxsqdea.supabase.co';
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0';
-    const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    const sb = nwCreateClient();
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
     const { data: p } = await sb.from('profiles').select('name,color,photo').eq('id', session.user.id).single();
     if (!p) return;
-    const esc = (s) => (s == null ? '' : String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
-    const initials = (p.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-    const avatar = `<div style="width:34px;height:34px;border-radius:50%;background:${p.color || '#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo ? `<img src="${esc(p.photo)}" style="width:100%;height:100%;object-fit:cover">` : initials}</div>`;
+    const altName = nwEscapeHtml(p.name) || 'usuario';
+    const initials = nwInitials(p.name);
+    const avatar = `<div style="width:34px;height:34px;border-radius:50%;background:${p.color || '#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden;flex-shrink:0">${p.photo ? `<img src="${nwEscapeHtml(p.photo)}" alt="Foto de perfil de ${altName}" style="width:100%;height:100%;object-fit:cover">` : initials}</div>`;
     if (desktopAuth) {
       desktopAuth.innerHTML = `
         <div style="position:relative">
-          <div onclick="toggleAvatarMenu(event)" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            ${avatar}<span style="font-size:13.5px;font-weight:600;color:var(--ink)">${esc((p.name || '').split(' ')[0])}</span>
+          <div onclick="nwToggleAvatarMenu(event)" role="button" tabindex="0" aria-haspopup="true" aria-label="Menú de cuenta de ${altName}" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            ${avatar}<span style="font-size:13.5px;font-weight:600;color:var(--ink)">${nwEscapeHtml((p.name || '').split(' ')[0])}</span>
           </div>
-          <div id="avatar-dropdown" style="display:none;position:absolute;right:0;top:44px;background:#fff;border:1px solid var(--line-2,#dedad1);border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.14);min-width:180px;z-index:300;overflow:hidden">
-            <a href="dashboard.html" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">📊 Mi Dashboard</a>
-            <a href="perfil-publico.html" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">👤 Ver mi perfil</a>
-            <a href="mensajes.html" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">💬 Mensajes</a>
-            <div onclick="logoutFromNav()" style="padding:10px 16px;font-size:13px;color:#b91c1c;cursor:pointer;border-top:1px solid var(--line-2,#dedad1)">🚪 Cerrar sesión</div>
+          <div id="avatar-dropdown" role="menu" style="display:none;position:absolute;right:0;top:44px;background:#fff;border:1px solid var(--line-2,#dedad1);border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.14);min-width:180px;z-index:300;overflow:hidden">
+            <a href="dashboard.html" role="menuitem" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">📊 Mi Dashboard</a>
+            <a href="perfil-publico.html" role="menuitem" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">👤 Ver mi perfil</a>
+            <a href="mensajes.html" role="menuitem" style="display:block;padding:10px 16px;font-size:13px;color:var(--ink);text-decoration:none">💬 Mensajes</a>
+            <div onclick="nwLogout()" role="menuitem" tabindex="0" style="padding:10px 16px;font-size:13px;color:#b91c1c;cursor:pointer;border-top:1px solid var(--line-2,#dedad1)">🚪 Cerrar sesión</div>
           </div>
         </div>`;
     }
@@ -322,27 +318,7 @@ async function runMatch() {
         <a href="dashboard.html" onclick="closeMenu()">📊 Mi Dashboard</a>
         <a href="perfil-publico.html" onclick="closeMenu()">👤 Ver mi perfil</a>
         <a href="mensajes.html" onclick="closeMenu()">💬 Mensajes</a>
-        <a onclick="logoutFromNav()" style="color:#b91c1c">🚪 Cerrar sesión</a>`;
+        <a onclick="nwLogout()" style="color:#b91c1c">🚪 Cerrar sesión</a>`;
     }
   } catch (e) {}
 })();
-
-function toggleAvatarMenu(e) {
-  e.stopPropagation();
-  const dd = document.getElementById('avatar-dropdown');
-  if (!dd) return;
-  dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-}
-document.addEventListener('click', () => {
-  const dd = document.getElementById('avatar-dropdown');
-  if (dd) dd.style.display = 'none';
-});
-async function logoutFromNav() {
-  const sb = window.supabase.createClient(
-    'https://vkewxmrutpjmdrxsqdea.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
-  );
-  await sb.auth.signOut();
-  localStorage.removeItem('nw_profile');
-  window.location.href = 'index.html';
-}

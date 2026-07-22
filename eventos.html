@@ -274,16 +274,11 @@ footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+<script src="shared.js"></script>
 <script>
-const _sb2=window.supabase.createClient(
-  'https://vkewxmrutpjmdrxsqdea.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
-);
+const _sb2=nwCreateClient();
 
-function escapeHtml(str){
-  if(str==null)return '';
-  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+const escapeHtml = nwEscapeHtml;
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast show';
@@ -506,60 +501,17 @@ function subscribeToEvents(){
     .subscribe();
 }
 
-function toggleAvatarMenu(e){
-  e.stopPropagation();
-  const dd=document.getElementById('avatar-dropdown');
-  if(!dd)return;
-  dd.style.display=dd.style.display==='block'?'none':'block';
-}
-document.addEventListener('click',()=>{
-  const dd=document.getElementById('avatar-dropdown');
-  if(dd)dd.style.display='none';
-});
-async function logoutFromNav(){
-  await _sb2.auth.signOut();
-  window.location.href='index.html';
-}
-
-(async()=>{
-  const {data:{session}}=await _sb2.auth.getSession();
-  const el=document.getElementById('nav-auth');
-  if(!el||!session){loadEvents();subscribeToEvents();return;}
-  CURRENT_VIEWER_ID=session.user.id;
-  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
-  if(!p){loadEvents();subscribeToEvents();return;}
-  try{
-    const {data:memberships}=await _sb2.from('group_members').select('group_id,groups(id,name)').eq('user_id',session.user.id).eq('status','approved');
-    MY_GROUPS=(memberships||[]).map(m=>m.groups).filter(Boolean);
-  }catch(e){}
-  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
-  const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
-  const badge=`<span id="nav-notif-badge" style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:${count>0?'flex':'none'};align-items:center;justify-content:center">${count>9?'9+':count}</span>`;
-  el.innerHTML=`<div style="position:relative">
-    <div onclick="toggleAvatarMenu(event)" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-      <div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div>
-      <span style="font-size:13px;font-weight:500;color:#3d3b36">${escapeHtml((p.name||'').split(' ')[0])}</span>
-    </div>
-    <div id="avatar-dropdown" style="display:none;position:absolute;right:0;top:44px;background:#fff;border:1px solid #dedad1;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.14);min-width:180px;z-index:300;overflow:hidden">
-      <a href="dashboard.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">📊 Mi Dashboard</a>
-      <a href="perfil-publico.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">👤 Ver mi perfil</a>
-      <a href="mensajes.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">💬 Mensajes</a>
-      <div onclick="logoutFromNav()" style="padding:10px 16px;font-size:13px;color:#b91c1c;cursor:pointer;border-top:1px solid #dedad1">🚪 Cerrar sesión</div>
-    </div>
-  </div>`;
+nwInitNavAuth({sb:_sb2,onSession:async(session)=>{
+  if(session){
+    CURRENT_VIEWER_ID=session.user.id;
+    try{
+      const {data:memberships}=await _sb2.from('group_members').select('group_id,groups(id,name)').eq('user_id',session.user.id).eq('status','approved');
+      MY_GROUPS=(memberships||[]).map(m=>m.groups).filter(Boolean);
+    }catch(e){}
+  }
   loadEvents();
   subscribeToEvents();
-  _sb2.channel('notif-badge-'+session.user.id)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`recipient_id=eq.${session.user.id}`},()=>{
-      const el2=document.getElementById('nav-notif-badge');
-      if(!el2)return;
-      const cur=el2.textContent==='9+'?10:(parseInt(el2.textContent)||0);
-      const nxt=cur+1;
-      el2.textContent=nxt>9?'9+':nxt;
-      el2.style.display='flex';
-    })
-    .subscribe();
-})();
+}});
 </script>
 </body>
 </html>
