@@ -233,6 +233,23 @@ function nwComputeMatchScore(me,other){
   return {pct,reasons,score};
 }
 
+/* Avisa a send-notification-email para que mande un correo real (con la
+   plantilla de email-templates/notificacion.html) por una notificacion
+   que YA existe en la tabla notifications -- mismo patron que notifyPush,
+   nunca bloquea la UI si falla. Tipos soportados hoy: post_like,
+   post_comment, connection_request, connection_accepted. */
+async function nwNotifyEmail(sb, recipientId, type, entityId) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    fetch('https://vkewxmrutpjmdrxsqdea.supabase.co/functions/v1/send-notification-email', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient_id: recipientId, type, entity_id: entityId })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
 /* Orquestador: revisa sesion, pinta el avatar si hay sesion, y siempre
    llama onSession(session, profile) (con null si no hay sesion o perfil)
    para que la pagina siga con su propia logica. */

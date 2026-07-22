@@ -1071,6 +1071,7 @@ async function toggleRealLike(postId){
     const {error}=await _sb2.from('post_likes').insert({post_id:postId,user_id:CURRENT_VIEWER_ID});
     if(error)return;
     post._liked=true;post._likeCount++;
+    if(post.author_id&&post.author_id!==CURRENT_VIEWER_ID)nwNotifyEmail(_sb2,post.author_id,'post_like',postId);
   }
   renderRealPostsFiltered();
 }
@@ -1181,6 +1182,7 @@ async function submitComment(postId){
   const {error}=await _sb2.from('comments').insert({post_id:postId,author_id:CURRENT_VIEWER_ID,body,mentions});
   if(error){input.disabled=false;showToast(error.message||'No pudimos publicar tu comentario');return;}
   post._commentCount=(post._commentCount||0)+1;
+  if(post.author_id&&post.author_id!==CURRENT_VIEWER_ID)nwNotifyEmail(_sb2,post.author_id,'post_comment',postId);
   await loadComments(post);
 }
 

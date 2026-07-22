@@ -955,6 +955,7 @@ async function sendMatchConnection(targetId,btn){
   btn.disabled=true;btn.textContent='Enviando...';
   const {error}=await _sb.from('connections').insert({from_id:currentUserId,to_id:targetId});
   if(error){btn.disabled=false;btn.textContent='+ Conectar';showToast(error.message||'No pudimos enviar la solicitud');return;}
+  nwNotifyEmail(_sb,targetId,'connection_request');
   btn.textContent='Solicitud enviada ✓';
   showToast('Solicitud de conexión enviada');
 }
@@ -1038,7 +1039,10 @@ async function respondToRequest(connId, accept){
     .select()
     .single();
   if(error){showToast('No pudimos procesar tu respuesta');return;}
-  if(accept&&data)notifyPush(data.from_id,'connection_accepted',connId);
+  if(accept&&data){
+    notifyPush(data.from_id,'connection_accepted',connId);
+    nwNotifyEmail(_sb,data.from_id,'connection_accepted',connId);
+  }
   showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
   loadConnections();
 }

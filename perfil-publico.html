@@ -720,6 +720,7 @@ async function sendConnectionRequest(){
   const {data,error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:viewedProfileId}).select().single();
   if(error){showToast('No pudimos enviar la solicitud');return;}
   notifyPush(viewedProfileId,'connection_request',data.id);
+  nwNotifyEmail(_sb,viewedProfileId,'connection_request',data.id);
   showToast('Solicitud enviada ✓');
   renderContactCard('pending_sent',data.id);
 }
@@ -736,7 +737,10 @@ async function respondConnectionRequest(connId, accept){
     .update({status:accept?'accepted':'declined',responded_at:new Date().toISOString()})
     .eq('id',connId);
   if(error){showToast('No pudimos procesar tu respuesta');return;}
-  if(accept)notifyPush(viewedProfileId,'connection_accepted',connId);
+  if(accept){
+    notifyPush(viewedProfileId,'connection_accepted',connId);
+    nwNotifyEmail(_sb,viewedProfileId,'connection_accepted',connId);
+  }
   showToast(accept?'¡Conectados! 🤝':'Solicitud rechazada');
   checkConnectionStatus();
 }
@@ -947,6 +951,7 @@ async function sendSuggestedConnection(targetId,el){
   const {data,error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:targetId}).select().single();
   if(error){el.textContent='+ Conectar';showToast(error.message||'No pudimos enviar la solicitud');return;}
   notifyPush(targetId,'connection_request',data.id);
+  nwNotifyEmail(_sb,targetId,'connection_request',data.id);
   el.textContent='Solicitud enviada ✓';
   showToast('Solicitud de conexión enviada');
 }
