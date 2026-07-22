@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eventos · Nextwork</title>
+<link rel="icon" type="image/png" href="logo.png?v=2">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0f0e0c;--ink2:#3d3b36;--ink3:#7a7870;
+  --cream:#f5f2eb;--cream2:#ede9e0;--cream3:#dedad1;
+  --accent:#1a3a2a;--accent2:#2d6b4a;--accent3:#4d9e72;
+  --glow:#c8f0d8;--glow2:#e8f7ef;
+  --surface:#ffffff;--r:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--cream3);padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.logo-word span{color:var(--accent2)}
+.nav-right{display:flex;align-items:center;gap:1.5rem}
+.nav-links{display:flex;gap:1.8rem;font-size:13px;color:var(--ink2)}
+.nav-links a:hover{color:var(--accent2)}
+.nav-links a.active{color:var(--accent2);font-weight:500}
+.nav-cta{background:var(--accent);color:var(--glow);padding:8px 18px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .2s}
+.nav-cta:hover{background:var(--accent2)}
+
+.page-hero{background:var(--accent);padding:3.5rem 2rem 3rem;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 65% 40%,rgba(77,158,114,.18) 0%,transparent 60%);pointer-events:none}
+.page-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3rem);color:var(--glow);line-height:1.12;letter-spacing:-.8px;margin-bottom:.7rem}
+.page-hero p{color:rgba(200,240,216,.7);font-size:15px;max-width:460px;margin:0 auto 1.8rem;font-weight:300;line-height:1.7}
+.hero-stats{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap}
+.hstat{text-align:center;color:var(--glow)}
+.hstat-n{font-family:'DM Serif Display',serif;font-size:1.6rem;display:block;line-height:1.2}
+.hstat-l{font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.8px}
+
+.toolbar{background:var(--surface);border-bottom:1px solid var(--cream3);padding:.9rem 2rem;position:sticky;top:62px;z-index:90}
+.toolbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2;pointer-events:none}
+.search-wrap input{width:100%;padding:9px 12px 9px 36px;border-radius:22px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border .2s}
+.search-wrap input:focus{border-color:var(--accent3)}
+.filter-select{padding:8px 12px;border-radius:10px;border:1.5px solid var(--cream3);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--ink2);outline:none;cursor:pointer}
+.filter-chips{display:flex;gap:7px;flex-wrap:wrap}
+.fchip{padding:6px 14px;border-radius:22px;border:1.5px solid var(--cream3);font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--ink2);transition:all .2s;user-select:none;white-space:nowrap}
+.fchip:hover{border-color:var(--accent3);color:var(--accent2)}
+.fchip.active{background:var(--accent);color:var(--glow);border-color:var(--accent)}
+.toolbar-cta{margin-left:auto;background:var(--accent);color:var(--glow);border:none;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;white-space:nowrap}
+.toolbar-cta:hover{background:var(--accent2)}
+
+.main{max-width:1200px;margin:0 auto;padding:2rem 2rem 5rem}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.3rem}
+.event-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--cream3);padding:1.4rem;transition:transform .25s,box-shadow .25s;display:flex;gap:1rem;cursor:pointer}
+.event-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(26,58,42,.08);border-color:var(--accent3)}
+.event-date-badge{flex-shrink:0;width:54px;height:54px;border-radius:10px;background:var(--glow2);color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700}
+.event-date-badge .day{font-size:18px;line-height:1.1}
+.event-date-badge .mon{font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.event-body{flex:1;min-width:0;display:flex;flex-direction:column}
+.event-title{font-family:'DM Serif Display',serif;font-size:1.02rem;line-height:1.3;margin-bottom:.35rem}
+.event-meta{font-size:12px;color:var(--ink3);margin-bottom:.5rem}
+.event-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem}
+.loc-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:6px}
+.loc-presencial{background:var(--glow2);color:var(--accent2);border:1px solid rgba(45,107,74,.18)}
+.loc-online{background:#e8f4fd;color:#1a5276;border:1px solid #aed6f1}
+.loc-hibrido{background:#fdf2f8;color:#76448a;border:1px solid #d7bde2}
+.group-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--cream2);color:var(--ink3)}
+.event-actions{display:flex;gap:.5rem;margin-top:auto}
+.rsvp-btn{flex:1;padding:7px;border-radius:16px;font-size:11.5px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--cream3);background:var(--surface);color:var(--ink2);transition:all .2s}
+.rsvp-btn:hover{border-color:var(--accent3)}
+.rsvp-btn.active-going{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.rsvp-btn.active-interested{background:var(--glow2);color:var(--accent2);border-color:var(--accent3)}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.empty-state h3{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--ink2);margin-bottom:.5rem}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:12px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.pub-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(15,14,12,.55);align-items:center;justify-content:center;padding:1.2rem}
+.pub-overlay.open{display:flex}
+.pub-box{background:var(--surface);border-radius:var(--r);width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.pub-head{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.4rem;border-bottom:1px solid var(--cream3)}
+.pub-head h3{font-family:'DM Serif Display',serif;font-size:1.2rem}
+.pub-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--cream2);color:var(--ink2);font-size:17px;cursor:pointer}
+.pub-body{padding:1.2rem 1.4rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.pub-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.pub-group input,.pub-group textarea,.pub-group select{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--cream3);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none}
+.pub-group textarea{resize:vertical;min-height:70px}
+.pub-row{display:flex;gap:.8rem}
+.pub-row .pub-group{flex:1}
+.pub-foot{padding:1rem 1.4rem;border-top:1px solid var(--cream3);display:flex;justify-content:flex-end}
+.pub-err{font-size:12.5px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;display:none}
+
+footer{background:var(--ink);color:rgba(255,255,255,.45);font-size:12.5px}
+.footer-top{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:3rem;padding:3rem 2.5rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:start}
+.footer-brand{display:flex;align-items:center;gap:9px;font-weight:500;font-size:17px;letter-spacing:-0.4px;color:rgba(255,255,255,.85);align-self:start}
+.footer-brand .logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-brand em{font-style:normal;color:var(--accent3)}
+.footer-col h4{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:.9rem;letter-spacing:.3px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.footer-col ul li a{color:rgba(255,255,255,.45);font-size:13px;transition:color .2s;display:block}
+.footer-col ul li a:hover{color:rgba(255,255,255,.8)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:1.2rem 2.5rem}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.45);transition:color .2s;cursor:pointer}
+.footer-links a:hover{color:rgba(255,255,255,.8)}
+
+@media(max-width:640px){nav{padding:0 1.2rem}.toolbar{padding:.8rem 1rem}.main{padding:1.5rem 1rem 4rem}.page-hero{padding:2.5rem 1rem 2rem}}
+@media(max-width:900px){.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem 3rem}.footer-brand{grid-column:1/-1}}
+@media(max-width:500px){.footer-top{grid-template-columns:1fr 1fr;gap:2rem;padding:2rem 1.5rem}.footer-bottom{flex-direction:column;align-items:flex-start;padding:1rem 1.5rem}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+    <span class="logo-word">next<span>work</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="buscar.html">Explorar perfiles</a>
+    <a href="oportunidades.html">Oportunidades</a>
+    <a href="publicaciones.html">Comunidad</a>
+    <a href="grupos.html">Grupos</a>
+    <a href="eventos.html" class="active">Eventos</a>
+    <a href="mensajes.html">Mensajes</a>
+  </div>
+  <div class="nav-right">
+    <span id="nav-auth"><a href="crear-perfil.html"><button class="nav-cta">Crear mi perfil</button></a></span>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Eventos<br><em style="font-style:italic;color:rgba(200,240,216,.7)">para construir en persona</em></h1>
+  <p>Meetups, charlas y encuentros de la comunidad Nextwork, presenciales u online, por ciudad, país o comunidad.</p>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="stat-events">0</span><span class="hstat-l">Eventos próximos</span></div>
+    <div class="hstat"><span class="hstat-n" id="stat-cities">0</span><span class="hstat-l">Ciudades</span></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Buscar eventos…" oninput="renderEventsFiltered()">
+    </div>
+    <select class="filter-select" id="filter-country" onchange="renderEventsFiltered()"><option value="todos">Todos los países</option></select>
+    <select class="filter-select" id="filter-city" onchange="renderEventsFiltered()"><option value="todos">Todas las ciudades</option></select>
+    <select class="filter-select" id="filter-group" onchange="renderEventsFiltered()"><option value="todos">Todas las comunidades</option></select>
+    <div class="filter-chips" id="filter-chips">
+      <span class="fchip active" data-loc="todos" onclick="setLocFilter(this)">Todos</span>
+      <span class="fchip" data-loc="presencial" onclick="setLocFilter(this)">📍 Presencial</span>
+      <span class="fchip" data-loc="online" onclick="setLocFilter(this)">💻 Online</span>
+      <span class="fchip" data-loc="hibrido" onclick="setLocFilter(this)">🔀 Híbrido</span>
+    </div>
+    <button class="toolbar-cta" onclick="openCreateEventModal()">+ Crear evento</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="cards-grid" id="events-grid">
+    <div class="empty-state"><h3>Cargando eventos…</h3></div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="pub-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
+  <div class="pub-box">
+    <div class="pub-head">
+      <h3 id="detail-title">Evento</h3>
+      <button class="pub-close" onclick="closeDetailModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="pub-body" id="detail-body"></div>
+    <div class="pub-foot" id="detail-foot"></div>
+  </div>
+</div>
+
+<!-- MODAL CREAR EVENTO -->
+<div class="pub-overlay" id="create-overlay" onclick="if(event.target===this)closeCreateEventModal()">
+  <div class="pub-box">
+    <div class="pub-head">
+      <h3>Crear evento</h3>
+      <button class="pub-close" onclick="closeCreateEventModal()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="pub-body">
+      <div id="create-err" class="pub-err"></div>
+      <div class="pub-group"><label>Título</label><input type="text" id="ce-title" maxlength="120" placeholder="Ej. Meetup de fundadores fintech"></div>
+      <div class="pub-group"><label>Descripción</label><textarea id="ce-desc" maxlength="1000" placeholder="¿De qué se trata este evento?"></textarea></div>
+      <div class="pub-row">
+        <div class="pub-group"><label>Ciudad</label><input type="text" id="ce-city" maxlength="80" placeholder="Ej. Santiago"></div>
+        <div class="pub-group"><label>País</label><input type="text" id="ce-country" maxlength="80" placeholder="Ej. Chile"></div>
+      </div>
+      <div class="pub-row">
+        <div class="pub-group">
+          <label>Modalidad</label>
+          <select id="ce-loctype">
+            <option value="presencial">📍 Presencial</option>
+            <option value="online">💻 Online</option>
+            <option value="hibrido">🔀 Híbrido</option>
+          </select>
+        </div>
+        <div class="pub-group"><label>Dirección o link</label><input type="text" id="ce-locdetail" maxlength="200" placeholder="Dirección o URL"></div>
+      </div>
+      <div class="pub-row">
+        <div class="pub-group"><label>Inicio</label><input type="datetime-local" id="ce-starts"></div>
+        <div class="pub-group"><label>Término (opcional)</label><input type="datetime-local" id="ce-ends"></div>
+      </div>
+      <div class="pub-group">
+        <label>Comunidad (opcional)</label>
+        <select id="ce-group"><option value="">Evento abierto (sin comunidad)</option></select>
+      </div>
+    </div>
+    <div class="pub-foot">
+      <button class="rsvp-btn active-going" style="flex:none;padding:10px 24px" id="ce-btn" onclick="submitCreateEvent()">Crear evento →</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-top">
+    <a href="index.html" class="footer-brand">
+      <div class="logo-mark"><img src="logo.png?v=2" alt="Nextwork"></div>
+      <span>Next<em>work</em></span>
+    </a>
+    <div class="footer-col">
+      <h4>General</h4>
+      <ul>
+        <li><a href="crear-perfil.html">Registrarse</a></li>
+        <li><a href="login.html">Iniciar sesión</a></li>
+        <li><a href="index.html#faq">Centro de ayuda</a></li>
+        <li><a href="index.html#how">Acerca de</a></li>
+        <li><a href="mailto:Team@nextwork.cl">Prensa</a></li>
+        <li><a href="desarrolladores.html">Desarrolladores</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar por Nextwork</h4>
+      <ul>
+        <li><a href="index.html#how">Cómo funciona</a></li>
+        <li><a href="oportunidades.html">Oportunidades</a></li>
+        <li><a href="buscar.html">Buscar perfiles</a></li>
+        <li><a href="dashboard.html">Mi Dashboard</a></li>
+        <li><a href="crear-perfil.html">Crear mi perfil</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Descubrir</h4>
+      <ul>
+        <li><a href="top-startups.html">Top Startups</a></li>
+        <li><a href="top-universidades.html">Top Universidades</a></li>
+        <li><a href="publicaciones.html">Publicaciones de usuarios</a></li>
+        <li><a href="grupos.html">Comunidades</a></li>
+        <li><a href="eventos.html">Eventos</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html#faq">Preguntas frecuentes</a>
+      <a href="index.html#contacto">Contacto</a>
+      <a href="mailto:Team@nextwork.cl">Team@nextwork.cl</a>
+    </div>
+    <span><strong>Nextwork</strong> · nextwork.cl · Construido con propósito en Chile · 2026</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1" integrity="sha384-UQ9Ztz63gzT2JZCuDRkNXV8RP/gXxdPUuM9LKlz2BzqGx9xFYNAK8yAEgbfZHs7P" crossorigin="anonymous"></script>
+<script>
+const _sb2=window.supabase.createClient(
+  'https://vkewxmrutpjmdrxsqdea.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZXd4bXJ1dHBqbWRyeHNxZGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MjUwMTYsImV4cCI6MjA5NDEwMTAxNn0.Ety8tIitQKW_3hEaH0obDnmewPx2Opx_ZPmUmIP9ZU0'
+);
+
+function escapeHtml(str){
+  if(str==null)return '';
+  return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show';
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+let CURRENT_VIEWER_ID=null;
+let EVENTS=[];
+let MY_RSVPS={}; /* event_id -> status */
+let RSVP_COUNTS={}; /* event_id -> {going, interested} */
+let MY_GROUPS=[]; /* grupos donde soy miembro aprobado, para el selector de crear evento */
+let activeLoc='todos';
+
+const LOC_LABEL={presencial:'📍 Presencial',online:'💻 Online',hibrido:'🔀 Híbrido'};
+
+function fmtDateBadge(iso){
+  const d=new Date(iso);
+  const months=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  return {day:d.getDate(),mon:months[d.getMonth()]};
+}
+function fmtDateLong(iso){
+  return new Date(iso).toLocaleString('es-CL',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+}
+
+function eventCard(ev){
+  const badge=fmtDateBadge(ev.starts_at);
+  const counts=RSVP_COUNTS[ev.id]||{going:0,interested:0};
+  const myStatus=MY_RSVPS[ev.id];
+  const group=ev._group;
+  return `
+    <div class="event-card" onclick="openDetailModal('${ev.id}')">
+      <div class="event-date-badge"><span class="day">${badge.day}</span><span class="mon">${badge.mon}</span></div>
+      <div class="event-body">
+        <div class="event-title">${escapeHtml(ev.title)}</div>
+        <div class="event-meta">${escapeHtml(ev.city)||'—'}${ev.country?', '+escapeHtml(ev.country):''} · ${counts.going} van · ${counts.interested} interesados</div>
+        <div class="event-badges">
+          <span class="loc-badge loc-${ev.location_type}">${LOC_LABEL[ev.location_type]}</span>
+          ${group?`<span class="group-badge">${escapeHtml(group.name)}</span>`:''}
+        </div>
+        <div class="event-actions" onclick="event.stopPropagation()">
+          <button class="rsvp-btn ${myStatus==='going'?'active-going':''}" onclick="toggleRsvp('${ev.id}','going')">✅ Voy</button>
+          <button class="rsvp-btn ${myStatus==='interested'?'active-interested':''}" onclick="toggleRsvp('${ev.id}','interested')">🤔 Me interesa</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function populateFilterOptions(){
+  const countries=[...new Set(EVENTS.map(e=>e.country).filter(Boolean))].sort();
+  const cities=[...new Set(EVENTS.map(e=>e.city).filter(Boolean))].sort();
+  const groups=[...new Map(EVENTS.filter(e=>e._group).map(e=>[e._group.id,e._group])).values()].sort((a,b)=>a.name.localeCompare(b.name));
+  const cSel=document.getElementById('filter-country');
+  const citySel=document.getElementById('filter-city');
+  const gSel=document.getElementById('filter-group');
+  const curC=cSel.value,curCity=citySel.value,curG=gSel.value;
+  cSel.innerHTML='<option value="todos">Todos los países</option>'+countries.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  citySel.innerHTML='<option value="todos">Todas las ciudades</option>'+cities.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  gSel.innerHTML='<option value="todos">Todas las comunidades</option>'+groups.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  if(countries.includes(curC))cSel.value=curC;
+  if(cities.includes(curCity))citySel.value=curCity;
+  if(groups.some(g=>g.id===curG))gSel.value=curG;
+  document.getElementById('stat-events').textContent=EVENTS.length;
+  document.getElementById('stat-cities').textContent=cities.length;
+}
+
+function renderEventsFiltered(){
+  const grid=document.getElementById('events-grid');
+  const q=(document.getElementById('search-input').value||'').trim().toLowerCase();
+  const country=document.getElementById('filter-country').value;
+  const city=document.getElementById('filter-city').value;
+  const groupFilter=document.getElementById('filter-group').value;
+  let list=[...EVENTS].sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  if(activeLoc!=='todos')list=list.filter(e=>e.location_type===activeLoc);
+  if(country!=='todos')list=list.filter(e=>e.country===country);
+  if(city!=='todos')list=list.filter(e=>e.city===city);
+  if(groupFilter!=='todos')list=list.filter(e=>e.group_id===groupFilter);
+  if(q)list=list.filter(e=>e.title.toLowerCase().includes(q)||(e.description||'').toLowerCase().includes(q));
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><h3>Sin resultados</h3><p>Prueba cambiando los filtros o crea el primer evento.</p></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(eventCard).join('');
+}
+
+function setLocFilter(el){
+  document.querySelectorAll('#filter-chips .fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeLoc=el.dataset.loc;
+  renderEventsFiltered();
+}
+
+async function loadEvents(){
+  try{
+    const {data,error}=await _sb2.from('events').select('*').gte('starts_at',new Date(Date.now()-86400000).toISOString()).order('starts_at',{ascending:true}).limit(150);
+    if(error||!data)return;
+    const groupIds=[...new Set(data.map(e=>e.group_id).filter(Boolean))];
+    let groupsById={};
+    if(groupIds.length){
+      const {data:groups}=await _sb2.from('groups').select('id,name').in('id',groupIds);
+      (groups||[]).forEach(g=>groupsById[g.id]=g);
+    }
+    EVENTS=data.map(e=>({...e,_group:groupsById[e.group_id]||null}));
+
+    const eventIds=EVENTS.map(e=>e.id);
+    RSVP_COUNTS={};MY_RSVPS={};
+    if(eventIds.length){
+      const {data:rsvps}=await _sb2.from('event_rsvps').select('event_id,user_id,status').in('event_id',eventIds);
+      (rsvps||[]).forEach(r=>{
+        if(!RSVP_COUNTS[r.event_id])RSVP_COUNTS[r.event_id]={going:0,interested:0};
+        RSVP_COUNTS[r.event_id][r.status]++;
+        if(CURRENT_VIEWER_ID&&r.user_id===CURRENT_VIEWER_ID)MY_RSVPS[r.event_id]=r.status;
+      });
+    }
+    populateFilterOptions();
+    renderEventsFiltered();
+  }catch(e){
+    document.getElementById('events-grid').innerHTML=`<div class="empty-state"><h3>No pudimos cargar los eventos</h3></div>`;
+  }
+}
+
+async function toggleRsvp(eventId,status){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para confirmar tu asistencia');return;}
+  const current=MY_RSVPS[eventId];
+  if(current===status){
+    await _sb2.from('event_rsvps').delete().eq('event_id',eventId).eq('user_id',CURRENT_VIEWER_ID);
+    delete MY_RSVPS[eventId];
+    if(RSVP_COUNTS[eventId])RSVP_COUNTS[eventId][status]=Math.max(0,RSVP_COUNTS[eventId][status]-1);
+    showToast('Quitaste tu respuesta');
+  } else {
+    const {error}=await _sb2.from('event_rsvps').upsert({event_id:eventId,user_id:CURRENT_VIEWER_ID,status},{onConflict:'event_id,user_id'});
+    if(error){showToast('No pudimos guardar tu respuesta');return;}
+    if(!RSVP_COUNTS[eventId])RSVP_COUNTS[eventId]={going:0,interested:0};
+    if(current)RSVP_COUNTS[eventId][current]=Math.max(0,RSVP_COUNTS[eventId][current]-1);
+    RSVP_COUNTS[eventId][status]++;
+    MY_RSVPS[eventId]=status;
+    showToast(status==='going'?'¡Vas al evento! ✓':'Marcado como interesado');
+  }
+  renderEventsFiltered();
+  const detailOverlay=document.getElementById('detail-overlay');
+  if(detailOverlay.classList.contains('open'))openDetailModal(eventId);
+}
+
+function openDetailModal(eventId){
+  const ev=EVENTS.find(e=>e.id===eventId);
+  if(!ev)return;
+  const counts=RSVP_COUNTS[ev.id]||{going:0,interested:0};
+  const myStatus=MY_RSVPS[ev.id];
+  document.getElementById('detail-title').textContent=ev.title;
+  document.getElementById('detail-body').innerHTML=`
+    <div style="font-size:13px;color:var(--ink3)">${fmtDateLong(ev.starts_at)}${ev.ends_at?' — '+fmtDateLong(ev.ends_at):''}</div>
+    <div class="event-badges">
+      <span class="loc-badge loc-${ev.location_type}">${LOC_LABEL[ev.location_type]}</span>
+      ${ev._group?`<a href="publicaciones.html?group=${ev._group.id}" class="group-badge">${escapeHtml(ev._group.name)}</a>`:''}
+    </div>
+    <div style="font-size:13.5px;color:var(--ink2);line-height:1.6;white-space:pre-line">${escapeHtml(ev.description)||'Sin descripción.'}</div>
+    ${ev.location_detail?`<div style="font-size:13px;color:var(--ink2)"><strong>${ev.location_type==='online'?'Link':'Dirección'}:</strong> ${escapeHtml(ev.location_detail)}</div>`:''}
+    <div style="font-size:12.5px;color:var(--ink3)">${counts.going} personas van · ${counts.interested} interesadas</div>`;
+  document.getElementById('detail-foot').innerHTML=`
+    <div style="display:flex;gap:.6rem;width:100%">
+      <button class="rsvp-btn ${myStatus==='going'?'active-going':''}" onclick="toggleRsvp('${ev.id}','going')">✅ Voy</button>
+      <button class="rsvp-btn ${myStatus==='interested'?'active-interested':''}" onclick="toggleRsvp('${ev.id}','interested')">🤔 Me interesa</button>
+    </div>`;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+function closeDetailModal(){
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+async function openCreateEventModal(){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para crear un evento');return;}
+  document.getElementById('create-err').style.display='none';
+  document.getElementById('ce-title').value='';
+  document.getElementById('ce-desc').value='';
+  document.getElementById('ce-city').value='';
+  document.getElementById('ce-country').value='';
+  document.getElementById('ce-loctype').value='presencial';
+  document.getElementById('ce-locdetail').value='';
+  document.getElementById('ce-starts').value='';
+  document.getElementById('ce-ends').value='';
+  const gSel=document.getElementById('ce-group');
+  gSel.innerHTML='<option value="">Evento abierto (sin comunidad)</option>'+MY_GROUPS.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  document.getElementById('create-overlay').classList.add('open');
+}
+function closeCreateEventModal(){
+  document.getElementById('create-overlay').classList.remove('open');
+}
+
+async function submitCreateEvent(){
+  const title=document.getElementById('ce-title').value.trim();
+  const description=document.getElementById('ce-desc').value.trim();
+  const city=document.getElementById('ce-city').value.trim();
+  const country=document.getElementById('ce-country').value.trim();
+  const location_type=document.getElementById('ce-loctype').value;
+  const location_detail=document.getElementById('ce-locdetail').value.trim();
+  const startsRaw=document.getElementById('ce-starts').value;
+  const endsRaw=document.getElementById('ce-ends').value;
+  const group_id=document.getElementById('ce-group').value||null;
+  const err=document.getElementById('create-err');
+  const btn=document.getElementById('ce-btn');
+  if(title.length<3){err.textContent='El título debe tener al menos 3 caracteres.';err.style.display='block';return;}
+  if(!startsRaw){err.textContent='Elige una fecha y hora de inicio.';err.style.display='block';return;}
+  const starts_at=new Date(startsRaw).toISOString();
+  const ends_at=endsRaw?new Date(endsRaw).toISOString():null;
+  if(ends_at&&ends_at<starts_at){err.textContent='La fecha de término no puede ser antes que el inicio.';err.style.display='block';return;}
+  err.style.display='none';
+  btn.disabled=true;btn.textContent='Creando...';
+  const {error}=await _sb2.from('events').insert({title,description,city,country,location_type,location_detail,starts_at,ends_at,group_id,creator_id:CURRENT_VIEWER_ID});
+  btn.disabled=false;btn.textContent='Crear evento →';
+  if(error){err.textContent=error.message||'No pudimos crear el evento.';err.style.display='block';return;}
+  closeCreateEventModal();
+  showToast('¡Evento creado! ✓');
+  loadEvents();
+}
+
+let EVENTS_CHANNEL=null;
+function subscribeToEvents(){
+  if(EVENTS_CHANNEL)return;
+  EVENTS_CHANNEL=_sb2.channel('events-feed')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'events'},()=>{loadEvents();})
+    .subscribe();
+}
+
+function toggleAvatarMenu(e){
+  e.stopPropagation();
+  const dd=document.getElementById('avatar-dropdown');
+  if(!dd)return;
+  dd.style.display=dd.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',()=>{
+  const dd=document.getElementById('avatar-dropdown');
+  if(dd)dd.style.display='none';
+});
+async function logoutFromNav(){
+  await _sb2.auth.signOut();
+  window.location.href='index.html';
+}
+
+(async()=>{
+  const {data:{session}}=await _sb2.auth.getSession();
+  const el=document.getElementById('nav-auth');
+  if(!el||!session){loadEvents();subscribeToEvents();return;}
+  CURRENT_VIEWER_ID=session.user.id;
+  const {data:p}=await _sb2.from('profiles').select('name,color,photo').eq('id',session.user.id).single();
+  if(!p){loadEvents();subscribeToEvents();return;}
+  try{
+    const {data:memberships}=await _sb2.from('group_members').select('group_id,groups(id,name)').eq('user_id',session.user.id).eq('status','approved');
+    MY_GROUPS=(memberships||[]).map(m=>m.groups).filter(Boolean);
+  }catch(e){}
+  const ini=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const {count}=await _sb2.from('notifications').select('*',{count:'exact',head:true}).eq('recipient_id',session.user.id).eq('read',false);
+  const badge=`<span id="nav-notif-badge" style="position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;background:#dc2626;border-radius:8px;border:2px solid #fff;color:#fff;font-size:9px;font-weight:700;display:${count>0?'flex':'none'};align-items:center;justify-content:center">${count>9?'9+':count}</span>`;
+  el.innerHTML=`<div style="position:relative">
+    <div onclick="toggleAvatarMenu(event)" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <div style="position:relative;width:34px;height:34px;flex-shrink:0">${badge}<div style="width:100%;height:100%;border-radius:50%;background:${p.color||'#2d6b4a'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;border:2px solid #4d9e72;overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:ini}</div></div>
+      <span style="font-size:13px;font-weight:500;color:#3d3b36">${escapeHtml((p.name||'').split(' ')[0])}</span>
+    </div>
+    <div id="avatar-dropdown" style="display:none;position:absolute;right:0;top:44px;background:#fff;border:1px solid #dedad1;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.14);min-width:180px;z-index:300;overflow:hidden">
+      <a href="dashboard.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">📊 Mi Dashboard</a>
+      <a href="perfil-publico.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">👤 Ver mi perfil</a>
+      <a href="mensajes.html" style="display:block;padding:10px 16px;font-size:13px;color:#0f0e0c;text-decoration:none">💬 Mensajes</a>
+      <div onclick="logoutFromNav()" style="padding:10px 16px;font-size:13px;color:#b91c1c;cursor:pointer;border-top:1px solid #dedad1">🚪 Cerrar sesión</div>
+    </div>
+  </div>`;
+  loadEvents();
+  subscribeToEvents();
+  _sb2.channel('notif-badge-'+session.user.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`recipient_id=eq.${session.user.id}`},()=>{
+      const el2=document.getElementById('nav-notif-badge');
+      if(!el2)return;
+      const cur=el2.textContent==='9+'?10:(parseInt(el2.textContent)||0);
+      const nxt=cur+1;
+      el2.textContent=nxt>9?'9+':nxt;
+      el2.style.display='flex';
+    })
+    .subscribe();
+})();
+</script>
+</body>
+</html>
