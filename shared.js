@@ -111,6 +111,43 @@ async function nwLogout() {
   window.location.href = 'index.html';
 }
 
+/* ── SUBIDA DE IMAGENES A SUPABASE STORAGE ──
+   Antes las fotos se guardaban como base64 directo en columnas de texto
+   de Postgres (bucket "nextwork-uploads", ver sql/storage_uploads.sql).
+   Comprime/redimensiona en el navegador antes de subir para no mandar
+   fotos de camara de 12MB como si fueran de perfil de 40px. */
+function nwCompressImage(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    img.onload = () => {
+      let { width, height } = img;
+      const limit = maxDim || 1000;
+      if (width > limit || height > limit) {
+        if (width > height) { height = Math.round(height * limit / width); width = limit; }
+        else { width = Math.round(width * limit / height); height = limit; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen')), 'image/webp', 0.82);
+    };
+    img.onerror = () => reject(new Error('Archivo de imagen inválido'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function nwUploadImage(sb, file, userId, context, maxDim) {
+  const blob = await nwCompressImage(file, maxDim);
+  const path = `${userId}/${context}-${Date.now()}.webp`;
+  const { error } = await sb.storage.from('nextwork-uploads').upload(path, blob, { contentType: 'image/webp', upsert: false });
+  if (error) throw error;
+  const { data } = sb.storage.from('nextwork-uploads').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 /* Orquestador: revisa sesion, pinta el avatar si hay sesion, y siempre
    llama onSession(session, profile) (con null si no hay sesion o perfil)
    para que la pagina siga con su propia logica. */
