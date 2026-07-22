@@ -435,6 +435,20 @@ function showComposerLock(){
   el.style.display=el.style.display==='none'?'block':'none';
 }
 
+/* Los botones de Comentar/Compartir de esta funcion son de las
+   "Publicaciones de ejemplo" (contenido de muestra, no real) -- antes
+   llamaban a showToast() sin argumento, que siempre mostraba "Crea tu
+   perfil para interactuar con la comunidad" sin revisar si la persona
+   ya tenia sesion iniciada. Si ya esta logueada, el mensaje correcto es
+   otro: que use las publicaciones reales de mas arriba. */
+function showExamplePostNotice(){
+  if(CURRENT_VIEWER_ID){
+    showToast('Esta es una publicación de ejemplo — comenta o interactúa en las publicaciones reales de la comunidad, más arriba ↑');
+  } else {
+    showToast();
+  }
+}
+
 function render(){
   const list=activeTopic==='todos'?POSTS:POSTS.filter(p=>p.topic===activeTopic);
   document.getElementById('feed').innerHTML=list.map(p=>{
@@ -463,11 +477,11 @@ function render(){
           <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/><path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
           ${p.liked?'Me gusta':'Me gusta'}
         </button>
-        <button class="action-btn" onclick="showToast()">
+        <button class="action-btn" onclick="showExamplePostNotice()">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Comentar
         </button>
-        <button class="action-btn" onclick="showToast()">
+        <button class="action-btn" onclick="showExamplePostNotice()">
           <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
           Compartir
         </button>
