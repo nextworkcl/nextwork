@@ -441,15 +441,26 @@ function openDetailModal(eventId){
     <div style="font-size:13.5px;color:var(--ink2);line-height:1.6;white-space:pre-line">${escapeHtml(ev.description)||'Sin descripción.'}</div>
     ${ev.location_detail?`<div style="font-size:13px;color:var(--ink2)"><strong>${ev.location_type==='online'?'Link':'Dirección'}:</strong> ${escapeHtml(ev.location_detail)}</div>`:''}
     <div style="font-size:12.5px;color:var(--ink3)">${counts.going} personas van · ${counts.interested} interesadas</div>`;
+  const canReport=CURRENT_VIEWER_ID&&ev.creator_id!==CURRENT_VIEWER_ID;
   document.getElementById('detail-foot').innerHTML=`
     <div style="display:flex;gap:.6rem;width:100%">
       <button class="rsvp-btn ${myStatus==='going'?'active-going':''}" onclick="toggleRsvp('${ev.id}','going')">✅ Voy</button>
       <button class="rsvp-btn ${myStatus==='interested'?'active-interested':''}" onclick="toggleRsvp('${ev.id}','interested')">🤔 Me interesa</button>
+      ${canReport?`<button class="rsvp-btn" title="Reportar" aria-label="Reportar evento" onclick="reportEvent('${ev.id}')" style="flex:none;padding:7px 10px">🚩</button>`:''}
     </div>`;
   document.getElementById('detail-overlay').classList.add('open');
 }
 function closeDetailModal(){
   document.getElementById('detail-overlay').classList.remove('open');
+}
+
+async function reportEvent(eventId){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para reportar');return;}
+  const reason=prompt('¿Por qué reportas este evento?');
+  if(!reason||!reason.trim())return;
+  const {error}=await _sb2.from('reports').insert({reporter_id:CURRENT_VIEWER_ID,content_type:'event',content_id:eventId,reason:reason.trim()});
+  if(error){showToast('No pudimos enviar el reporte');return;}
+  showToast('Reporte enviado. Gracias por avisarnos 🙏');
 }
 
 async function openCreateEventModal(){

@@ -70,7 +70,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,235,.96);backdrop-
 
   <div id="panel" style="display:none">
     <h1 class="page-title">Panel de reportes</h1>
-    <p class="page-sub">Reportes enviados por la comunidad sobre publicaciones, oportunidades y perfiles.</p>
+    <p class="page-sub">Reportes enviados por la comunidad sobre publicaciones, oportunidades, perfiles, grupos y eventos.</p>
 
     <div class="filter-row">
       <div class="filter-chip active" data-status="pending" onclick="setStatusFilter(this,'pending')">Pendientes</div>
@@ -109,7 +109,7 @@ function timeAgo(iso){
   return'hace '+Math.floor(diff/86400)+'d';
 }
 
-const TYPE_LABELS={post:'Publicación',opportunity:'Oportunidad',profile:'Perfil'};
+const TYPE_LABELS={post:'Publicación',opportunity:'Oportunidad',profile:'Perfil',group:'Grupo',event:'Evento'};
 let REPORTS=[];
 let statusFilter='pending';
 
@@ -137,8 +137,19 @@ function reportCard(r){
         ${r.status!=='resolved'?`<button class="report-btn primary" onclick="updateReportStatus('${r.id}','resolved')">Marcar resuelto</button>`:''}
         ${r.status!=='dismissed'?`<button class="report-btn" onclick="updateReportStatus('${r.id}','dismissed')">Descartar</button>`:''}
         ${r.content_type==='profile'?`<a href="perfil-publico.html?id=${r.content_id}" target="_blank" class="report-btn">Ver perfil</a>`:''}
+        ${r.content_type==='group'?`<a href="publicaciones.html?group=${r.content_id}" target="_blank" class="report-btn">Ver grupo</a><button class="report-btn" style="color:#b91c1c" onclick="deleteReportedContent('group','${r.content_id}','${r.id}')">Eliminar grupo</button>`:''}
+        ${r.content_type==='event'?`<button class="report-btn" style="color:#b91c1c" onclick="deleteReportedContent('event','${r.content_id}','${r.id}')">Eliminar evento</button>`:''}
       </div>
     </div>`;
+}
+
+async function deleteReportedContent(type,contentId,reportId){
+  if(!confirm(`¿Eliminar este ${type==='group'?'grupo':'evento'}? Esta acción no se puede deshacer.`))return;
+  const table=type==='group'?'groups':'events';
+  const {error}=await _sb.from(table).delete().eq('id',contentId);
+  if(error){showToast('No pudimos eliminar el contenido');return;}
+  await updateReportStatus(reportId,'resolved');
+  showToast(`${type==='group'?'Grupo':'Evento'} eliminado`);
 }
 
 function renderReports(){
@@ -179,21 +190,29 @@ async function loadReports(){
   const postIds=data.filter(r=>r.content_type==='post').map(r=>r.content_id);
   const oppIds=data.filter(r=>r.content_type==='opportunity').map(r=>r.content_id);
   const profileIds=data.filter(r=>r.content_type==='profile').map(r=>r.content_id);
+  const groupIds=data.filter(r=>r.content_type==='group').map(r=>r.content_id);
+  const eventIds=data.filter(r=>r.content_type==='event').map(r=>r.content_id);
 
-  const [postsRes,oppsRes,profilesRes]=await Promise.all([
+  const [postsRes,oppsRes,profilesRes,groupsRes,eventsRes]=await Promise.all([
     postIds.length?_sb.from('posts').select('id,body').in('id',postIds):Promise.resolve({data:[]}),
     oppIds.length?_sb.from('opportunities').select('id,title').in('id',oppIds):Promise.resolve({data:[]}),
-    profileIds.length?_sb.from('perfiles_publicos').select('id,name').in('id',profileIds):Promise.resolve({data:[]})
+    profileIds.length?_sb.from('perfiles_publicos').select('id,name').in('id',profileIds):Promise.resolve({data:[]}),
+    groupIds.length?_sb.from('groups').select('id,name').in('id',groupIds):Promise.resolve({data:[]}),
+    eventIds.length?_sb.from('events').select('id,title').in('id',eventIds):Promise.resolve({data:[]})
   ]);
   const postById={};(postsRes.data||[]).forEach(p=>postById[p.id]=p.body);
   const oppById={};(oppsRes.data||[]).forEach(o=>oppById[o.id]=o.title);
   const profileById={};(profilesRes.data||[]).forEach(p=>profileById[p.id]=p.name);
+  const groupById={};(groupsRes.data||[]).forEach(g=>groupById[g.id]=g.name);
+  const eventById={};(eventsRes.data||[]).forEach(e=>eventById[e.id]=e.title);
 
   REPORTS.forEach(r=>{
     r._reporter=reporterById[r.reporter_id];
     if(r.content_type==='post')r._contentPreview=postById[r.content_id];
     else if(r.content_type==='opportunity')r._contentPreview=oppById[r.content_id];
     else if(r.content_type==='profile')r._contentPreview=profileById[r.content_id];
+    else if(r.content_type==='group')r._contentPreview=groupById[r.content_id];
+    else if(r.content_type==='event')r._contentPreview=eventById[r.content_id];
   });
 
   document.getElementById('gate').style.display='none';

@@ -300,22 +300,33 @@ function groupActionHtml(g){
 }
 
 function groupCard(g){
+  const canReport=CURRENT_VIEWER_ID&&g.creator_id!==CURRENT_VIEWER_ID;
   return `
     <div class="group-card">
       <div class="group-top">
         <div class="group-av" style="background:${g.color||getColor(g.name)}">${groupInitials(g.name)}</div>
-        <div>
+        <div style="flex:1">
           <div class="group-name">${escapeHtml(g.name)}</div>
           <div class="group-badges">
             <span class="cat-badge">${CAT_LABEL[g.category]||g.category}</span>
             <span class="priv-badge">${g.is_private?'🔒 Privado':'🌐 Público'}</span>
           </div>
         </div>
+        ${canReport?`<span title="Reportar" role="button" tabindex="0" aria-label="Reportar grupo" style="cursor:pointer;font-size:13px;color:var(--ink3)" onclick="reportGroup('${g.id}')">🚩</span>`:''}
       </div>
       <div class="group-desc">${escapeHtml(g.description)||'Sin descripción todavía.'}</div>
       <div class="group-meta">${g.member_count} miembro${g.member_count!==1?'s':''}</div>
       ${groupActionHtml(g)}
     </div>`;
+}
+
+async function reportGroup(groupId){
+  if(!CURRENT_VIEWER_ID){showToast('Inicia sesión para reportar');return;}
+  const reason=prompt('¿Por qué reportas este grupo?');
+  if(!reason||!reason.trim())return;
+  const {error}=await _sb2.from('reports').insert({reporter_id:CURRENT_VIEWER_ID,content_type:'group',content_id:groupId,reason:reason.trim()});
+  if(error){showToast('No pudimos enviar el reporte');return;}
+  showToast('Reporte enviado. Gracias por avisarnos 🙏');
 }
 
 function renderGroupsFiltered(){
