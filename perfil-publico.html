@@ -395,12 +395,6 @@ const STATUS_MAP = {
   'Ofrezco mentoría':{label:'🌱 Ofrezco mentoría',cls:'badge-mentoria'},
 };
 
-const SUGGESTED = [
-  {av:'SC',c:'#1a3a2a',name:'Sofía Contreras',role:'Founder · MindPath',pct:94},
-  {av:'MR',c:'#1e4a8a',name:'Matías Rojas',role:'CTO · Rocketbot',pct:89},
-  {av:'AL',c:'#4a1a5a',name:'Alejandra Luna',role:'UX Designer',pct:85},
-];
-
 const escapeHtml = nwEscapeHtml;
 function getInitials(name){
   if(!name) return '?';
@@ -855,13 +849,8 @@ function renderProfile(p, ownProfile){
   /* RECOMENDACIONES */
   loadRecommendations(p.id);
 
-  /* SUGGESTED */
-  document.getElementById('suggested-list').innerHTML=SUGGESTED.map(s=>`
-    <div class="suggested-user" onclick="showToast('🔒 Disponible en la beta')">
-      <div class="sug-av" style="background:${s.c}">${s.av}</div>
-      <div><div class="sug-name">${s.name}</div><div class="sug-role">${s.role}</div></div>
-      <div class="sug-follow">+ Seguir</div>
-    </div>`).join('');
+  /* SUGGESTED — ver loadSimilarProfiles() */
+  loadSimilarProfiles(p);
 
   /* EDIT LINK — solo el dueño puede editar */
   document.getElementById('edit-link').style.display=isOwnProfile?'':'none';
@@ -901,6 +890,65 @@ async function renderMatchCard(other){
   attrsEl.innerHTML=shown.length
     ? shown.map(a=>`<div class="match-attr"><div class="match-attr-dot"></div>${escapeHtml(a)}</div>`).join('')
     : `<div class="match-attr"><div class="match-attr-dot"></div>Compatibilidad base — completa más tu perfil para afinar el cálculo</div>`;
+}
+
+/* "Perfiles similares" -- antes 3 personas inventadas (SUGGESTED) que no
+   llevaban a ningun lado. Ahora son perfiles reales de Nextwork rankeados
+   por compatibilidad con el perfil que se esta viendo (nwComputeMatchScore),
+   no con el visitante -- es un widget de descubrimiento distinto y
+   complementario a la tarjeta de match ("tu compatibilidad con esta
+   persona") y a "Personas que quizas conozcas" (que sugiere gente segun
+   la red del visitante, no segun el perfil visto). Funciona sin sesion:
+   solo conectar requiere estar logueado. */
+async function loadSimilarProfiles(viewedProfile){
+  const list=document.getElementById('suggested-list');
+  if(!list)return;
+  try{
+    const excludeIds=new Set([viewedProfile.id]);
+    if(viewerSession)excludeIds.add(viewerSession.user.id);
+    if(viewerSession){
+      try{
+        const {data:blocks}=await _sb.from('blocked_users').select('blocked_id').eq('blocker_id',viewerSession.user.id);
+        (blocks||[]).forEach(b=>excludeIds.add(b.blocked_id));
+      }catch(e){}
+      try{
+        const {data:conns}=await _sb.from('connections').select('from_id,to_id').or(`from_id.eq.${viewerSession.user.id},to_id.eq.${viewerSession.user.id}`);
+        (conns||[]).forEach(c=>{excludeIds.add(c.from_id);excludeIds.add(c.to_id);});
+      }catch(e){}
+    }
+
+    const {data:candidates}=await _sb.from('perfiles_publicos').select('*').limit(200);
+    const pool=(candidates||[]).filter(c=>!excludeIds.has(c.id)&&c.name&&c.name.trim());
+    if(!pool.length){list.innerHTML=`<div style="font-size:12px;color:var(--ink3)">Sin sugerencias por ahora.</div>`;return;}
+
+    const top=pool.map(c=>({...c,_match:nwComputeMatchScore(viewedProfile,c)}))
+      .sort((a,b)=>b._match.score-a._match.score)
+      .slice(0,3);
+
+    list.innerHTML=top.map(s=>{
+      const initials=getInitials(s.name);
+      const color=s.color||getColor(s.name);
+      return `<div class="suggested-user">
+        <a href="perfil-publico.html?id=${s.id}" style="display:flex;align-items:center;gap:.7rem;flex:1;min-width:0;color:inherit;text-decoration:none">
+          <div class="sug-av" style="background:${color};overflow:hidden">${s.photo?`<img src="${escapeHtml(s.photo)}" alt="Foto de perfil de ${escapeHtml(s.name)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+          <div style="min-width:0"><div class="sug-name">${escapeHtml(s.name)}</div><div class="sug-role">${escapeHtml(s.role||'')}</div></div>
+        </a>
+        <span class="sug-follow" role="button" tabindex="0" onclick="sendSuggestedConnection('${s.id}',this)">+ Conectar</span>
+      </div>`;
+    }).join('');
+  }catch(e){
+    list.innerHTML=`<div style="font-size:12px;color:var(--ink3)">Sin sugerencias por ahora.</div>`;
+  }
+}
+
+async function sendSuggestedConnection(targetId,el){
+  if(!viewerSession){showToast('🔒 Inicia sesión para conectar');return;}
+  el.textContent='Enviando...';
+  const {data,error}=await _sb.from('connections').insert({from_id:viewerSession.user.id,to_id:targetId}).select().single();
+  if(error){el.textContent='+ Conectar';showToast(error.message||'No pudimos enviar la solicitud');return;}
+  notifyPush(targetId,'connection_request',data.id);
+  el.textContent='Solicitud enviada ✓';
+  showToast('Solicitud de conexión enviada');
 }
 
 async function renderNavUser(){
