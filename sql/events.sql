@@ -102,7 +102,18 @@ CREATE POLICY "Responder RSVP como uno mismo"
 CREATE POLICY "Cambiar mi propio RSVP"
   ON public.event_rsvps FOR UPDATE TO public
   USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (
+    user_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.events e
+      WHERE e.id = event_rsvps.event_id
+      AND (
+        e.group_id IS NULL
+        OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = e.group_id AND g.is_private = false)
+        OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = e.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+      )
+    )
+  );
 
 CREATE POLICY "Quitar mi propio RSVP"
   ON public.event_rsvps FOR DELETE TO public
