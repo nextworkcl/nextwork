@@ -148,6 +148,91 @@ async function nwUploadImage(sb, file, userId, context, maxDim) {
   return data.publicUrl;
 }
 
+/* ── MATCH SCORE: compatibilidad real, calculada con datos del perfil ──
+   No es el motor de IA con embeddings (eso lo construye por separado el
+   equipo) -- es un algoritmo de reglas, transparente y explicable, sobre
+   señales estructuradas que ya existen en cada perfil: habilidades, rol,
+   universidad, empresa, ubicacion, y las dos señales que son el corazon
+   real de "matching por afinidad": si lo que uno OFRECE calza con lo que
+   el otro BUSCA (vision/collab), y si sus visiones se parecen.
+   Usado en dashboard.html, perfil-publico.html y crear-perfil.html --
+   antes cada uno mostraba un numero al azar (Math.random()) en vez de
+   esto. */
+const NW_ROLE_BUCKETS={
+  tech:['developer','desarrollador','engineer','ingenier','programador','backend','frontend','full-stack','fullstack','software','devops','data scientist','data engineer'],
+  design:['diseñador','designer','diseño','ux','ui ','brand'],
+  business:['founder','fundador','ceo','cofounder','cofundador','business','ventas','sales','marketing','growth','bizdev'],
+  product:['product manager','product owner','producto']
+};
+function nwDetectRoleBucket(role){
+  const r=(role||'').toLowerCase();
+  for(const bucket in NW_ROLE_BUCKETS){
+    if(NW_ROLE_BUCKETS[bucket].some(k=>r.includes(k)))return bucket;
+  }
+  return 'other';
+}
+const NW_MATCH_STOPWORDS=new Set(['de','la','el','en','y','a','que','un','una','para','con','los','las','del','al','es','soy','busco','quiero','me','mi','su','sus','como','por','se','lo','más','muy','este','esta','tengo','hay','the','and','for']);
+function nwMeaningfulWords(text){
+  return (text||'').toLowerCase().replace(/[^a-z0-9áéíóúñ\s]/gi,' ').split(/\s+/).filter(w=>w.length>3&&!NW_MATCH_STOPWORDS.has(w));
+}
+function nwWordOverlapCount(a,b){
+  const setA=new Set(nwMeaningfulWords(a));
+  return nwMeaningfulWords(b).filter(w=>setA.has(w)).length;
+}
+const NW_BUCKET_LABEL={tech:'tecnología',design:'diseño',business:'negocio',product:'producto'};
+
+function nwComputeMatchScore(me,other){
+  let score=0;
+  const reasons=[];
+
+  const mySkills=new Set((me.skills||[]).map(s=>(s||'').toLowerCase()));
+  const sharedSkills=(other.skills||[]).filter(s=>mySkills.has((s||'').toLowerCase()));
+  if(sharedSkills.length){
+    score+=Math.min(sharedSkills.length,5)*3;
+    reasons.push(`Comparten ${sharedSkills.length===1?'la habilidad':sharedSkills.length+' habilidades'}: ${sharedSkills.slice(0,3).join(', ')}`);
+  }
+
+  const myBucket=nwDetectRoleBucket(me.role);
+  const otherBucket=nwDetectRoleBucket(other.role);
+  if(myBucket!=='other'&&otherBucket!=='other'){
+    if(myBucket!==otherBucket){
+      score+=15;
+      reasons.push(`Perfiles complementarios: ${me.role||'tu rol'} + ${other.role||'su rol'}`);
+    } else {
+      score+=6;
+      reasons.push(`Ambos con perfil de ${NW_BUCKET_LABEL[otherBucket]}`);
+    }
+  }
+
+  const offerMeetsNeed=nwWordOverlapCount(me.offer,other.vision)+nwWordOverlapCount(other.offer,me.vision)+nwWordOverlapCount(me.offer,other.collab)+nwWordOverlapCount(other.offer,me.collab);
+  if(offerMeetsNeed>0){
+    score+=Math.min(offerMeetsNeed,6)*2;
+    reasons.push('Lo que uno ofrece calza con lo que el otro busca');
+  }
+
+  const visionOverlap=nwWordOverlapCount(me.vision,other.vision);
+  if(visionOverlap>0){
+    score+=Math.min(visionOverlap,5)*2;
+    reasons.push('Visión similar sobre lo que buscan construir');
+  }
+
+  if(me.university&&other.university&&me.university.trim().toLowerCase()===other.university.trim().toLowerCase()){
+    score+=5;
+    reasons.push(`Ambos de ${other.university}`);
+  }
+  if(me.company&&other.company&&me.company.trim().toLowerCase()===other.company.trim().toLowerCase()){
+    score+=5;
+    reasons.push(`Ambos en ${other.company}`);
+  }
+  if(me.location&&other.location&&me.location.trim().toLowerCase()===other.location.trim().toLowerCase()){
+    score+=6;
+    reasons.push(`Ambos en ${other.location}`);
+  }
+
+  const pct=Math.max(40,Math.min(97,Math.round(40+score)));
+  return {pct,reasons,score};
+}
+
 /* Orquestador: revisa sesion, pinta el avatar si hay sesion, y siempre
    llama onSession(session, profile) (con null si no hay sesion o perfil)
    para que la pagina siga con su propia logica. */

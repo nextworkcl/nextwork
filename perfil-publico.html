@@ -869,20 +869,14 @@ function renderProfile(p, ownProfile){
   /* CONTACT CARD — no tiene sentido "contactarte a ti mismo" */
   document.getElementById('contact-card').style.display=isOwnProfile?'none':'block';
 
-  /* MATCH CARD — solo si vemos el perfil de otra persona y estamos logueados */
+  /* MATCH CARD — solo si vemos el perfil de otra persona y estamos logueados.
+     Compatibilidad real (nwComputeMatchScore, ver shared.js): antes esto
+     era Math.random()*20+75, un numero inventado sin relacion a los datos
+     de ninguno de los dos perfiles. */
   const matchCard=document.getElementById('match-card');
   if(!isOwnProfile && viewerSession){
     matchCard.style.display='block';
-    const pct=Math.floor(Math.random()*20+75);
-    document.getElementById('match-pct').textContent=pct+'%';
-    setTimeout(()=>document.getElementById('match-bar-fill').style.width=pct+'%',300);
-    const attrs=[];
-    if(p.skills&&p.skills.length) attrs.push('Habilidades complementarias');
-    if(p.collab&&p.collab.length) attrs.push('Tipo de colaboración compatible');
-    if(p.location) attrs.push('Misma zona geográfica');
-    attrs.push('Visión y valores alineados');
-    document.getElementById('match-attrs').innerHTML=attrs.slice(0,3).map(a=>`
-      <div class="match-attr"><div class="match-attr-dot"></div>${a}</div>`).join('');
+    renderMatchCard(p);
   } else {
     matchCard.style.display='none';
   }
@@ -890,6 +884,23 @@ function renderProfile(p, ownProfile){
   /* JOIN CTA — ocultar si el visitante ya es parte de Nextwork */
   const joinCta=document.getElementById('join-cta');
   if(joinCta) joinCta.style.display=viewerSession?'none':'block';
+}
+
+async function renderMatchCard(other){
+  if(!viewerSession)return;
+  const {data:me}=await _sb.from('profiles').select('role,skills,offer,vision,collab,university,company,location').eq('id',viewerSession.user.id).single();
+  if(!me)return;
+  const {pct,reasons}=nwComputeMatchScore(me,other);
+  const pctEl=document.getElementById('match-pct');
+  const fillEl=document.getElementById('match-bar-fill');
+  if(pctEl)pctEl.textContent=pct+'%';
+  if(fillEl)setTimeout(()=>fillEl.style.width=pct+'%',300);
+  const attrsEl=document.getElementById('match-attrs');
+  if(!attrsEl)return;
+  const shown=reasons.slice(0,3);
+  attrsEl.innerHTML=shown.length
+    ? shown.map(a=>`<div class="match-attr"><div class="match-attr-dot"></div>${escapeHtml(a)}</div>`).join('')
+    : `<div class="match-attr"><div class="match-attr-dot"></div>Compatibilidad base — completa más tu perfil para afinar el cálculo</div>`;
 }
 
 async function renderNavUser(){
