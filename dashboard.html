@@ -206,6 +206,15 @@ footer strong{color:rgba(255,255,255,.75)}
 .matches-empty .mi{font-size:2rem;margin-bottom:.6rem}
 .matches-empty p:first-of-type{font-weight:600;font-size:14.5px;margin-bottom:.3rem;color:var(--ink)}
 .matches-empty p:last-child{font-size:13px;color:var(--ink3);max-width:420px;margin:0 auto}
+.matches-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.5rem}
+@media(max-width:720px){.matches-grid{grid-template-columns:1fr}}
+.match-score-row{display:flex;align-items:center;gap:.5rem;margin:.6rem 0}
+.match-score-bar{flex:1;height:6px;border-radius:4px;background:var(--cream2);overflow:hidden}
+.match-score-fill{height:100%;background:linear-gradient(90deg,var(--accent3),var(--accent2));border-radius:4px}
+.match-score-pct{font-size:12px;font-weight:700;color:var(--accent2);flex-shrink:0}
+.match-reasons{list-style:none;margin:0 0 .7rem;padding:0;display:flex;flex-direction:column;gap:.25rem}
+.match-reasons li{font-size:11.5px;color:var(--ink3);padding-left:1rem;position:relative;line-height:1.4}
+.match-reasons li::before{content:'✓';position:absolute;left:0;color:var(--accent3);font-weight:700}
 
 @media(max-width:1100px){.layout{grid-template-columns:250px 1fr}.right-sidebar{display:none}}
 @media(max-width:720px){.layout{grid-template-columns:1fr;padding:1.2rem 1rem 4rem}.left-sidebar{order:-1}}
@@ -404,11 +413,10 @@ footer strong{color:rgba(255,255,255,.75)}
       <!-- MATCHES -->
       <div class="section-head">
         <h3>Tus matches</h3>
+        <span title="Calculado a partir de tus habilidades, rol, visión y lo que ofreces/buscas en tu perfil" style="font-size:11px;color:var(--ink3);cursor:help">ⓘ cómo se calcula</span>
       </div>
-      <div class="matches-empty">
-        <div class="mi">🧠</div>
-        <p>El motor de matching con IA está en construcción</p>
-        <p>En cuanto esté listo, aquí verás a las personas que mejor complementan tu proyecto.</p>
+      <div id="matches-wrap">
+        <div class="matches-empty"><div class="mi">🧠</div><p>Inicia sesión para ver tus matches</p><p>Calculamos compatibilidad real usando tu perfil: habilidades, rol, visión y lo que ofreces.</p></div>
       </div>
 
       <!-- OPORTUNIDADES -->
@@ -758,6 +766,7 @@ if(new URLSearchParams(window.location.search).get('pro')==='success'){
       loadReferrals();
       loadMyOrganizations();
       loadMyGroups();
+      loadMatches();
       checkPushSubscriptionState();
       const digestCheck=document.getElementById('digest-optout-check');
       if(digestCheck)digestCheck.checked=!!p.email_digest_opt_out;
@@ -885,6 +894,147 @@ function personChip(p,initials,color){
     <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="Foto de perfil de ${escapeHtml(p.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
     <div><div class="match-name"><a href="perfil-publico.html?id=${p.id}" style="color:inherit">${escapeHtml(p.name||'Sin nombre')}</a></div><div class="match-role">${escapeHtml(p.role||'')}</div></div>
   </div>`;
+}
+
+/* ── MATCH SCORE: compatibilidad real, calculada con datos del perfil ──
+   No es el motor de IA con embeddings (eso lo construye por separado el
+   equipo) -- es un algoritmo de reglas, transparente y explicable, sobre
+   las mismas señales estructuradas que ya usamos para "Personas que
+   quizás conozcas": habilidades, rol, universidad, empresa. Ademas suma
+   dos señales nuevas que son el corazon real de "matching por afinidad":
+   si lo que uno OFRECE calza con lo que el otro BUSCA (vision/collab), y
+   si sus visiones se parecen. */
+const ROLE_BUCKETS={
+  tech:['developer','desarrollador','engineer','ingenier','programador','backend','frontend','full-stack','fullstack','software','devops','data scientist','data engineer'],
+  design:['diseñador','designer','diseño','ux','ui ','brand'],
+  business:['founder','fundador','ceo','cofounder','cofundador','business','ventas','sales','marketing','growth','bizdev'],
+  product:['product manager','product owner','producto']
+};
+function detectRoleBucket(role){
+  const r=(role||'').toLowerCase();
+  for(const bucket in ROLE_BUCKETS){
+    if(ROLE_BUCKETS[bucket].some(k=>r.includes(k)))return bucket;
+  }
+  return 'other';
+}
+const MATCH_STOPWORDS=new Set(['de','la','el','en','y','a','que','un','una','para','con','los','las','del','al','es','soy','busco','quiero','me','mi','su','sus','como','por','se','lo','más','muy','este','esta','tengo','hay','the','and','for']);
+function meaningfulWords(text){
+  return (text||'').toLowerCase().replace(/[^a-z0-9áéíóúñ\s]/gi,' ').split(/\s+/).filter(w=>w.length>3&&!MATCH_STOPWORDS.has(w));
+}
+function wordOverlapCount(a,b){
+  const setA=new Set(meaningfulWords(a));
+  return meaningfulWords(b).filter(w=>setA.has(w)).length;
+}
+const BUCKET_LABEL={tech:'tecnología',design:'diseño',business:'negocio',product:'producto'};
+
+function computeMatchScore(me,other){
+  let score=0;
+  const reasons=[];
+
+  const mySkills=new Set((me.skills||[]).map(s=>(s||'').toLowerCase()));
+  const sharedSkills=(other.skills||[]).filter(s=>mySkills.has((s||'').toLowerCase()));
+  if(sharedSkills.length){
+    score+=Math.min(sharedSkills.length,5)*3;
+    reasons.push(`Comparten ${sharedSkills.length===1?'la habilidad':sharedSkills.length+' habilidades'}: ${sharedSkills.slice(0,3).join(', ')}`);
+  }
+
+  const myBucket=detectRoleBucket(me.role);
+  const otherBucket=detectRoleBucket(other.role);
+  if(myBucket!=='other'&&otherBucket!=='other'){
+    if(myBucket!==otherBucket){
+      score+=15;
+      reasons.push(`Perfiles complementarios: ${me.role||'tu rol'} + ${other.role||'su rol'}`);
+    } else {
+      score+=6;
+      reasons.push(`Ambos con perfil de ${BUCKET_LABEL[otherBucket]}`);
+    }
+  }
+
+  const offerMeetsNeed=wordOverlapCount(me.offer,other.vision)+wordOverlapCount(other.offer,me.vision)+wordOverlapCount(me.offer,other.collab)+wordOverlapCount(other.offer,me.collab);
+  if(offerMeetsNeed>0){
+    score+=Math.min(offerMeetsNeed,6)*2;
+    reasons.push('Lo que uno ofrece calza con lo que el otro busca');
+  }
+
+  const visionOverlap=wordOverlapCount(me.vision,other.vision);
+  if(visionOverlap>0){
+    score+=Math.min(visionOverlap,5)*2;
+    reasons.push('Visión similar sobre lo que buscan construir');
+  }
+
+  if(me.university&&other.university&&me.university.trim().toLowerCase()===other.university.trim().toLowerCase()){
+    score+=5;
+    reasons.push(`Ambos de ${other.university}`);
+  }
+  if(me.company&&other.company&&me.company.trim().toLowerCase()===other.company.trim().toLowerCase()){
+    score+=5;
+    reasons.push(`Ambos en ${other.company}`);
+  }
+  if(me.location&&other.location&&me.location.trim().toLowerCase()===other.location.trim().toLowerCase()){
+    score+=6;
+    reasons.push(`Ambos en ${other.location}`);
+  }
+
+  const pct=Math.max(40,Math.min(97,Math.round(40+score)));
+  return {pct,reasons,score};
+}
+
+async function loadMatches(){
+  if(!currentUserId||!currentProfile)return;
+  try{
+    const excludeIds=new Set([currentUserId]);
+    const {data:conns}=await _sb.from('connections').select('from_id,to_id').or(`from_id.eq.${currentUserId},to_id.eq.${currentUserId}`);
+    (conns||[]).forEach(c=>{excludeIds.add(c.from_id);excludeIds.add(c.to_id);});
+    try{
+      const {data:blocks}=await _sb.from('blocked_users').select('blocked_id').eq('blocker_id',currentUserId);
+      (blocks||[]).forEach(b=>excludeIds.add(b.blocked_id));
+    }catch(e){}
+
+    const {data:candidates}=await _sb.from('perfiles_publicos').select('*').limit(300);
+    const pool=(candidates||[]).filter(p=>!excludeIds.has(p.id)&&p.name&&p.name.trim());
+    if(!pool.length){renderMatchesEmpty();return;}
+
+    const scored=pool
+      .map(p=>({...p,_match:computeMatchScore(currentProfile,p)}))
+      .sort((a,b)=>b._match.score-a._match.score)
+      .slice(0,6);
+    renderMatches(scored);
+  }catch(e){renderMatchesEmpty();}
+}
+
+function renderMatchesEmpty(){
+  const wrap=document.getElementById('matches-wrap');
+  if(!wrap)return;
+  wrap.innerHTML=`<div class="matches-empty"><div class="mi">🧠</div><p>Todavía no hay suficientes perfiles para calcular tus matches</p><p>A medida que se sume más gente a Nextwork, aquí verás a las personas que mejor complementan tu proyecto.</p></div>`;
+}
+
+function renderMatches(scored){
+  const wrap=document.getElementById('matches-wrap');
+  if(!wrap)return;
+  if(!scored.length){renderMatchesEmpty();return;}
+  wrap.innerHTML=`<div class="matches-grid">${scored.map(p=>{
+    const initials=getInitials(p.name);
+    const color=p.color||getColor(p.name);
+    const reasons=p._match.reasons.slice(0,3);
+    return `<div class="match-card">
+      ${personChip(p,initials,color)}
+      <div class="match-score-row">
+        <div class="match-score-bar"><div class="match-score-fill" style="width:${p._match.pct}%"></div></div>
+        <span class="match-score-pct">${p._match.pct}%</span>
+      </div>
+      ${reasons.length?`<ul class="match-reasons">${reasons.map(r=>`<li>${escapeHtml(r)}</li>`).join('')}</ul>`:'<div style="font-size:11.5px;color:var(--ink3);margin-bottom:.7rem">Perfil compatible por afinidad general</div>'}
+      <button class="req-btn-accept" onclick="sendMatchConnection('${p.id}',this)">+ Conectar</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function sendMatchConnection(targetId,btn){
+  if(!currentUserId)return;
+  btn.disabled=true;btn.textContent='Enviando...';
+  const {error}=await _sb.from('connections').insert({from_id:currentUserId,to_id:targetId});
+  if(error){btn.disabled=false;btn.textContent='+ Conectar';showToast(error.message||'No pudimos enviar la solicitud');return;}
+  btn.textContent='Solicitud enviada ✓';
+  showToast('Solicitud de conexión enviada');
 }
 
 async function loadConnections(){
