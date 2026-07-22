@@ -36,6 +36,39 @@ CREATE TABLE public.group_members (
 
 CREATE INDEX idx_group_members_user_id ON public.group_members(user_id);
 
+-- Funciones SECURITY DEFINER usadas por las politicas de abajo en vez de
+-- un EXISTS directo contra group_members: si una politica de group_members
+-- consulta group_members otra vez (para saber si sos miembro/admin), esa
+-- subconsulta vuelve a pasar por RLS y dispara la misma politica de nuevo
+-- -> recursion infinita (Postgres 42P17). Una funcion SECURITY DEFINER
+-- corre como dueño de la funcion (que no esta sujeto a RLS), asi que la
+-- consulta interna no vuelve a evaluar la politica.
+CREATE OR REPLACE FUNCTION public.is_approved_group_member(gid uuid, uid uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.group_members
+    WHERE group_id = gid AND user_id = uid AND status = 'approved'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_group_admin(gid uuid, uid uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.group_members
+    WHERE group_id = gid AND user_id = uid AND role = 'admin' AND status = 'approved'
+  );
+$$;
+
 
 -- ═══ RLS: GRUPOS ═══
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
@@ -49,8 +82,8 @@ CREATE POLICY "Crear grupo como uno mismo"
 
 CREATE POLICY "Admins editan el grupo"
   ON public.groups FOR UPDATE TO public
-  USING (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = groups.id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = groups.id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'));
+  USING (public.is_group_admin(groups.id, auth.uid()))
+  WITH CHECK (public.is_group_admin(groups.id, auth.uid()));
 
 CREATE POLICY "Solo el creador borra el grupo"
   ON public.groups FOR DELETE TO public
@@ -68,7 +101,7 @@ CREATE POLICY "Ver miembros segun visibilidad"
   USING (
     user_id = auth.uid()
     OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = group_members.group_id AND g.is_private = false)
-    OR EXISTS (SELECT 1 FROM public.group_members gm2 WHERE gm2.group_id = group_members.group_id AND gm2.user_id = auth.uid() AND gm2.status = 'approved')
+    OR public.is_approved_group_member(group_members.group_id, auth.uid())
   );
 
 -- El rol siempre debe declararse 'member' desde el cliente -- el trigger de
@@ -82,14 +115,14 @@ CREATE POLICY "Unirse a un grupo"
 
 CREATE POLICY "Admins gestionan membresias"
   ON public.group_members FOR UPDATE TO public
-  USING (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = group_members.group_id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = group_members.group_id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'));
+  USING (public.is_group_admin(group_members.group_id, auth.uid()))
+  WITH CHECK (public.is_group_admin(group_members.group_id, auth.uid()));
 
 CREATE POLICY "Salir del grupo o admin expulsa"
   ON public.group_members FOR DELETE TO public
   USING (
     user_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = group_members.group_id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved')
+    OR public.is_group_admin(group_members.group_id, auth.uid())
   );
 
 
@@ -103,7 +136,7 @@ CREATE POLICY "Leer publicaciones segun visibilidad"
   USING (
     group_id IS NULL
     OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = posts.group_id AND g.is_private = false)
-    OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = posts.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+    OR public.is_approved_group_member(posts.group_id, auth.uid())
   );
 
 DROP POLICY "Publicar como uno mismo" ON public.posts;
@@ -111,7 +144,7 @@ CREATE POLICY "Publicar en el feed o en grupos donde soy miembro"
   ON public.posts FOR INSERT TO public
   WITH CHECK (
     auth.uid() = author_id
-    AND (group_id IS NULL OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = posts.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved'))
+    AND (group_id IS NULL OR public.is_approved_group_member(posts.group_id, auth.uid()))
   );
 
 DROP POLICY "Solo el autor borra su publicacion" ON public.posts;
@@ -119,7 +152,7 @@ CREATE POLICY "Autor o admin del grupo borra la publicacion"
   ON public.posts FOR DELETE TO public
   USING (
     auth.uid() = author_id
-    OR (group_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = posts.group_id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'))
+    OR (group_id IS NOT NULL AND public.is_group_admin(posts.group_id, auth.uid()))
   );
 
 

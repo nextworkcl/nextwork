@@ -32,14 +32,14 @@ CREATE POLICY "Leer eventos segun visibilidad"
   USING (
     group_id IS NULL
     OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = events.group_id AND g.is_private = false)
-    OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = events.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+    OR public.is_approved_group_member(events.group_id, auth.uid())
   );
 
 CREATE POLICY "Crear evento como uno mismo"
   ON public.events FOR INSERT TO public
   WITH CHECK (
     auth.uid() = creator_id
-    AND (group_id IS NULL OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = events.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved'))
+    AND (group_id IS NULL OR public.is_approved_group_member(events.group_id, auth.uid()))
   );
 
 CREATE POLICY "Autor edita su evento"
@@ -51,7 +51,7 @@ CREATE POLICY "Autor o admin del grupo borra el evento"
   ON public.events FOR DELETE TO public
   USING (
     auth.uid() = creator_id
-    OR (group_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = events.group_id AND gm.user_id = auth.uid() AND gm.role = 'admin' AND gm.status = 'approved'))
+    OR (group_id IS NOT NULL AND public.is_group_admin(events.group_id, auth.uid()))
   );
 
 
@@ -79,7 +79,7 @@ CREATE POLICY "Ver rsvps de eventos visibles"
       AND (
         e.group_id IS NULL
         OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = e.group_id AND g.is_private = false)
-        OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = e.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+        OR public.is_approved_group_member(e.group_id, auth.uid())
       )
     )
   );
@@ -94,7 +94,7 @@ CREATE POLICY "Responder RSVP como uno mismo"
       AND (
         e.group_id IS NULL
         OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = e.group_id AND g.is_private = false)
-        OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = e.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+        OR public.is_approved_group_member(e.group_id, auth.uid())
       )
     )
   );
@@ -110,7 +110,7 @@ CREATE POLICY "Cambiar mi propio RSVP"
       AND (
         e.group_id IS NULL
         OR EXISTS (SELECT 1 FROM public.groups g WHERE g.id = e.group_id AND g.is_private = false)
-        OR EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id = e.group_id AND gm.user_id = auth.uid() AND gm.status = 'approved')
+        OR public.is_approved_group_member(e.group_id, auth.uid())
       )
     )
   );
