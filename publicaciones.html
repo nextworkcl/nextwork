@@ -567,7 +567,7 @@ function showMentionDropdown(elId,matches,matchLen){
     const color=p.color||'#2d6b4a';
     const safeName=escapeHtml(p.name||'').replace(/'/g,"\\'");
     return `<div class="mention-item" onmousedown="event.preventDefault();insertMention('${elId}','${safeName}','${p.id}',${matchLen})">
-      <div class="mention-item-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="mention-item-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="Foto de perfil de ${escapeHtml(p.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       ${escapeHtml(p.name)}
     </div>`;
   }).join('');
@@ -619,7 +619,7 @@ function activateComposer(session,profile){
   const initials=(profile.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('composer').innerHTML=`
     <div class="composer-top">
-      <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${escapeHtml(profile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="composer-avatar" style="background:${profile.color||'#2d6b4a'};color:#fff;font-weight:700;font-size:13px;overflow:hidden">${profile.photo?`<img src="${escapeHtml(profile.photo)}" alt="Tu foto de perfil" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <textarea id="composer-textarea" class="composer-textarea" placeholder="¿Qué quieres compartir con la comunidad? Usa @ para mencionar a una conexión" maxlength="2000" style="flex:1"></textarea>
     </div>
     <div id="composer-image-preview" style="display:none;margin:.6rem 0 0;position:relative;max-width:260px">
@@ -883,14 +883,14 @@ function renderRealPost(p){
   return `
     <div class="post">
       <div class="post-header">
-        <div class="avatar" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+        <div class="avatar" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" alt="Foto de perfil de ${escapeHtml(author.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
         <div class="post-meta">
           <div class="post-name"><a href="perfil-publico.html?id=${p.author_id}" style="color:inherit">${escapeHtml(author.name||'Usuario')}</a></div>
           <div class="post-role">${escapeHtml(author.role||'')}</div>
           <div class="post-time">${timeAgo(p.created_at)}</div>
         </div>
-        ${CURRENT_VIEWER_ID&&!isMine?`<span class="report-link" title="Reportar" onclick="reportPost('${p.id}')">🚩</span>`:''}
-        ${isMine?`<div class="post-menu" title="Eliminar" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
+        ${CURRENT_VIEWER_ID&&!isMine?`<span class="report-link" title="Reportar" role="button" tabindex="0" aria-label="Reportar publicación" onclick="reportPost('${p.id}')">🚩</span>`:''}
+        ${isMine?`<div class="post-menu" title="Eliminar" role="button" tabindex="0" aria-label="Eliminar publicación" onclick="deleteRealPost('${p.id}')">🗑️</div>`:''}
       </div>
       <div class="post-body">${renderMentionedText(p.body,p.mentions)}</div>
       ${p.image?`<div class="post-image-wrap"><img src="${escapeHtml(p.image)}" class="post-image" alt=""></div>`:''}
@@ -1092,9 +1092,9 @@ function commentBubble(c,postId,rootId){
   const safeName=escapeHtml(author.name||'Usuario').replace(/'/g,"\\'");
   return `
     <div class="comment-item">
-      <div class="comment-av" style="background:${color}">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="comment-av" style="background:${color}">${author.photo?`<img src="${escapeHtml(author.photo)}" alt="Foto de perfil de ${escapeHtml(author.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <div class="comment-bubble">
-        <div class="comment-author">${escapeHtml(author.name||'Usuario')}${isMine?` <span class="report-link" style="padding:0" title="Editar" onclick="startEditComment('${c.id}','${postId}')">✏️</span> <span class="report-link" style="padding:0" title="Eliminar" onclick="deleteComment('${c.id}','${postId}')">🗑️</span>`:''}</div>
+        <div class="comment-author">${escapeHtml(author.name||'Usuario')}${isMine?` <span class="report-link" style="padding:0" title="Editar" role="button" tabindex="0" aria-label="Editar comentario" onclick="startEditComment('${c.id}','${postId}')">✏️</span> <span class="report-link" style="padding:0" title="Eliminar" role="button" tabindex="0" aria-label="Eliminar comentario" onclick="deleteComment('${c.id}','${postId}')">🗑️</span>`:''}</div>
         <div class="comment-text" id="comment-text-${c.id}">${renderMentionedText(c.body,c.mentions)}</div>
         <div class="comment-time">${timeAgo(c.created_at)}${CURRENT_VIEWER_ID?` · <span class="report-link" style="padding:0" onclick="toggleReplyBox('${threadRootId}','${safeName}','${c.author_id}')">Responder</span>`:''}</div>
       </div>

@@ -627,7 +627,7 @@ function recCard(r,author,pending){
   const color=author.color||'#2d6b4a';
   return `<div class="rec-card${pending?' rec-pending':''}">
     <div class="rec-header">
-      <div class="rec-av" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="rec-av" style="background:${color};overflow:hidden">${author.photo?`<img src="${escapeHtml(author.photo)}" alt="Foto de perfil de ${escapeHtml(author.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <div>
         <div class="rec-name"><a href="perfil-publico.html?id=${r.author_id}" style="color:inherit">${escapeHtml(author.name||'Usuario')}</a></div>
         <div class="rec-time">${escapeHtml(author.role||'')}</div>

@@ -164,7 +164,7 @@ async function loadOrganization(){
     const initials=getInitials(p.name);
     const color=p.color||getColor(p.name);
     return `<a href="perfil-publico.html?id=${p.id}" class="member-chip">
-      <div class="member-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+      <div class="member-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="Foto de perfil de ${escapeHtml(p.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
       <div><div class="member-name">${escapeHtml(p.name||'Usuario')}</div><div class="member-role">${escapeHtml(p.role||'')}</div></div>
       ${m.role==='admin'?'<span class="admin-tag">ADMIN</span>':''}
     </a>`;

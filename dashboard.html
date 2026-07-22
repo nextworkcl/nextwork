@@ -647,7 +647,7 @@ function renderDashboard(p){
       :`<a href="pro.html" style="font-size:11px;font-weight:700;color:var(--accent);background:var(--glow);padding:3px 10px;border-radius:12px;text-decoration:none">⭐ HAZTE PRO</a>`}
     ${p.is_admin?`<a href="admin-reportes.html" title="Panel de reportes" style="font-size:18px;text-decoration:none">🛡️</a><a href="admin-analytics.html" title="Analíticas" style="font-size:18px;text-decoration:none">📊</a>`:''}
     <div style="position:relative">
-      <button id="notif-bell" onclick="toggleNotifDropdown(event)" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px;line-height:1" title="Notificaciones">
+      <button id="notif-bell" onclick="toggleNotifDropdown(event)" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px;line-height:1" title="Notificaciones" aria-label="Notificaciones" aria-haspopup="true">
         🔔
         <span id="notif-count" style="display:none;position:absolute;top:-2px;right:-2px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 5px;line-height:1.3">0</span>
       </button>
@@ -881,7 +881,7 @@ async function confirmDeleteAccount(){
 /* ── SOLICITUDES DE CONEXIÓN ── */
 function personChip(p,initials,color){
   return `<div class="match-header">
-    <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+    <div class="match-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="Foto de perfil de ${escapeHtml(p.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
     <div><div class="match-name"><a href="perfil-publico.html?id=${p.id}" style="color:inherit">${escapeHtml(p.name||'Sin nombre')}</a></div><div class="match-role">${escapeHtml(p.role||'')}</div></div>
   </div>`;
 }
@@ -994,9 +994,9 @@ async function loadMyContent(){
       list.innerHTML=myPosts.map(p=>`
         <div class="mini-post">
           <div class="mini-post-header">
-            <div class="mini-av" style="background:${color};overflow:hidden">${currentProfile.photo?`<img src="${escapeHtml(currentProfile.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+            <div class="mini-av" style="background:${color};overflow:hidden">${currentProfile.photo?`<img src="${escapeHtml(currentProfile.photo)}" alt="Foto de perfil de ${escapeHtml(currentProfile.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
             <div><div class="mini-name">${escapeHtml(currentProfile.name)}</div><div class="mini-role">${timeAgo(p.created_at)}</div></div>
-            <span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:16px" title="Eliminar" onclick="deleteMyPost('${p.id}')">🗑️</span>
+            <span style="margin-left:auto;cursor:pointer;color:var(--ink3);font-size:16px" title="Eliminar" role="button" tabindex="0" aria-label="Eliminar publicación" onclick="deleteMyPost('${p.id}')">🗑️</span>
           </div>
           <div class="mini-body">${escapeHtml(p.body)}</div>
         </div>`).join('');
@@ -1342,7 +1342,7 @@ async function loadMyOrganizations(){
     grid.innerHTML=(orgs||[]).map(o=>`
       <a href="organizacion.html?id=${o.id}" class="match-card" style="display:block">
         <div class="match-header">
-          <div class="match-av" style="background:#6366f1;overflow:hidden">${o.logo?`<img src="${escapeHtml(o.logo)}" style="width:100%;height:100%;object-fit:cover">`:'🏢'}</div>
+          <div class="match-av" style="background:#6366f1;overflow:hidden">${o.logo?`<img src="${escapeHtml(o.logo)}" alt="Logo de ${escapeHtml(o.name)||'organización'}" style="width:100%;height:100%;object-fit:cover">`:'🏢'}</div>
           <div><div class="match-name">${escapeHtml(o.name)}</div><div class="match-role">${roleById[o.id]==='admin'?'Administrador':'Miembro'}</div></div>
         </div>
       </a>`).join('');

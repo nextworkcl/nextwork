@@ -617,7 +617,7 @@ async function loadPeopleYouMayKnow(){
         :(REASON_LABELS[p.reason]||'Podrían conocerse');
       return `<div class="pymk-card">
         <a href="perfil-publico.html?id=${p.id}" style="text-decoration:none;color:inherit">
-          <div class="pymk-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+          <div class="pymk-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="Foto de perfil de ${escapeHtml(p.name)||'usuario'}" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
           <div class="pymk-name">${escapeHtml(p.name||'Usuario')}</div>
           <div class="pymk-role">${escapeHtml(p.role||'')}</div>
         </a>

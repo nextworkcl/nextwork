@@ -213,7 +213,7 @@ function renderConvList(){
     return `
     <div class="conv-item${c.id===activeId?' active':''}" onclick="openConversation('${c.id}')">
       <div class="conv-av-wrap">
-        <div class="conv-av" style="background:${c.color}">${c.photo?`<img src="${escapeHtml(c.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(c.name)}</div>
+        <div class="conv-av" style="background:${c.color}">${c.photo?`<img src="${escapeHtml(c.photo)}" alt="Foto de perfil de ${escapeHtml(c.name)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(c.name)}</div>
         ${ONLINE_IDS.has(c.id)?'<span class="online-dot"></span>':''}
       </div>
       <div class="conv-info">
@@ -245,7 +245,7 @@ async function openConversation(id){
     <div class="thread-header">
       <span class="thread-back" onclick="closeThread()">←</span>
       <div class="conv-av-wrap">
-        <div class="conv-av" style="background:${conv.color};width:36px;height:36px;font-size:12px">${conv.photo?`<img src="${escapeHtml(conv.photo)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(conv.name)}</div>
+        <div class="conv-av" style="background:${conv.color};width:36px;height:36px;font-size:12px">${conv.photo?`<img src="${escapeHtml(conv.photo)}" alt="Foto de perfil de ${escapeHtml(conv.name)}" style="width:100%;height:100%;object-fit:cover">`:getInitials(conv.name)}</div>
         ${ONLINE_IDS.has(conv.id)?'<span class="online-dot"></span>':''}
       </div>
       <div>
