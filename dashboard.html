@@ -413,7 +413,20 @@ footer strong{color:rgba(255,255,255,.75)}
       <!-- MATCHES -->
       <div class="section-head">
         <h3>Tus matches</h3>
-        <span title="Calculado a partir de tus habilidades, rol, visión y lo que ofreces/buscas en tu perfil" style="font-size:11px;color:var(--ink3);cursor:help">ⓘ cómo se calcula</span>
+        <div style="position:relative">
+          <span role="button" tabindex="0" aria-haspopup="true" style="font-size:11px;color:var(--ink3);cursor:pointer;text-decoration:underline dotted" onclick="toggleMatchInfo(event)" onkeydown="if(event.key==='Enter'){toggleMatchInfo(event)}">ⓘ cómo se calcula</span>
+          <div id="match-info-popover" style="display:none;position:absolute;right:0;top:24px;width:280px;background:var(--surface);border:1px solid var(--cream3);border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.14);padding:1rem 1.1rem;z-index:200;text-align:left">
+            <p style="font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:.6rem">¿Cómo calculamos tu % de match?</p>
+            <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.5rem">
+              <li style="font-size:11.5px;color:var(--ink2);line-height:1.5">🎯 Habilidades que tienen en común</li>
+              <li style="font-size:11.5px;color:var(--ink2);line-height:1.5">🧩 Roles complementarios (ej. dev + founder) o del mismo área</li>
+              <li style="font-size:11.5px;color:var(--ink2);line-height:1.5">🤝 Si lo que uno ofrece calza con lo que el otro busca</li>
+              <li style="font-size:11.5px;color:var(--ink2);line-height:1.5">🌎 Visión parecida sobre lo que quieren construir</li>
+              <li style="font-size:11.5px;color:var(--ink2);line-height:1.5">📍 Misma universidad, empresa o ciudad</li>
+            </ul>
+            <p style="font-size:11px;color:var(--ink3);margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--cream3)">No es el motor de IA con embeddings (todavía en construcción) — es un cálculo transparente con los datos reales de ambos perfiles.</p>
+          </div>
+        </div>
       </div>
       <div id="matches-wrap">
         <div class="matches-empty"><div class="mi">🧠</div><p>Inicia sesión para ver tus matches</p><p>Calculamos compatibilidad real usando tu perfil: habilidades, rol, visión y lo que ofreces.</p></div>
@@ -885,6 +898,19 @@ function personChip(p,initials,color){
    -- lo usan tambien perfil-publico.html y crear-perfil.html, asi que no
    se duplica aca. */
 const computeMatchScore = nwComputeMatchScore;
+
+function toggleMatchInfo(e){
+  e.stopPropagation();
+  const pop=document.getElementById('match-info-popover');
+  if(!pop)return;
+  pop.style.display=pop.style.display==='block'?'none':'block';
+}
+document.addEventListener('click',(e)=>{
+  const pop=document.getElementById('match-info-popover');
+  if(pop&&pop.style.display==='block'&&!pop.contains(e.target)){
+    pop.style.display='none';
+  }
+});
 
 async function loadMatches(){
   if(!currentUserId||!currentProfile)return;
