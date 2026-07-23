@@ -254,6 +254,56 @@ async function nwNotifyEmail(sb, recipientId, type, entityId) {
   } catch (e) {}
 }
 
+/* ── MATCH SCORE PARA OPORTUNIDADES ──
+   Misma filosofia que nwComputeMatchScore pero para perfil <-> oportunidad
+   en vez de perfil <-> perfil: una oportunidad no tiene "vision" ni "rol",
+   tiene habilidades requeridas, un tipo (startup/freelance/idea/collab/
+   equity) y una descripcion, asi que la señal mas fuerte es cuanto de lo
+   que la oportunidad pide calza con lo que la persona ofrece/tiene. */
+const NW_COLLAB_TO_OPP_TYPE={
+  'Cofundador/a de startup':['startup','idea'],
+  'Freelance / Proyecto puntual':['freelance'],
+  'Colaborador permanente':['collab'],
+  'Contratación con equity':['equity'],
+  'Mentoría o advisor':['collab'],
+  'Inversión o financiamiento':['equity'],
+};
+const NW_OPP_TYPE_LABEL={startup:'Startup',freelance:'Freelance',idea:'Idea',collab:'Colaboración',equity:'Equity'};
+
+function nwComputeOpportunityMatch(profile,opp){
+  let score=0;
+  const reasons=[];
+
+  const mySkills=new Set((profile.skills||[]).map(s=>(s||'').toLowerCase()));
+  const oppSkills=opp.skills||[];
+  const sharedSkills=oppSkills.filter(s=>mySkills.has((s||'').toLowerCase()));
+  if(oppSkills.length&&sharedSkills.length){
+    score+=Math.min(sharedSkills.length,5)*5;
+    reasons.push(`Tienes ${sharedSkills.length} de las ${oppSkills.length} habilidades que piden: ${sharedSkills.slice(0,3).join(', ')}`);
+  }
+
+  const collabList=Array.isArray(profile.collab)?profile.collab:[];
+  const matchedCollab=collabList.find(c=>(NW_COLLAB_TO_OPP_TYPE[c]||[]).includes(opp.type));
+  if(matchedCollab){
+    score+=20;
+    reasons.push(`Buscas "${matchedCollab}" y esta oportunidad es de tipo ${NW_OPP_TYPE_LABEL[opp.type]||opp.type}`);
+  }
+
+  const textOverlap=nwWordOverlapCount(profile.offer,opp.description)+nwWordOverlapCount(profile.vision,opp.description);
+  if(textOverlap>0){
+    score+=Math.min(textOverlap,6)*2;
+    reasons.push('Lo que buscas calza con lo que describe esta oportunidad');
+  }
+
+  if(profile.location&&opp.location&&profile.location.trim().toLowerCase()===opp.location.trim().toLowerCase()){
+    score+=8;
+    reasons.push(`Ambos en ${opp.location}`);
+  }
+
+  const pct=Math.max(40,Math.min(97,Math.round(40+score)));
+  return {pct,reasons,score};
+}
+
 /* Orquestador: revisa sesion, pinta el avatar si hay sesion, y siempre
    llama onSession(session, profile) (con null si no hay sesion o perfil)
    para que la pagina siga con su propia logica. */

@@ -421,10 +421,12 @@ footer strong{color:rgba(255,255,255,.75)}
 
       <!-- OPORTUNIDADES -->
       <div class="section-head">
-        <h3>Oportunidades recomendadas<span class="preview-badge">VISTA PREVIA</span></h3>
+        <h3>Oportunidades recomendadas</h3>
         <a href="oportunidades.html" class="see-all">Ver todas →</a>
       </div>
-      <div class="opp-list" id="opp-list"></div>
+      <div class="opp-list" id="opp-list">
+        <div class="matches-empty"><div class="mi">💼</div><p>Buscando oportunidades compatibles…</p></div>
+      </div>
 
       <!-- PUBLICACIONES -->
       <div class="section-head">
@@ -580,12 +582,6 @@ const TIPS = [
   'Conecta tu LinkedIn para que otros puedan conocer tu trayectoria completa.',
 ];
 
-const OPPS = [
-  {icon:'🚀',bg:'#e8f7ef',title:'Co-fundador técnico para EdTech',company:'EduPath · Idea stage',tags:['Equity 15%','Remote','Urgente']},
-  {icon:'⚡',bg:'#fff3e0',title:'Diseñador UX para rediseño de marca',company:'Kredz · Fintech B2B',tags:['$900 USD','6 semanas','Figma']},
-  {icon:'🤝',bg:'#f0f4ff',title:'Productor de contenido · Podcast',company:'Latam Builders · Revenue share',tags:['Colaboración','Remoto','Audio']},
-];
-
 const POSTS = [
   {av:'VR',c:'#1a4a3a',name:'Valentina Ríos',role:'Founder · GreenRoute',time:'hace 2h',body:'¡Llegamos a 1.000 usuarios activos esta semana! 🌱 Cuando lanzamos hace 4 meses no teníamos ni dominio. Hoy tenemos usuarios en 3 ciudades.',likes:567,comments:104},
   {av:'JV',c:'#1a2a5a',name:'Jorge Valdés',role:'PM · Buk',time:'hace 5h',body:'5 cosas que aprendí en mi primer año como PM en una startup: 1. El roadmap es mentira hasta que está en producción...',likes:312,comments:68},
@@ -712,18 +708,6 @@ function renderDashboard(p){
   /* TIP */
   document.getElementById('tip-text').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
 
-  /* OPPS */
-  document.getElementById('opp-list').innerHTML=OPPS.map(o=>`
-    <div class="opp-card">
-      <div class="opp-icon" style="background:${o.bg}">${o.icon}</div>
-      <div class="opp-info">
-        <div class="opp-title">${o.title}</div>
-        <div class="opp-company">${o.company}</div>
-        <div class="opp-tags">${o.tags.map(t=>`<span class="otag otag-s">${t}</span>`).join('')}</div>
-      </div>
-      <div class="opp-action"><button class="btn-apply" onclick="showToast('🔒 Disponible en la beta — ¡ya casi!')">Postular</button></div>
-    </div>`).join('');
-
   /* POSTS */
   document.getElementById('posts-list').innerHTML=POSTS.map(p=>`
     <div class="mini-post">
@@ -767,6 +751,7 @@ if(new URLSearchParams(window.location.search).get('pro')==='success'){
       loadMyOrganizations();
       loadMyGroups();
       loadMatches();
+      loadRecommendedOpportunities();
       checkPushSubscriptionState();
       const digestCheck=document.getElementById('digest-optout-check');
       if(digestCheck)digestCheck.checked=!!p.email_digest_opt_out;
@@ -958,6 +943,36 @@ async function sendMatchConnection(targetId,btn){
   nwNotifyEmail(_sb,targetId,'connection_request');
   btn.textContent='Solicitud enviada ✓';
   showToast('Solicitud de conexión enviada');
+}
+
+/* ── OPORTUNIDADES RECOMENDADAS (real, nwComputeOpportunityMatch) ── */
+const OPP_TYPE_ICON={startup:'🚀',freelance:'⚡',idea:'💡',collab:'🤝',equity:'📈'};
+async function loadRecommendedOpportunities(){
+  const list=document.getElementById('opp-list');
+  if(!list||!currentUserId||!currentProfile)return;
+  try{
+    const {data}=await _sb.from('opportunities').select('*').neq('author_id',currentUserId).order('created_at',{ascending:false}).limit(100);
+    const opps=data||[];
+    if(!opps.length){
+      list.innerHTML=`<div class="matches-empty"><div class="mi">💼</div><p>Todavía no hay oportunidades publicadas</p></div>`;
+      return;
+    }
+    const top=opps.map(o=>({...o,_match:nwComputeOpportunityMatch(currentProfile,o)}))
+      .sort((a,b)=>b._match.score-a._match.score)
+      .slice(0,4);
+    list.innerHTML=top.map(o=>`
+      <div class="opp-card">
+        <div class="opp-icon" style="background:var(--glow2)">${OPP_TYPE_ICON[o.type]||'💼'}</div>
+        <div class="opp-info">
+          <div class="opp-title">${escapeHtml(o.title)}</div>
+          <div class="opp-company">${o._match.pct}% compatible${o.location?' · '+escapeHtml(o.location):''}</div>
+          <div class="opp-tags">${(o.skills||[]).slice(0,3).map(s=>`<span class="otag otag-s">${escapeHtml(s)}</span>`).join('')}</div>
+        </div>
+        <div class="opp-action"><a href="oportunidades.html" class="btn-apply" style="text-decoration:none;display:inline-block">Ver →</a></div>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML=`<div class="matches-empty"><div class="mi">💼</div><p>No pudimos cargar oportunidades</p></div>`;
+  }
 }
 
 async function loadConnections(){
