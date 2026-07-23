@@ -406,7 +406,7 @@ function renderCards(list){
   loadWrap.style.display=visibleCount>=list.length?'none':'block';
 
   grid.innerHTML=visible.map(p=>`
-    <div class="profile-card" onclick="goProfile('${p.name}')">
+    <div class="profile-card" role="button" tabindex="0" aria-label="Ver perfil de ${p.name}" onclick="goProfile('${p.name}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goProfile('${p.name}')}">
       <div class="card-banner" style="background:linear-gradient(135deg,${p.color}cc,${p.color}88)">
         ${p.featured?'<span class="featured-badge">⭐ Destacado</span>':''}
         <div class="card-avatar-wrap">
@@ -652,7 +652,7 @@ function renderRealCard(p){
   const skillsHtml=(Array.isArray(p.skills)?p.skills:[]).slice(0,4).map(s=>`<span class="ctag ctag-skill">${escapeHtml(s)}</span>`).join('');
   const bio=p.vision?'🌎 '+p.vision:(p.offer?'🎯 '+p.offer:(p.bio||'Este miembro aún no agregó una descripción.'));
   return `
-    <div class="profile-card" onclick="window.location.href='perfil-publico.html?id=${p.id}'">
+    <div class="profile-card" role="button" tabindex="0" aria-label="Ver perfil de ${escapeHtml(p.name||'este miembro')}" onclick="window.location.href='perfil-publico.html?id=${p.id}'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='perfil-publico.html?id=${p.id}'}">
       <div class="card-banner" style="background:linear-gradient(135deg,${color}cc,${color}88)">
         <div class="card-avatar-wrap">
           <div class="card-avatar" style="background:${color};overflow:hidden">
