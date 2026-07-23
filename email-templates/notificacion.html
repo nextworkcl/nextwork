@@ -1,27 +1,29 @@
 <!--
-  Plantilla de correo para notificaciones instantaneas (like, comentario,
-  solicitud de conexion, conexion aceptada). Va pegada tal cual en:
+  Plantilla UNICA de EmailJS, reutilizada por las dos funciones edge que
+  mandan correo (send-notification-email y weekly-digest). El plan
+  gratuito de EmailJS solo permite 2 plantillas y ya estan ocupadas por
+  otras (Auto-Reply, Contact Us) -- en vez de pedir que actualices el
+  plan, cada funcion arma su propio contenido interno como HTML y lo
+  manda en UNA sola variable ({{content_html}}), asi esta plantilla le
+  sirve a cualquier tipo de correo que Nextwork necesite mandar en el
+  futuro sin gastar otro slot.
 
+  Va pegada tal cual en:
     EmailJS (emailjs.com) -> Email Templates -> Create New Template
     -> boton "</> Code Editor" (arriba a la derecha del editor)
     -> pegar TODO este archivo, reemplazando lo que venga por defecto.
+    -> en el campo "Subject" (fuera del editor de HTML) poner: {{subject}}
 
   Usa tablas en vez de flexbox/grid a proposito: es lo unico que Outlook
-  renderiza de forma confiable. Todos los estilos van inline (los clientes
-  de correo ignoran o eliminan la mayoria de las hojas de estilo externas
-  o los bloques <style> en el <head>).
+  renderiza de forma confiable. Todos los estilos van inline.
 
-  Variables que llena supabase/functions/send-notification-email/index.ts:
-    {{to_name}}       -- nombre de quien recibe el correo
-    {{actor_name}}    -- nombre de quien hizo la accion
-    {{actor_initial}} -- primera letra del nombre (para el circulo avatar)
-    {{actor_color}}   -- color hex del perfil de esa persona
-    {{action_text}}   -- ej. "le dio like a tu publicación"
-    {{preview_text}}  -- fragmento del post, o una frase de contexto
-    {{action_url}}    -- link directo a donde corresponde ver la accion
-    {{cta_label}}     -- texto del boton, ej. "Ver publicación"
-
-  Asunto sugerido en EmailJS: {{actor_name}} interactuó contigo en Nextwork
+  Variables:
+    {{subject}}      -- asunto del correo (EmailJS lo toma del campo Subject)
+    {{to_name}}      -- nombre de quien recibe el correo
+    {{content_html}} -- el cuerpo del correo, ya armado como HTML por la
+                        funcion edge que lo manda (distinto segun el tipo
+                        de correo). EmailJS no escapa HTML en variables,
+                        asi que se inserta tal cual.
 -->
 <div style="background-color:#ede9e0;padding:32px 16px;font-family:'DM Sans',Helvetica,Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background-color:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #dedad1;">
@@ -35,42 +37,9 @@
       </td>
     </tr>
 
-    <!-- AVATAR + MENSAJE -->
+    <!-- CONTENIDO (distinto segun la funcion que manda el correo) -->
     <tr>
-      <td style="padding:36px 32px 4px;text-align:center;">
-        <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 18px;">
-          <tr>
-            <td width="56" height="56" align="center" valign="middle" style="width:56px;height:56px;border-radius:50%;background-color:{{actor_color}};font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:bold;color:#ffffff;">
-              {{actor_initial}}
-            </td>
-          </tr>
-        </table>
-        <p style="margin:0;font-size:16px;line-height:1.6;color:#0f0e0c;">
-          <strong>{{actor_name}}</strong> {{action_text}}
-        </p>
-      </td>
-    </tr>
-
-    <!-- PREVIEW + BOTON -->
-    <tr>
-      <td style="padding:16px 32px 32px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f2eb;border-radius:10px;">
-          <tr>
-            <td style="padding:16px 20px;font-size:13.5px;line-height:1.6;color:#3d3b36;font-style:italic;">
-              "{{preview_text}}"
-            </td>
-          </tr>
-        </table>
-        <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:22px auto 0;">
-          <tr>
-            <td align="center" style="border-radius:22px;background-color:#1a3a2a;">
-              <a href="{{action_url}}" style="display:inline-block;padding:12px 32px;font-size:14px;font-weight:500;color:#c8f0d8;text-decoration:none;border-radius:22px;font-family:'DM Sans',Helvetica,Arial,sans-serif;">
-                {{cta_label}} →
-              </a>
-            </td>
-          </tr>
-        </table>
-      </td>
+      <td>{{content_html}}</td>
     </tr>
 
     <!-- FOOTER -->

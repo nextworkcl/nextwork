@@ -9,18 +9,20 @@
 //   supabase functions deploy send-notification-email
 //
 // IMPORTANTE -- antes de que esto funcione, en EmailJS (emailjs.com):
-//   1. Crea una plantilla nueva (Email Templates -> Create New Template).
-//      Pega el HTML que esta en email-templates/notificacion.html (editor
-//      de EmailJS -> boton "</> Code Editor" para pegar HTML crudo) --
-//      usa estas variables exactas: {{to_email}}, {{to_name}},
-//      {{actor_name}}, {{actor_initial}}, {{actor_color}}, {{action_text}},
-//      {{preview_text}}, {{action_url}}, {{cta_label}}
-//   2. Copia el Template ID y ponlo como secret EMAILJS_NOTIF_TEMPLATE_ID
-//   3. Confirma que "Allow requests from non-browser applications" siga
-//      activado en Account -> Security (ya deberia estarlo desde el
-//      resumen semanal, sql/push_and_digest.sql)
+//   1. Si todavia no existe, crea UNA plantilla (Email Templates ->
+//      Create New Template -> boton "</> Code Editor") y pega el HTML
+//      de email-templates/notificacion.html. En el campo "Subject"
+//      (fuera del editor de HTML) poner: {{subject}}
+//      Esta MISMA plantilla la usa tambien weekly-digest -- el plan
+//      gratuito de EmailJS solo permite 2 plantillas, asi que ambas
+//      funciones comparten una sola en vez de gastar un slot cada una.
+//   2. Copia el Template ID y ponlo como secret EMAILJS_TEMPLATE_ID
+//      (si ya lo configuraste para weekly-digest, es el mismo secret,
+//      no hace falta repetirlo)
+//   3. Confirma que "Allow requests from non-browser applications" este
+//      activado en Account -> Security
 //
-// Secrets necesarios: EMAILJS_NOTIF_TEMPLATE_ID
+// Secrets necesarios: EMAILJS_TEMPLATE_ID
 // (service_id y public key de EmailJS se reutilizan, ya son publicos --
 // los mismos que usa weekly-digest)
 
@@ -130,24 +132,51 @@ serve(async (req) => {
         : "https://nextwork-55o.pages.dev/dashboard.html";
       previewText = "Ya son conexiones — ahora pueden mensajearse directamente en Nextwork.";
     }
+    const ctaLabel = CTA_LABEL[type] || "Ver en Nextwork";
+
+    // El HTML del cuerpo se arma aca y se manda como una sola variable
+    // (content_html) -- la plantilla de EmailJS es solo el marco fijo
+    // (header/footer), compartido tambien con weekly-digest.
+    const contentHtml = `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:36px 32px 4px;text-align:center;">
+            <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 18px;">
+              <tr>
+                <td width="56" height="56" align="center" valign="middle" style="width:56px;height:56px;border-radius:50%;background-color:${actorColor};font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:bold;color:#ffffff;">${actorInitial}</td>
+              </tr>
+            </table>
+            <p style="margin:0;font-size:16px;line-height:1.6;color:#0f0e0c;"><strong>${actorName}</strong> ${ACTION_TEXT[type]}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 32px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f2eb;border-radius:10px;">
+              <tr><td style="padding:16px 20px;font-size:13.5px;line-height:1.6;color:#3d3b36;font-style:italic;">"${previewText}"</td></tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:22px auto 0;">
+              <tr>
+                <td align="center" style="border-radius:22px;background-color:#1a3a2a;">
+                  <a href="${actionUrl}" style="display:inline-block;padding:12px 32px;font-size:14px;font-weight:500;color:#c8f0d8;text-decoration:none;border-radius:22px;font-family:'DM Sans',Helvetica,Arial,sans-serif;">${ctaLabel} →</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
 
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json", origin: "https://nextwork-55o.pages.dev" },
       body: JSON.stringify({
         service_id: EMAILJS_SERVICE_ID,
-        template_id: Deno.env.get("EMAILJS_NOTIF_TEMPLATE_ID"),
+        template_id: Deno.env.get("EMAILJS_TEMPLATE_ID"),
         user_id: EMAILJS_PUBLIC_KEY,
         template_params: {
           to_email: recipient.email,
           to_name: recipient.name || "",
-          actor_name: actorName,
-          actor_initial: actorInitial,
-          actor_color: actorColor,
-          action_text: ACTION_TEXT[type],
-          preview_text: previewText,
-          action_url: actionUrl,
-          cta_label: CTA_LABEL[type] || "Ver en Nextwork",
+          subject: `${actorName} interactuó contigo en Nextwork`,
+          content_html: contentHtml,
         },
       }),
     });
