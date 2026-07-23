@@ -173,7 +173,11 @@ function nwDetectRoleBucket(role){
 }
 const NW_MATCH_STOPWORDS=new Set(['de','la','el','en','y','a','que','un','una','para','con','los','las','del','al','es','soy','busco','quiero','me','mi','su','sus','como','por','se','lo','más','muy','este','esta','tengo','hay','the','and','for']);
 function nwMeaningfulWords(text){
-  return (text||'').toLowerCase().replace(/[^a-z0-9áéíóúñ\s]/gi,' ').split(/\s+/).filter(w=>w.length>3&&!NW_MATCH_STOPWORDS.has(w));
+  // collab/status/hobbies se guardan como array (checkboxes multi-select),
+  // no como texto -- normalizar aca evita que .toLowerCase() reviente si
+  // a esta funcion le llega un array en vez de un string.
+  const str=Array.isArray(text)?text.join(' '):(text||'');
+  return str.toLowerCase().replace(/[^a-z0-9áéíóúñ\s]/gi,' ').split(/\s+/).filter(w=>w.length>3&&!NW_MATCH_STOPWORDS.has(w));
 }
 function nwWordOverlapCount(a,b){
   const setA=new Set(nwMeaningfulWords(a));
