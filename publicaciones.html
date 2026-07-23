@@ -265,6 +265,7 @@ footer strong{color:rgba(255,255,255,.75)}
     <div id="real-posts-wrap" style="display:none">
       <div class="section-label-row">
         <h3 id="feed-section-title">Publicaciones de la comunidad</h3>
+        <span id="hashtag-filter-chip" style="display:none;font-size:11.5px;color:var(--accent2);cursor:pointer;text-decoration:underline dotted" onclick="clearHashtagFilter()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')clearHashtagFilter()">✕ quitar filtro</span>
         <span class="live-badge"><span class="dot"></span>EN VIVO</span>
         <select id="feed-sort-select" class="feed-sort-select" onchange="feedSort=this.value;renderRealPostsFiltered()">
           <option value="relevant">Relevantes</option>
@@ -287,52 +288,14 @@ footer strong{color:rgba(255,255,255,.75)}
 
   <!-- SIDEBAR -->
   <div id="sidebar-col">
-    <div class="trending-box">
+    <div class="trending-box" id="trending-box">
       <h3>Trending en Nextwork</h3>
-      <div class="trend-item">
-        <div class="trend-num">Tendencia · Startups</div>
-        <div class="trend-tag">#seedround</div>
-        <div class="trend-count">142 publicaciones</div>
-      </div>
-      <div class="trend-item">
-        <div class="trend-num">Tendencia · Empleo</div>
-        <div class="trend-tag">#hiring</div>
-        <div class="trend-count">98 publicaciones</div>
-      </div>
-      <div class="trend-item">
-        <div class="trend-num">Tendencia · Latam</div>
-        <div class="trend-tag">#latamtech</div>
-        <div class="trend-count">87 publicaciones</div>
-      </div>
-      <div class="trend-item">
-        <div class="trend-num">Tendencia · VC</div>
-        <div class="trend-tag">#fundraising</div>
-        <div class="trend-count">64 publicaciones</div>
-      </div>
-      <div class="trend-item">
-        <div class="trend-num">Tendencia · Producto</div>
-        <div class="trend-tag">#productmanagement</div>
-        <div class="trend-count">51 publicaciones</div>
-      </div>
+      <div id="trending-list"></div>
     </div>
 
-    <div class="suggest-box">
-      <h3>Personas a seguir</h3>
-      <div class="suggest-item">
-        <div class="sug-av" style="background:#1a3a2a">SC</div>
-        <div class="sug-info"><div class="sug-name">Sofía Contreras</div><div class="sug-role">Founder · MindPath</div></div>
-        <div class="sug-btn">+ Seguir</div>
-      </div>
-      <div class="suggest-item">
-        <div class="sug-av" style="background:#1e4a8a">MR</div>
-        <div class="sug-info"><div class="sug-name">Matías Rojas</div><div class="sug-role">CTO · Rocketbot</div></div>
-        <div class="sug-btn">+ Seguir</div>
-      </div>
-      <div class="suggest-item">
-        <div class="sug-av" style="background:#6b3a1a">FN</div>
-        <div class="sug-info"><div class="sug-name">Felipe Navarro</div><div class="sug-role">Investor · Platanus</div></div>
-        <div class="sug-btn">+ Seguir</div>
-      </div>
+    <div class="suggest-box" id="suggest-box" style="display:none">
+      <h3>Gente que quizás conozcas</h3>
+      <div id="suggest-list"></div>
     </div>
   </div>
 </div>
@@ -414,11 +377,17 @@ const POSTS = [
 ];
 
 let activeTopic='todos';
+let activeHashtag=null;
 
 function filterTopic(t,el){
   activeTopic=t;
+  activeHashtag=null;
   document.querySelectorAll('.topic-chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
+  const title=document.getElementById('feed-section-title');
+  if(title)title.textContent='Publicaciones de la comunidad';
+  const chip=document.getElementById('hashtag-filter-chip');
+  if(chip)chip.style.display='none';
   render();
   if(typeof renderRealPostsFiltered==='function')renderRealPostsFiltered();
 }
@@ -518,6 +487,7 @@ nwInitNavAuth({sb:_sb2,onSession:(session,p)=>{
   if(session&&p){
     CURRENT_VIEWER_ID=session.user.id;
     activateComposer(session,p);
+    loadSuggestedPeople();
   }
   initGroupMode();
 }});
@@ -962,7 +932,16 @@ function renderRealPostsFiltered(){
   const feed=document.getElementById('real-feed');
   if(!wrap||!feed)return;
   let list=activeTopic==='todos'?REAL_POSTS:REAL_POSTS.filter(p=>p.topic===activeTopic);
-  if(!list.length){wrap.style.display='none';return;}
+  if(activeHashtag)list=list.filter(p=>extractHashtags(p.body).includes(activeHashtag));
+  if(!list.length){
+    if(activeHashtag){
+      wrap.style.display='block';
+      feed.innerHTML=`<div style="font-size:12.5px;color:var(--ink3);padding:1rem 0;text-align:center">Nadie ha publicado con ${escapeHtml(activeHashtag)} todavía.</div>`;
+    } else {
+      wrap.style.display='none';
+    }
+    return;
+  }
   wrap.style.display='block';
   list=[...list];
   if(feedSort==='relevant'){
@@ -1025,9 +1004,103 @@ async function loadRealPosts(){
       _commentCount:commentCountByPost[p.id]||0
     }));
     renderRealPostsFiltered();
+    renderTrending();
   }catch(e){}
 }
 loadRealPosts();
+
+/* ── TRENDING: hashtags reales sacados de las ultimas 50 publicaciones
+   (mismo pool que ya carga loadRealPosts), no numeros inventados. Antes
+   este bloque mostraba 5 hashtags con contadores fijos que nunca
+   cambiaban. ── */
+function extractHashtags(text){
+  if(!text)return[];
+  const matches=text.match(/#[\p{L}\d_]{2,30}/gu)||[];
+  return [...new Set(matches.map(t=>t.toLowerCase()))];
+}
+function computeTrending(){
+  const counts={};
+  REAL_POSTS.forEach(p=>{
+    extractHashtags(p.body).forEach(t=>{counts[t]=(counts[t]||0)+1;});
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+}
+function renderTrending(){
+  if(GROUP_ID)return;
+  const list=document.getElementById('trending-list');
+  if(!list)return;
+  const trends=computeTrending();
+  if(!trends.length){
+    list.innerHTML='<div style="font-size:12.5px;color:var(--ink3);line-height:1.5">Todavía no hay suficientes publicaciones con # para armar un trending. Usa uno en tu próxima publicación 👀</div>';
+    return;
+  }
+  list.innerHTML=trends.map(([tag,count],i)=>`
+    <div class="trend-item" role="button" tabindex="0" aria-label="Ver publicaciones con ${escapeHtml(tag)}" onclick="filterByHashtag('${tag}')" onkeydown="if(event.key==='Enter')filterByHashtag('${tag}')">
+      <div class="trend-num">${i+1} · Tendencia en Nextwork</div>
+      <div class="trend-tag">${escapeHtml(tag)}</div>
+      <div class="trend-count">${count} publicaci${count===1?'ón':'ones'}</div>
+    </div>`).join('');
+}
+function filterByHashtag(tag){
+  activeHashtag=tag;
+  activeTopic='todos';
+  document.querySelectorAll('.topic-chip').forEach(c=>c.classList.remove('active'));
+  const todosChip=document.querySelector('.topic-chip');
+  if(todosChip)todosChip.classList.add('active');
+  const title=document.getElementById('feed-section-title');
+  if(title)title.textContent=`Publicaciones con ${tag}`;
+  const chip=document.getElementById('hashtag-filter-chip');
+  if(chip)chip.style.display='inline';
+  render();
+  renderRealPostsFiltered();
+  const wrap=document.getElementById('real-posts-wrap')||document.getElementById('example-posts-label');
+  if(wrap)wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function clearHashtagFilter(){
+  activeHashtag=null;
+  const title=document.getElementById('feed-section-title');
+  if(title)title.textContent='Publicaciones de la comunidad';
+  const chip=document.getElementById('hashtag-filter-chip');
+  if(chip)chip.style.display='none';
+  renderRealPostsFiltered();
+}
+
+/* ── GENTE QUE QUIZAS CONOZCAS: reemplaza la lista fija de "Personas a
+   seguir" (nombres inventados, boton "Seguir" que ni siquiera es un
+   concepto real del sitio) por el mismo RPC de sugerencias que ya usan
+   buscar.html y dashboard.html, con "+ Conectar" real. ── */
+async function loadSuggestedPeople(){
+  if(GROUP_ID)return;
+  const box=document.getElementById('suggest-box');
+  const list=document.getElementById('suggest-list');
+  if(!box||!list)return;
+  try{
+    const {data,error}=await _sb2.rpc('get_people_you_may_know',{limit_count:3});
+    if(error||!data||!data.length){box.style.display='none';return;}
+    list.innerHTML=data.map(p=>{
+      const initials=(p.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+      const color=p.color||'#2d6b4a';
+      return `
+      <div class="suggest-item">
+        <a href="perfil-publico.html?id=${p.id}" style="display:flex;align-items:center;gap:.7rem;flex:1;min-width:0;text-decoration:none;color:inherit">
+          <div class="sug-av" style="background:${color};overflow:hidden">${p.photo?`<img src="${escapeHtml(p.photo)}" alt="" style="width:100%;height:100%;object-fit:cover">`:initials}</div>
+          <div class="sug-info"><div class="sug-name">${escapeHtml(p.name||'Usuario')}</div><div class="sug-role">${escapeHtml(p.role||'')}</div></div>
+        </a>
+        <div class="sug-btn" role="button" tabindex="0" aria-label="Conectar con ${escapeHtml(p.name||'esta persona')}" onclick="sendSuggestConnection('${p.id}',this)" onkeydown="if(event.key==='Enter')sendSuggestConnection('${p.id}',this)">+ Conectar</div>
+      </div>`;
+    }).join('');
+    box.style.display='block';
+  }catch(e){box.style.display='none';}
+}
+async function sendSuggestConnection(targetId,btn){
+  btn.textContent='...';
+  btn.style.pointerEvents='none';
+  const {error}=await _sb2.from('connections').insert({from_id:CURRENT_VIEWER_ID,to_id:targetId});
+  if(error){btn.textContent='+ Conectar';btn.style.pointerEvents='auto';showToast(error.message||'No pudimos enviar la solicitud');return;}
+  nwNotifyEmail(_sb2,targetId,'connection_request');
+  btn.textContent='Enviada ✓';
+  btn.style.color='var(--ink3)';
+}
 
 let NEW_POSTS_COUNT=0;
 let POSTS_CHANNEL=null;
@@ -1082,6 +1155,7 @@ async function deleteRealPost(postId){
   if(error){showToast('No pudimos eliminar la publicación');return;}
   REAL_POSTS=REAL_POSTS.filter(p=>p.id!==postId);
   renderRealPostsFiltered();
+  renderTrending();
   showToast('Publicación eliminada');
 }
 
